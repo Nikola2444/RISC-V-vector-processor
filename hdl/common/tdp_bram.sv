@@ -1,49 +1,36 @@
-//------------------------------------------------------------------------------
-// Copyright (c) 2021 Neuronix AI Labs; All rights reserved.
-//------------------------------------------------------------------------------
-// File name   : xilinx_uram_tdp_ram.sv
-// Author      : Nikola Kovacevic NikolaKo@VeriestS.com
-// Created     : 3-Aug-2021
-// Description : True Dual Port Block RAM
-// Notes       : 
-//------------------------------------------------------------------------------ 
-
 //  Xilinx True Dual Port RAM, No Change, Single Clock
 //  This code implements a parameterizable true dual port ram (both ports can read and write).
 //  This is a no change RAM which retains the last read value on the output during writes
 //  which is the most power efficient mode.
 //  If a reset or enable is not necessary, it may be tied off or removed from the code.
 
-module xilinx_bram_tdp_ram #(
+module tdp_bram #(
   parameter WIDTH = 72,                       // Specify RAM data width  
   parameter DEPTH = 2048,                     // Specify RAM depth (number of entries)
   parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
   parameter CASCADE_HEIGHT = 0, // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
   parameter INIT_FILE = ""                        // Specify name/location of RAM initialization file if using one (leave blank if not)
-) (/*AUTOARG*/
-   // Outputs
-   douta, doutb,
-   // Inputs
-   addra, addrb, dina, dinb, clka, wea, web, ena, enb, clkb, rsta,
-   rstb, oreg_ena, oreg_enb
+) 
+   (
+   input [clogb2(DEPTH-1)-1:0] addra, // Port A address bus, width determined from RAM_DEPTH
+   input [clogb2(DEPTH-1)-1:0] addrb, // Port B address bus, width determined from RAM_DEPTH
+   input [WIDTH-1:0] 	       dina, // Port A RAM input data
+   input [WIDTH-1:0] 	       dinb, // Port B RAM input data
+   input 		       clka, // Clock
+   input 		       wea, // Port A write enable
+   input 		       web, // Port B write enable
+   input 		       ena, // Port A RAM Enable, for additional power savings, disable port when not in use
+   input 		       enb, // Port B RAM Enable, for additional power savings, disable port when not in use
+   input 		       clkb, // Clock
+   input 		       rsta, // Port A output reset (does not affect ram contents)
+   input 		       rstb, // Port B output reset (does not affect ram contents)
+   input 		       oreg_ena, // Port A output register enable
+   input 		       oreg_enb, // Port B output register enable
+   output [WIDTH-1:0] 	       douta, // Port A RAM output data
+   output [WIDTH-1:0] 	       doutb         // Port B RAM output data
    );
 
-  input [clogb2(DEPTH-1)-1:0] addra;  // Port A address bus, width determined from RAM_DEPTH
-  input [clogb2(DEPTH-1)-1:0] addrb;  // Port B address bus, width determined from RAM_DEPTH
-  input [WIDTH-1:0] dina;           // Port A RAM input data
-  input [WIDTH-1:0] dinb;           // Port B RAM input data
-  input clka;                           // Clock
-  input wea;                            // Port A write enable
-  input web;                            // Port B write enable
-  input ena;                            // Port A RAM Enable, for additional power savings, disable port when not in use
-  input enb;                            // Port B RAM Enable, for additional power savings, disable port when not in use
-  input clkb;                           // Clock
-  input rsta;                           // Port A output reset (does not affect ram contents)
-  input rstb;                           // Port B output reset (does not affect ram contents)
-  input oreg_ena;                         // Port A output register enable
-  input oreg_enb;                         // Port B output register enable
-  output [WIDTH-1:0] douta;         // Port A RAM output data
-  output [WIDTH-1:0] doutb;         // Port B RAM output data
+  
 
   (* cascade_height = CASCADE_HEIGHT *)(* ram_style = "block" *) reg [WIDTH-1:0] ram[DEPTH];
 

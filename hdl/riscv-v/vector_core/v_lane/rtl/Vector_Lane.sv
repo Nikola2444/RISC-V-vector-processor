@@ -435,11 +435,11 @@ generate
         
         // Generate VRF read assignments
         assign vrf_waddr[j_gen] = write_addr_mux[j_gen];
-        assign vrf_bwen[j_gen] = bwen_mux[j_gen];
+        assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{alu_output_valid_reg[j_gen]}};
         assign vrf_write_next[j_gen] = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]}; 
         assign vrf_wdata[j_gen] = vrf_write_reg[j_gen][32 + 4 - 1 : 4];
         assign vmrf_write_next[j_gen] = {vmrf_wen_i[j_gen], ALU_vector_mask_o[j_gen], vmrf_addr_i[j_gen]};
-        assign vmrf_wen[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & {4{alu_output_valid_reg[j_gen]}};
+        assign vmrf_wen[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & alu_output_valid_reg[j_gen];
         assign vmrf_wdata[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE)];
         assign vmrf_waddr[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE) - 1 : 0];
         assign write_addr_mux_sel[j_gen] = vsew_i;

@@ -10,15 +10,16 @@ module sdp_bwe_bram #(
   parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
   parameter INIT_FILE = ""                        // Specify name/location of RAM initialization file if using one (leave blank if not)
 ) (
-  input clk,                           // Clock
-  input [clogb2(RAM_DEPTH-1)-1:0] addra,  // Write address bus, width determined from RAM_DEPTH
-  input [(NB_COL*COL_WIDTH)-1:0] dina,  // RAM input data
-  input [NB_COL-1:0] wea,               // Byte-write enable
-  input [clogb2(RAM_DEPTH-1)-1:0] addrb,  // Read address bus, width determined from RAM_DEPTH
-  output [(NB_COL*COL_WIDTH)-1:0] doutb // RAM output data
-  input enb,                            // Read Enable, for additional power savings, disable when not in use
-  input rstb,                           // Output reset (does not affect memory contents)
-  input regceb,                         // Output register enable
+  input 			  clka, // Clock
+  input 			  clkb, // Clock
+  input [clogb2(RAM_DEPTH-1)-1:0] addra, // Write address bus, width determined from RAM_DEPTH
+  input [(NB_COL*COL_WIDTH)-1:0]  dina, // RAM input data
+  input [NB_COL-1:0] 		  wea, // Byte-write enable
+  input [clogb2(RAM_DEPTH-1)-1:0] addrb, // Read address bus, width determined from RAM_DEPTH
+  output [(NB_COL*COL_WIDTH)-1:0] doutb, // RAM output data
+  input 			  enb, // Read Enable, for additional power savings, disable when not in use
+  input 			  rstb, // Output reset (does not affect memory contents)
+  input 			  regceb                         // Output register enable
 );
 
   reg [(NB_COL*COL_WIDTH)-1:0] BRAM [RAM_DEPTH-1:0];
@@ -37,14 +38,14 @@ module sdp_bwe_bram #(
     end
   endgenerate
 
-  always @(posedge clk)
+  always @(posedge clkb)
     if (enb)
       ram_data <= BRAM[addrb];
 
   generate
   genvar i;
      for (i = 0; i < NB_COL; i = i+1) begin: byte_write
-       always @(posedge clk)
+       always @(posedge clka)
          if (wea[i])
            BRAM[addra][(i+1)*COL_WIDTH-1:i*COL_WIDTH] <= dina[(i+1)*COL_WIDTH-1:i*COL_WIDTH];
       end
@@ -63,7 +64,7 @@ module sdp_bwe_bram #(
 
       reg [(NB_COL*COL_WIDTH)-1:0] doutb_reg = {(NB_COL*COL_WIDTH){1'b0}};
 
-      always @(posedge clk)
+      always @(posedge clkb)
         if (rstb)
           doutb_reg <= {(NB_COL*COL_WIDTH){1'b0}};
         else if (regceb)

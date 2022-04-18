@@ -1,7 +1,7 @@
 module sdp_bram #(
-		  parameter WIDTH = 64,                       // Specify RAM data width  
+		  parameter WIDTH = 32,                       // Specify RAM data width  
 		  parameter DEPTH = 512,                     // Specify RAM depth (number of entries)
-		  parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
+		  parameter RAM_PERFORMANCE = "LLOW_LATENCY", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
 		  parameter CASCADE_HEIGHT = 0, 
 		  parameter INIT_FILE = ""                        // Specify name/location of RAM initialization file if using one (leave blank if not)
 		  ) 

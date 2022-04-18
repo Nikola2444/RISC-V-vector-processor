@@ -140,9 +140,9 @@ module vrf #
 	 begin: gen_BRAMs
 	    sdp_bwe_bram #(/*AUTO_INSTPARAM*/
 			   // Parameters
-			   .NUM_COL		(MEM_WIDTH/8),
+			   .NB_COL		(MEM_WIDTH/8),
 			   .COL_WIDTH		(8),
-			   .DEPTH		(MEM_DEPTH),
+			   .RAM_DEPTH		(MEM_DEPTH),
 			   .RAM_PERFORMANCE	(RAM_PERFORMANCE),
 			   .INIT_FILE		(""))
 	    LVT_BRAMs(/*AUTO_INST*/
@@ -233,9 +233,9 @@ module vrf #
 	 begin: gen_BRAMs
 	    sdp_bwe_bram #(/*AUTO_INSTPARAM*/
 			   // Parameters
-			   .NUM_COL		(MEM_WIDTH/8),
+			   .NB_COL		(MEM_WIDTH/8),
 			   .COL_WIDTH		(8),
-			   .DEPTH		(MEM_DEPTH),
+			   .RAM_DEPTH		(MEM_DEPTH),
 			   .RAM_PERFORMANCE	(RAM_PERFORMANCE),
 			   .INIT_FILE		(""))
 	    READ_BRAMs(/*AUTO_INST*/

@@ -45,10 +45,8 @@ module Vector_Lane
         input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
         
         // ALU signals
-        input logic [W_PORTS_NUM - 1 : 0] op1_sel_i,
         input logic [W_PORTS_NUM - 1 : 0][1 : 0] op2_sel_i,
         input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_i,
-        input logic [W_PORTS_NUM - 1 : 0][31 : 0] non_lane_data_i,
         input logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_i,
         input logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_i,
         input logic [W_PORTS_NUM - 1 : 0] imm_sign_i,
@@ -58,26 +56,26 @@ module Vector_Lane
     );    
     
 // Generate variable    
-// ------------------------------------------ //
+////////////////////////////////////////////////
 genvar i_gen, j_gen;
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // VRF read port signals
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr;
 logic [R_PORTS_NUM - 1 : 0][31 : 0] vrf_rdata;
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // VRF write port signals
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr;
 logic [W_PORTS_NUM - 1 : 0][31 : 0] vrf_wdata_mux;
 logic [W_PORTS_NUM - 1 : 0][31 : 0] vrf_wdata;
 logic [W_PORTS_NUM - 1 : 0][3 : 0] vrf_bwen;
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // Read data preparation logic 
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [R_PORTS_NUM - 1 : 0][7 : 0] read_data_byte_mux;
 logic [R_PORTS_NUM - 1 : 0][1 : 0] read_data_byte_mux_sel;                                          // # Control signal # DONE
 logic [R_PORTS_NUM - 1 : 0][15 : 0] read_data_hw_mux;
@@ -89,23 +87,23 @@ logic [R_PORTS_NUM - 1 : 0] read_data_hw_us_mux_sel;                            
 logic [R_PORTS_NUM - 1 : 0][31 : 0] read_data_mux;
 logic [R_PORTS_NUM - 1 : 0][1 : 0] read_data_mux_sel;                                               // # Control signal # DONE
 logic [R_PORTS_NUM - 1 : 0][3 * 32 - 1 : 0] read_data_prep_reg, read_data_prep_next;
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // Read address logic
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] read_addr_mux;
 logic [R_PORTS_NUM - 1 : 0][1 : 0] read_addr_mux_sel;                                               // # Control signal # DONE
-// ------------------------------------------ //                                           
+////////////////////////////////////////////////                                           
 
 // Write address logic
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] write_addr_mux;
 logic [W_PORTS_NUM - 1 : 0][1 : 0] write_addr_mux_sel;                                              // # Control signal # DONE
 logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_mux_sel;                                              // # Control signal # DONE
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // Pipeline registers
-// ------------------------------------------ //
+////////////////////////////////////////////////
 // VRF write pipeline register
 // vrf_waddr | vrf_wdata | bwen
 logic [W_PORTS_NUM - 1 : 0][4 + 32 + $clog2(MEM_DEPTH) - 1 : 0] vrf_write_reg, vrf_write_next;      
@@ -130,10 +128,9 @@ logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1 : 0] vmrf_write_
 // Pipeline registers for the signals on the same level as ALU
 typedef struct packed
 {
-    logic [W_PORTS_NUM - 1 : 0] op1_sel;
-    logic [W_PORTS_NUM - 1 : 0][1 : 0] op2_sel;
     logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel;
-    logic [W_PORTS_NUM - 1 : 0][31 : 0] non_lane_data, ALU_x_data, ALU_reduction_data;
+    logic [W_PORTS_NUM - 1 : 0][1 : 0] op2_sel;
+    logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data, ALU_reduction_data;
     logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm;
     logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel, store_load_index_mux_sel;
     logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] ALU_ctrl;
@@ -144,42 +141,41 @@ typedef struct packed
 } ALU_packet; 
 
 ALU_packet [2 : 0] ALU_signals_reg, ALU_signals_next; 
-// ------------------------------------------ //
+////////////////////////////////////////////////
      
 // Vector mask register file
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [W_PORTS_NUM - 1 : 0] vmrf_wdata, vmrf_rdata;    
 logic [W_PORTS_NUM - 1 : 0][3 : 0] bwen_mux;
 logic [W_PORTS_NUM - 1 : 0] bwen_mux_sel;                                                           // # Control signal # DONE
 logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_waddr;
 logic [W_PORTS_NUM - 1 : 0] vmrf_wen;
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // ALU
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_data_o;
 logic [W_PORTS_NUM - 1 : 0] ALU_vector_mask_o;
 logic [W_PORTS_NUM - 1 : 0][31 : 0] op1, op2, op3;
-logic [W_PORTS_NUM - 1 : 0] op1_sel;
 logic [W_PORTS_NUM - 1 : 0][1 : 0] op2_sel;
 logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel;
 logic [W_PORTS_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][31 : 0] op3_mux;
-logic [W_PORTS_NUM - 1 : 0][31 : 0] non_lane_data, ALU_x_data, ALU_imm, ALU_reduction_data;
+logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data, ALU_imm, ALU_reduction_data;
 logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] ALU_ctrl;
 logic [W_PORTS_NUM - 1 : 0] imm_sign;
 logic [W_PORTS_NUM - 1 : 0] alu_output_valid_reg, alu_output_valid_next;
-// ------------------------------------------ //
+////////////////////////////////////////////////
 
 // Load and store
-// ------------------------------------------ //
+////////////////////////////////////////////////
 logic [W_PORTS_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][31 : 0] store_data_mux;
 logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel;
 logic [W_PORTS_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][31 : 0] store_load_index_mux;
 logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel;
-// ------------------------------------------ //
+////////////////////////////////////////////////
      
 // Moduls instantiation
-// ------------------------------------------ //
+////////////////////////////////////////////////
      
 vrf 
 #
@@ -247,7 +243,7 @@ ALU_inst
     
 );
 
-// ------------------------------------------ //     
+////////////////////////////////////////////////     
 
 // Pipeline registers for data on the same level as ALU
 always_ff@(posedge clk_i) begin
@@ -265,10 +261,8 @@ always_comb begin
     for(int i = 0; i < 2; i++) begin
         ALU_signals_next[i + 1] = ALU_signals_reg[i]; 
     end
-    op1_sel = ALU_signals_reg[2].op1_sel;
     op2_sel = ALU_signals_reg[2].op2_sel;
     op3_sel = ALU_signals_reg[2].op3_sel;
-    non_lane_data = ALU_signals_reg[2].non_lane_data;
     ALU_x_data = ALU_signals_reg[2].ALU_x_data;
     imm_sign = ALU_signals_reg[2].imm_sign;
     ALU_reduction_data = ALU_signals_reg[2].ALU_reduction_data;
@@ -278,10 +272,8 @@ always_comb begin
     store_data_valid_o = ALU_signals_reg[2].store_data_valid;
     store_load_index_valid_o = ALU_signals_reg[2].store_load_index_valid;
     
-    ALU_signals_next[0].op1_sel = op1_sel_i;
     ALU_signals_next[0].op2_sel = op2_sel_i;
     ALU_signals_next[0].op3_sel = op3_sel_i;
-    ALU_signals_next[0].non_lane_data = non_lane_data_i;
     ALU_signals_next[0].ALU_x_data = ALU_x_data_i;
     ALU_signals_next[0].ALU_imm = ALU_imm_i;
     ALU_signals_next[0].imm_sign = imm_sign_i;
@@ -389,7 +381,7 @@ generate
             endcase
             
             // Muxes for ALU operands
-            op1[j_gen] = (op1_sel[j_gen] == 0) ? read_data_mux[j_gen << 2] : non_lane_data;
+            op1[j_gen] = read_data_mux[j_gen << 2];
             case(op2_sel[j_gen])
                 0: op2[j_gen] = read_data_mux[j_gen << 2 + 1];
                 1: op2[j_gen] = ALU_x_data[j_gen];

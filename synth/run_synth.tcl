@@ -169,7 +169,9 @@ if { [info exists pjt_files] } {
 
 #Calculating clock period and pulse width
 set period [expr 1000.0 / $frequency]
+set period2 [expr $period/2]
 set wafeform_width "0.000 [expr $period / 2]"
+set wafeform_width2 "0.000 [expr $period2 / 2]"
     
 file mkdir $curr_dir/$result_dir/$part_name
 
@@ -185,7 +187,7 @@ create_clock -period $period -name clk -waveform $wafeform_width [get_ports $clk
 if { [string match "no_clock" $clk2_name] } {
     puts "no second clock"
 } else {
-    create_clock -period 2 -name clk_2 -waveform {0.000 1.000} [get_ports $clk2_name]
+    create_clock -period $period2 -name clk_2 -waveform $wafeform_width2 [get_ports $clk2_name]
 }
 
 file mkdir $curr_dir/$result_dir/$part_name/

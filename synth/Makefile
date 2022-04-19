@@ -37,6 +37,7 @@ check:
 .EXPORT_ALL_VARIABLES:
 
 COMMON_DIR = $(RISCV_vector_processor_dir)/hdl/common/
+V_LANE_DIR = $(RISCV_vector_processor_dir)/hdl/riscv-v/vector_core/v_lane/rtl/
 
 .PHONY: clean
 clean:

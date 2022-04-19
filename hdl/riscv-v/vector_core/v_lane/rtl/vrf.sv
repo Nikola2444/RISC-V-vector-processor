@@ -1,11 +1,11 @@
 module vrf #
   (parameter R_PORTS_NUM = 8,
    parameter W_PORTS_NUM = 4,
-   parameter MULTIPUMP_WRITE = 1,
+   parameter MULTIPUMP_WRITE = 2,
    parameter MULTIPUMP_READ = 1,
-   parameter RAM_PERFORMANCE = "LOW_LATENCY", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
+   parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
    // 
-   parameter MEM_DEPTH = 1024,
+   parameter MEM_DEPTH = 512,
    parameter MEM_WIDTH = 32)
    (
     input 					   clk,
@@ -30,7 +30,8 @@ module vrf #
    localparam LP_LVT_BRAM_PER_BANK  = W_PORTS_NUM/MULTIPUMP_WRITE-1;
    localparam LP_READ_BRAM_PER_BANK = R_PORTS_NUM/MULTIPUMP_READ;
    localparam LP_INPUT_REG_NUM      = RAM_PERFORMANCE == "HIGH_PERFORMANCE" && MULTIPUMP_WRITE==1 ? 2 : 1;
-   typedef int lvt_raddr_type[LP_BANK_NUM][LP_LVT_BRAM_PER_BANK][MULTIPUMP_WRITE];
+   //localparam LP_INPUT_REG_NUM      = RAM_PERFORMANCE == "HIGH_PERFORMANCE" ? 2 : 1;
+   typedef int lvt_raddr_type[LP_BANK_NUM][LP_LVT_BRAM_PER_BANK];
    localparam lvt_raddr_type lvt_raddr_array=lvt_raddr_set();
 
    
@@ -45,8 +46,7 @@ module vrf #
 	 begin
 	    if (j!=i*MULTIPUMP_WRITE)
 	    begin
-	       for (int d=0;d<MULTIPUMP_WRITE;d++)
-		 lvt_raddr_array[i][k][d]=j+d;		 
+		 lvt_raddr_array[i][k]=j;		 
 	       k++;
 	    end
 	 end
@@ -93,12 +93,12 @@ module vrf #
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][MEM_WIDTH-1:0] 	     din_reg;
 
 
-   logic [$clog2(MULTIPUMP_WRITE)-1:0] 					     multipump_write_sel;
+   logic [$clog2(MULTIPUMP_WRITE)-1:0] 					     multipump_write_sel_reg;
    logic [LP_BANK_NUM-1:0][LP_BANK_NUM-1:0][MEM_WIDTH-1:0] 		     lvt_write_xor_in;
    logic [LP_BANK_NUM-1:0][MEM_WIDTH-1:0] 				     lvt_write_xor_out;
    logic [LP_READ_BRAM_PER_BANK-1:0][LP_BANK_NUM-1:0][MEM_WIDTH-1:0] 	     lvt_read_xor;
    
-
+   
    always @(posedge clk)
    begin
       if (!rstn)
@@ -131,6 +131,16 @@ module vrf #
 	end	
    end
 
+   always @(posedge clk2)
+   begin
+      if(!rstn)
+      begin
+	 multipump_write_sel_reg <=0;
+      end
+      else
+	multipump_write_sel_reg <= ~multipump_write_sel_reg;
+   end	
+
    
    //generating LVT brams per bank
    generate
@@ -161,10 +171,12 @@ module vrf #
 	 end	 
       end
 
+
+      
       //connecting write addresses to LVT BRAM read addresses
-      for (genvar i=0; i<LP_BANK_NUM;i+=MULTIPUMP_WRITE )
+      for (genvar i=0; i<LP_BANK_NUM;i++ )
       begin
-	 for (genvar j=0; j<LP_LVT_BRAM_PER_BANK;j+=MULTIPUMP_WRITE)
+	 for (genvar j=0; j<LP_LVT_BRAM_PER_BANK;j++)
 	 begin
 	    if (MULTIPUMP_WRITE == 1)
 	    begin
@@ -174,34 +186,36 @@ module vrf #
 	    end
 	    else
 	    begin
-	       assign lvt_ram_waddr[i/2][j/2] = multipump_write_sel == 0 ? waddr_reg[i][LP_INPUT_REG_NUM-1] : waddr_reg[i+1][LP_INPUT_REG_NUM-1];
-	       assign lvt_ram_bwe[i/2][j/2] =  multipump_write_sel == 0 ? bwe_reg[i][LP_INPUT_REG_NUM-1] : bwe_reg[i+1][LP_INPUT_REG_NUM-1];
+	       assign lvt_ram_waddr[i][j] = multipump_write_sel_reg == 0 ? waddr_reg[i*MULTIPUMP_WRITE][LP_INPUT_REG_NUM-1] : waddr_reg[i*MULTIPUMP_WRITE+1][LP_INPUT_REG_NUM-1];
+	       assign lvt_ram_bwe[i][j] =  multipump_write_sel_reg == 0 ? bwe_reg[i*MULTIPUMP_WRITE][LP_INPUT_REG_NUM-1] : bwe_reg[i*MULTIPUMP_WRITE+1][LP_INPUT_REG_NUM-1];
 	    end
 	 end
       end
-      
-      integer k=0;    
+         
       for (genvar i=0; i<LP_BANK_NUM;i++)
       begin	 
 	 for (genvar k=0; k<LP_LVT_BRAM_PER_BANK;k++)
 	 begin
 	    if (MULTIPUMP_WRITE == 1)
-	      assign lvt_ram_raddr[i][k] = waddr_i[lvt_raddr_array[i][k][0]];
+	      assign lvt_ram_raddr[i][k] = waddr_i[lvt_raddr_array[i][k]];
 	    else
-	      assign lvt_ram_raddr[i][k] = waddr_i[lvt_raddr_array[i][k][multipump_write_sel]];//muxing multiple reads
+	    begin
+	       assign lvt_ram_raddr[i][k] = multipump_write_sel_reg == 0 ? waddr_i[lvt_raddr_array[i][k]] : waddr_i[lvt_raddr_array[i][k]+1];//muxing multiple reads
+	       //assign lvt_ram_raddr[i][k*MULTIPUMP_WRITE+1] = //muxing multiple reads
+	    end
 	 end	 
       end
 
 
       //xoring input data with data read from LVT brams
-      for (genvar i=0; i<W_PORTS_NUM;i++ )	 
+      for (genvar i=0; i<W_PORTS_NUM; i+=MULTIPUMP_WRITE )	 
       begin
-	 assign lvt_write_xor_in[i][i]=din_reg[i][LP_INPUT_REG_NUM-1];
+	 assign lvt_write_xor_in[i/2][i/2]= multipump_write_sel_reg == 0 ? din_reg[i][LP_INPUT_REG_NUM-1] : din_reg[i+1][LP_INPUT_REG_NUM-1];
 	 for (genvar j=0; j<LP_BANK_NUM;j++)
 	 begin
-	    for (genvar k = 0;k<LP_LVT_BRAM_PER_BANK;k++)	      
-	      if (j!=i && i==lvt_raddr_array[j][k][0])//TODO: enable mulitpump
-		assign lvt_write_xor_in[i][j] = lvt_ram_dout[j][k];
+	    for (genvar k = 0;k<LP_LVT_BRAM_PER_BANK;k++)
+		if (j!=(i/MULTIPUMP_WRITE) && i==lvt_raddr_array[j][k])//TODO: enable mulitpumpa
+		  assign lvt_write_xor_in[i/2][j] = lvt_ram_dout[j][k];
 	 end
       end
 
@@ -249,12 +263,12 @@ module vrf #
 		       .wea		(read_ram_bwe[i][j]),
 		       
 		       .enb		(read_ram_ren[i][j]),
-		       .clkb		(clk2),
+		       .clkb		(clk),
 		       .rstb		(1'b0),
 		       .regceb		(read_ram_oreg_en[i][j]));
 
 
-	    assign read_ram_waddr[i][j]	= waddr_reg[i][LP_INPUT_REG_NUM-1];
+	    assign read_ram_waddr[i][j]	= !multipump_write_sel_reg ? waddr_reg[i*MULTIPUMP_WRITE][LP_INPUT_REG_NUM-1] : waddr_reg[i*MULTIPUMP_WRITE+1][LP_INPUT_REG_NUM-1];
 	    assign read_ram_bwe[i][j]	= bwe_reg[i][LP_INPUT_REG_NUM-1];
 	    assign read_ram_din[i][j]	= lvt_write_xor_out[i];
 /* -----\/----- EXCLUDED -----\/-----

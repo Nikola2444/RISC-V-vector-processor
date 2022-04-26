@@ -23,10 +23,21 @@ typedef enum logic [10:0] {OPMVV_101xxx_rdy=0, OPMVX_101xxx_rdy=1,
 			   LOAD_rdy=5, OPMVV_rdy=6, OPMVX_rdy=7,
 			   OPIVV_rdy=8, OPIVI_rdy=9, OPIVX_rdy=10} instruction_rdy;
 
-typedef enum logic [10:0] {OPMVV_101xxx_vld=11'b00000000001, OPMVX_101xxx_vld=11'b00000000010,
-			   STORE_IDX_vld=11'b00000000100,STORE_vld=11'b00000001000, LOAD_IDX_vld=11'b00000010000,
-			   LOAD_vld=11'b00000100000, OPMVV_vld=11'b00001000000, OPMVX_vld=11'b00010000000,
-			   OPIVV_vld=11'b00100000000, OPIVI_vld=11'b01000000000, OPIVX_vld=11'b10000000000} instruction_vld;
+typedef enum logic [11:0] {OPMVV_101xxx_vld=12'b000000000001, OPMVX_101xxx_vld=12'b000000000010,
+			   STORE_IDX_vld=12'b000000000100,STORE_vld=12'b000000001000, LOAD_IDX_vld=12'b000000010000,
+			   LOAD_vld=12'b000000100000, OPMVV_vld=12'b000001000000, OPMVX_vld=12'b000010000000,
+			   OPIVV_vld=12'b000100000000, OPIVI_vld=12'b001000000000, OPIVX_vld=12'b010000000000, OPCFG_vld= 12'b100000000000} instruction_vld;
+
+typedef enum logic [6:0] {v_st_opcode=7'b0100111, v_ld_opcode=7'b0000111,
+			  v_arith_opcode=7'b1010111} opcode;
+
+typedef enum logic [2:0] {OPIVV=3'b000, OPFVV=3'b001, OPMVV=3'b010, OPIVI=3'b011,
+			  OPIVX=3'b100, OPFVF=3'b101, OPMVX=3'b110, OPCFG=3'b111} arith_funct3;
+
+typedef enum logic [1:0] {unit_stride=2'b00, idx_unordered=2'b01,
+			  strided=2'b10, idx_ordered=2'b11} v_mop;
+
+
 
 
  

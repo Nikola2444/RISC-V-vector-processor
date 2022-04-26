@@ -24,6 +24,7 @@ module sdp_bwe_bram #(
 
   reg [(NB_COL*COL_WIDTH)-1:0] BRAM [RAM_DEPTH-1:0];
   reg [(NB_COL*COL_WIDTH)-1:0] ram_data = {(NB_COL*COL_WIDTH){1'b0}};
+  reg [(NB_COL*COL_WIDTH)-1:0] in_data_reg = {(NB_COL*COL_WIDTH){1'b0}};
 
   // The following code either initializes the memory values to a specified file or to all zeros to match hardware
   generate
@@ -38,9 +39,15 @@ module sdp_bwe_bram #(
     end
   endgenerate
 
+
   always @(posedge clkb)
     if (enb)
       ram_data <= BRAM[addrb];
+
+/* -----\/----- EXCLUDED -----\/-----
+   always @(posedge clka)
+     in_data_reg <= dina;
+ -----/\----- EXCLUDED -----/\----- */
 
   generate
   genvar i;
@@ -48,6 +55,7 @@ module sdp_bwe_bram #(
        always @(posedge clka)
          if (wea[i])
            BRAM[addra][(i+1)*COL_WIDTH-1:i*COL_WIDTH] <= dina[(i+1)*COL_WIDTH-1:i*COL_WIDTH];
+	   //BRAM[addra][(i+1)*COL_WIDTH-1:i*COL_WIDTH] <= in_data_reg[(i+1)*COL_WIDTH-1:i*COL_WIDTH];
       end
   endgenerate
 

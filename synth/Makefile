@@ -5,6 +5,7 @@ run_implementation = no
 run_for_all_boards ?= no
 frequency ?= 250
 part_name ?= xc7z020clg484-1
+#alveo_part_name = xcu200-fsgd2104-2-e  
 optimize ?= no
 clk_name ?= clk
 clk2_name ?= no_clock

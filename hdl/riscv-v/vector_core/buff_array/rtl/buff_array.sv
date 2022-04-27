@@ -22,15 +22,22 @@ module buff_array #(
   input  wire [2:0]                             cfg_sew            ,
   // M_CU interface
   // TODO DEFINE
-  input  wire                                   sew_update        ,
-  input  wire                                   sbuff_read_cntr_en,
+  input  wire                                   cfg_update        ,
+  input  wire                                   cfg_rst           ,
+  input  wire                                   sbuff_read_en     ,
+  input  wire                                   sbuff_read_stall  ,
+  input  wire                                   sbuff_read_flush  ,
+  input  wire                                   sbuff_whs         ,
+  input  wire                                   sbuff_rhs         ,
   input  wire                                   sbuff_strobe_ren  ,
+  output wire                                   sbuff_not_empty   ,
+  output wire                                   sbuff_store_done  ,
   // V_LANE interface
   input  wire                                   vlane_store_valid  ,
   input  wire [31:0]                            vlane_store_data [0:V_LANE_NUM-1],
   input  wire [31:0]                            vlane_store_ptr  [0:V_LANE_NUM-1],
   output wire [31:0]                            vlane_load_data  [0:V_LANE_NUM-1],
-  input  wire  [31:0]                           vlane_load_ptr   [0:V_LANE_NUM-1],
+  input  wire [31:0]                            vlane_load_ptr   [0:V_LANE_NUM-1],
   // AXIM_CTRL interface
   input  wire                                   axi_rd_tvalid          ,
   output wire                                   axi_rd_tready          ,
@@ -56,8 +63,7 @@ module buff_array #(
   localparam integer BUFF_DEPTH = VLMAX32_PVL*MAX_VECTORS_BUFFD;
   // WORD_CNTR_WIDTH: Width of word counter in transaction 
   localparam integer WORD_CNTR_WIDTH = $clog2(VLMAX32_PVL);
-  localparam integer BATCH_CNTR_WIDTH = $clog2(VLMAX32_PVL)-$clog2(V_LANE_NUM);
-
+  localparam integer BATCH_CNTR_WIDTH = $clog2(VLMAX32_PVL);
   ///////////////////////////////////////////////////////////////////////////////
   // Variables
   ///////////////////////////////////////////////////////////////////////////////
@@ -65,13 +71,16 @@ module buff_array #(
   logic [3:0]                               sbuff_strobe_reg,sbuff_strobe_next;
   logic [1:0]                               sbuff_strobe_rol_amt;
   logic [1:0]                               sbuff_rdata_rol_amt;
+  logic                                     sbuff_write_cntr_en; // TODO: CONNECT
+  logic                                     sbuff_read_cntr_en; 
 
   logic [WORD_CNTR_WIDTH-1:0]               sbuff_read_cntr;
-  logic [BATCH_CNTR_WIDTH-1:0]              sbuff_write_cntr;
+  logic [BATCH_CNTR_WIDTH-1:0]              sbuff_write_cntr; 
+  logic [BATCH_CNTR_WIDTH-1:0]              sbuff_write_cntr_high; 
 
   logic [31:0]                              sbuff_wdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sbuff_waddr;
-  logic [3:0]                               sbuff_wen;
+  logic [V_LANE_NUM-1:0]                    sbuff_wen;
   logic [31:0]                              sbuff_wptr  [0:V_LANE_NUM-1];
   logic [31:0]                              sbuff_rdata [0:V_LANE_NUM-1];
   logic [31:0]                              sbuff_rdata_rol;
@@ -81,8 +90,6 @@ module buff_array #(
   logic                                     sbuff_roen;
   logic                                     sbuff_rocl;
 
-  logic                                     sbuff_whs;//write handshake
-  logic                                     sbuff_rhs;//read handshake
 
   logic [31:0]                              lbuff_wdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            lbuff_waddr;
@@ -98,8 +105,6 @@ module buff_array #(
   // Begin RTL
   ///////////////////////////////////////////////////////////////////////////////
   
-  assign sbuff_whs = vlane_store_valid;
-
   // Counter selects data from one store buffer to forward to axi
   always_ff @(posedge clk) begin
     if (!rstn) begin
@@ -110,6 +115,12 @@ module buff_array #(
     end
   end
 
+  // Write counter addresses write ports of all store buffers
+  // Each store buffer is then selected with sbuff_wen
+  // Write counter is incremented:
+  // For SEW=32, every single write
+  // For SEW=16, every second write
+  // For SEW=8,  every fourth write
   always_ff @(posedge clk) begin
     if (!rstn) begin
       sbuff_write_cntr <= 0;
@@ -119,50 +130,82 @@ module buff_array #(
     end
   end
 
+  // To simplify counter combinatorial logic, we increment
+  //  only after we write to the last store buffer
+  assign sbuff_write_cntr_en = sbuff_wen[V_LANE_NUM-1] && sbuff_whs;
+
+  assign sbuff_not_empty = sbuff_write_cntr != 0;
+
+  always_ff @(posedge clk) begin
+    if (!rstn || cfg_rst)
+      sbuff_write_cntr <= 0;
+    else
+      sbuff_store_done <= (sbuff_write_cntr == sbuff_write_cntr_high) && sbuff_whs;
+  end
+
+  assign sbuff_waddr = sbuff_write_cntr;
 
   // Multiplex selecting data from one of V_LANE_NUM buffers to output 
-  always_comb begin
-    sbuff_rdata_mux = sbuff_rdata[sbuff_read_cntr];
-  end
+  assign sbuff_rdata_mux = sbuff_rdata[sbuff_read_cntr[0+:$clog2(V_LANE_NUM)]];
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
   always_comb begin
     case (sbuff_rdata_rol_amt)
       3:
-      sbuff_rdata_rol = {sbuff_rdata_mux[7:0],sbuff_rdata_mux[31:8]};
+        sbuff_rdata_rol = {sbuff_rdata_mux[7:0],sbuff_rdata_mux[31:8]};
       2:
-      sbuff_rdata_rol = {sbuff_rdata_mux[15:0],sbuff_rdata_mux[31:16]};
+        sbuff_rdata_rol = {sbuff_rdata_mux[15:0],sbuff_rdata_mux[31:16]};
       1:
-      sbuff_rdata_rol = {sbuff_rdata_mux[23:0],sbuff_rdata_mux[31:24]};
+        sbuff_rdata_rol = {sbuff_rdata_mux[23:0],sbuff_rdata_mux[31:24]};
       default:
-      sbuff_rdata_rol = sbuff_rdata_mux;
+        sbuff_rdata_rol = sbuff_rdata_mux;
     endcase
   end
 
-
-  // Changing write enable signals for narrow writes
-  // Byte-write enable fits the data width, and updates in a way
-  //  so that narrower data is packed into 32-bit buffer
+  // Number of expected stores
   always_ff @(posedge clk) begin
     if (!rstn) begin
-      sbuff_wen <= 4'b1111;
+       sbuff_write_cntr_high <= 0;
+    end
+    else if(cfg_update) begin
+      case(cfg_sew[1:0])
+        2: // FOR SEW = 32
+          sbuff_write_cntr_high <= ((VLMAX32>>cfg_lmul)>>4);
+        1: // FOR SEW = 16
+          sbuff_write_cntr_high <= ((VLMAX32>>cfg_lmul)>>2);
+        default:
+          sbuff_write_cntr_high <= (VLMAX32>>cfg_lmul);
+      endcase
+    end
+  end
+
+  // Changing write enable signals for narrow writes
+  // Narrower data is packed into 32-bit buffer
+  always_ff @(posedge clk) begin
+    if (!rstn) begin
+      sbuff_wen <= 0;
     end
     case(cfg_sew[1:0])
       2: begin      // FOR SEW = 32
-        sbuff_wen <= 4'b1111;
+        for(int vlane=0; vlane<V_LANE_NUM; vlane++)
+          sbuff_wen[vlane] = 1'b1;
       end
       1: begin      // FOR SEW = 16
-      if(sew_update)
-        sbuff_wen <= 4'b0011;
+      if(cfg_update)
+        for(int vlane=0; vlane<V_LANE_NUM; vlane++)
+          sbuff_wen[vlane] = (vlane<V_LANE_NUM/2) ? 1'b1 : 1'b0;
       else if (sbuff_whs)
-        sbuff_wen <= {sbuff_wen[1:0],sbuff_wen[3:2]};
+        sbuff_wen <= (sbuff_wen<<(V_LANE_NUM/2)) | (sbuff_wen>>(V_LANE_NUM-V_LANE_NUM/2));
+        //sbuff_wen <= {sbuff_wen[(V_LANE_NUM/2-1):0],sbuff_wen[(V_LANE_NUM-1):(V_LANE_NUM/2-1)]};
       end
       default: begin // FOR SEW = 8
-      if(sew_update)
-        sbuff_wen <= 4'b0001;
+      if(cfg_update)
+        for(int vlane=0; vlane<V_LANE_NUM; vlane++)
+          sbuff_wen[vlane] = (vlane<V_LANE_NUM/2) ? 1'b1 : 1'b0;
       else if (sbuff_whs)
-        sbuff_wen <= {sbuff_wen[2:0],sbuff_wen[3]};
+        sbuff_wen <= (sbuff_wen<<(V_LANE_NUM/4)) | (sbuff_wen>>(V_LANE_NUM-V_LANE_NUM/4));
+        //sbuff_wen <= {sbuff_wen[(V_LANE_NUM/4-1):0],sbuff_wen[(V_LANE_NUM-1):(V_LANE_NUM/4-1)]};
       end
     endcase
   end
@@ -171,20 +214,20 @@ module buff_array #(
   // Storbing necessasry to write narrower data to 32-bit axi bus
   always_ff @(posedge clk) begin
     if (!rstn) begin
-      sbuff_strobe_reg <= 4'b1111;
+      sbuff_strobe_reg <= 4'b0000;
     end
     case(cfg_sew[1:0])
       2: begin      // FOR SEW = 32
         sbuff_strobe_reg <= 4'b1111;
       end
       1: begin      // FOR SEW = 16
-      if(sew_update)
+      if(cfg_update)
         sbuff_strobe_reg <= 4'b0011;
       else if (sbuff_rhs)
         sbuff_strobe_reg <= sbuff_strobe_next;
       end
       default: begin // FOR SEW = 8
-      if(sew_update)
+      if(cfg_update)
         sbuff_strobe_reg <= 4'b0001;
       else if (sbuff_rhs)
         sbuff_strobe_reg <= sbuff_strobe_next;
@@ -207,12 +250,12 @@ module buff_array #(
     endcase
   end
 
-
   // MAIN ITERATOR OVER V_LANE BUFFERS
   genvar vlane;
   generate 
-    for (vlane=0; vlane<V_LANE_NUM; vlane++) begin: vlane_iterator
 
+
+    for (vlane=0; vlane<V_LANE_NUM; vlane++) begin: vlane_iterator
       // Multiplex narrower data in so writes are in the correct position for byte-write enable
       always_comb begin
         case(cfg_sew[1:0])
@@ -221,12 +264,14 @@ module buff_array #(
             sbuff_wptr[vlane]  = vlane_store_ptr[vlane];
           end
           1: begin       // FOR SEW = 16
-            sbuff_wdata[vlane] = {2{vlane_store_data[vlane][15:0]}};
-            sbuff_wptr [vlane] = {2{vlane_store_ptr [vlane][15:0]}};
+            sbuff_wdata[vlane] = {vlane_store_data[(vlane*2)%V_LANE_NUM+1][15:0], vlane_store_data[(vlane*2)%V_LANE_NUM][15:0]};
+            sbuff_wptr [vlane] = {vlane_store_ptr [(vlane*2)%V_LANE_NUM+1][15:0], vlane_store_ptr [(vlane*2)%V_LANE_NUM][15:0]};
           end
           default: begin // FOR SEW = 8
-            sbuff_wdata[vlane] = {4{vlane_store_data[vlane][7:0]}};
-            sbuff_wptr [vlane] = {4{vlane_store_ptr [vlane][7:0]}};
+            sbuff_wdata[vlane] = {vlane_store_data[(vlane*4)%V_LANE_NUM+3][7:0], vlane_store_data[(vlane*4)%V_LANE_NUM+2][7:0],
+                                  vlane_store_data[(vlane*4)%V_LANE_NUM+1][7:0], vlane_store_data[(vlane*4)%V_LANE_NUM   ][7:0]};
+            sbuff_wptr [vlane] = {vlane_store_ptr [(vlane*4)%V_LANE_NUM+3][7:0], vlane_store_ptr [(vlane*4)%V_LANE_NUM+2][7:0],
+                                  vlane_store_ptr [(vlane*4)%V_LANE_NUM+1][7:0], vlane_store_ptr [(vlane*4)%V_LANE_NUM  ][7:0]};
           end
         endcase
       end
@@ -244,7 +289,7 @@ module buff_array #(
         .addra    (sbuff_waddr),
         .addrb    (sbuff_raddr),
         .dina     ({sbuff_wdata[vlane], sbuff_wptr[vlane]}),
-        .wea      ({sbuff_wen, sbuff_wen}),
+        .wea      ({{4{sbuff_wen[vlane]}},{4{sbuff_wen[vlane]}}}),
         .enb      (sbuff_ren),
         .rstb     (sbuff_ocl),
         .regceb   (sbuff_oen),

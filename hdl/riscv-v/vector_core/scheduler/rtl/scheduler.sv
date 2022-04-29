@@ -7,21 +7,33 @@
 module scheduler
   (input logic clk,
    input logic 	       rstn,
-   // Scalar-Vector interface
+   //*** Scalar-Vector interface*****
    input logic [31:0]  vector_instr_i,
    input logic [31:0]  rs1_i,
    input logic [31:0]  rs2_i,
-   output logic        vector_rdy_o,
-   // Scheduler-V_CU interface
+   input logic [ 1:0]  sew_i,
+   output logic        vector_stall_o,
+   //*** Scheduler-V_CU interface****
    input logic [10:0]  instr_rdy_i,
    output logic [10:0] instr_vld_o,
    output logic [31:0] vector_instr_o,
-   // Scheduler-M_CU interface
-   input logic 	       ld_rdy_i,
-   input logic 	       ld_buffered_i,
-   input logic 	       st_rdy_i,
-   output logic        st_vld_i,
-   output logic        ld_vld_i
+   //*** Scheduler-M_CU interface****
+   //Load handshake
+   input logic 	       mcu_ld_rdy_i,
+   output logic        mcu_ld_vld_o, 
+   input logic 	       mcu_ld_buffered_i,
+   //Store handshake
+   input logic 	       mcu_st_rdy_i,
+   output logic        mcu_st_vld_o,
+   //Load/store information
+   output logic [31:0] mcu_base_addr_o, // -> base address
+   output logic [31:0] mcu_stride_o, // -> stride
+   output logic [ 2:0] mcu_data_width_o,
+   output logic        mcu_idx_ld_st_o,
+   output logic        mcu_strided_ld_st_o,
+   output logic        mcu_unit_ld_st_o
+   
+
    );
 
 
@@ -47,14 +59,23 @@ module scheduler
    logic [6:0] 	       v_instr_opcode;
    logic [2:0] 	       v_instr_funct6_upper;
    logic [2:0] 	       v_instr_funct3;
-   logic [1:0] 	       v_instr_mop;
+   logic [1:0] 	       v_instr_mop;   
 
    logic 	       next_instr_rdy;
+
+   logic               mcu_ld_buffering_reg;
+   logic [31:0]        v_idx_ld_part2;
 
    assign v_instr_opcode       = vector_instr_reg[6:0];
    assign v_instr_funct3       = vector_instr_reg[14:12];
    assign v_instr_mop          = vector_instr_reg[27:26];
    assign v_instr_funct6_upper = vector_instr_reg[31:29];
+
+   // MCU signals
+   assign mcu_base_addr_o  = rs1_i;
+   assign mcu_stride_o     = rs2_i;
+   assign mcu_data_width_o = vector_instr_reg[14:12];
+
 
    always @(posedge clk)
    begin
@@ -62,13 +83,20 @@ module scheduler
       begin
 	 vector_instr_reg <= 'h0;
       end
-      else
+      else if (next_instr_rdy)
       begin
 	 vector_instr_reg <= vector_instr_next;
       end
    end
-   assign vector_instr_next = vector_rdy_o ? vector_instr_i : vector_instr_reg;
 
+   //if the instructions is indexed load, for the next instruction we insert the second part of that instruction which is
+   // a simple vector load.
+   assign v_idx_ld_part2    = {vector_instr_reg[31:28],2'b00,vector_instr_reg[25:15],sew_i, vector_instr_reg[11:0]};
+
+   assign vector_instr_next =  (v_idx_unordered_check && v_ld_instr_check) ?  v_idx_ld_part2 : vector_instr_i;
+
+
+   
    //combinational logic bellow checks the opcode field of an
    //vector instruction
    always_comb
@@ -120,12 +148,26 @@ module scheduler
       v_strided_check = 1'b0;
       v_idx_unordered_check = 1'b0;
       v_idx_ordered_check = 1'b0;
+      
+      mcu_unit_ld_st_o = 1'b0;
+      mcu_strided_ld_st_o = 1'b0;
+      mcu_idx_ld_st_o = 1'b0;
+
       if (v_instr_mop == unit_stride)
-	v_unit_check = 1'b1;
+      begin
+	 v_unit_check = 1'b1;
+	 mcu_unit_ld_st_o = 1'b1;
+      end
       if (v_instr_mop == strided)
-	v_strided_check = 1'b1;
+      begin
+	 v_strided_check = 1'b1;
+	 mcu_strided_ld_st_o = 1'b1;
+      end
       if (v_instr_mop == idx_unordered)
-	v_idx_unordered_check = 1'b1;
+      begin
+	 v_idx_unordered_check = 1'b1;
+	 mcu_idx_ld_st_o = 1'b1;
+      end
       if (v_instr_mop == idx_ordered)
 	v_idx_ordered_check = 1'b1;
    end
@@ -136,19 +178,20 @@ module scheduler
    always_comb
    begin
       instr_vld_o = 'h0;
+      
       if (v_st_instr_check)
       begin
-	 if (v_strided_check || v_unit_check)
+	 if ((v_strided_check || v_unit_check) && mcu_st_rdy_i)
 	   instr_vld_o = STORE_vld;
-	 else if (v_idx_ordered_check || v_idx_unordered_check)
+	 else if ((v_idx_ordered_check || v_idx_unordered_check) && mcu_st_rdy_i)
 	   instr_vld_o = STORE_IDX_vld;
       end
       if (v_ld_instr_check)
       begin
-	 if (v_strided_check || v_unit_check)
+	 if ((v_strided_check || v_unit_check) && mcu_ld_buffered_i)
 	   instr_vld_o = LOAD_vld;
-	 else if (v_idx_ordered_check || v_idx_unordered_check)
-	   instr_vld_o = LOAD_IDX_vld;
+	 else if ((v_idx_ordered_check || v_idx_unordered_check))
+	   instr_vld_o = LOAD_IDX_vld;	
       end
       if (v_arith_instr_check)
       begin
@@ -173,11 +216,45 @@ module scheduler
       end            
    end
 
+   //logic that checks if there is a load being buffered by M_CU
+   assign mcu_ld_vld_o = (!mcu_ld_buffering_reg && v_ld_instr_check);
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 mcu_ld_buffering_reg <= 'h0;
+      end
+      else
+      begin
+	 if (mcu_ld_vld_o && mcu_ld_rdy_i && !mcu_ld_buffering_reg)
+	 begin
+	    mcu_ld_buffering_reg <= 1'b1;
+	 end
+	 else if (mcu_ld_buffered_i)
+	   mcu_ld_buffering_reg <= 1'b0;
+      end
+   end
+
+   assign mcu_st_vld_o = v_st_instr_check && !v_idx_unordered_check;
+
    //check handshake between scheduler and V_CU
 
-   assign next_instr_rdy = (instr_vld_o & instr_rdy_i) != 12'b0;
+   assign next_instr_rdy = (instr_vld_o & instr_rdy_i) != 'h0;
 
    // maybe extented
-   assign vector_rdy_o   = next_instr_rdy;
+   // Stall if new instructions is valid but v_cu is not ready,
+   // if we have a store instruction but m_cu is not ready,
+   // 
+
+   assign vector_stall_o   = (!next_instr_rdy && (v_st_instr_check | v_ld_instr_check | v_arith_instr_check)) | 
+			     (mcu_st_vld_o && !mcu_st_rdy_i) | 
+			     (v_ld_instr_check && !mcu_ld_buffered_i);
+
+
+   assign mcu_rs1_o        = rs1_i;
+   assign mcu_rs2_o        = rs2_i;
+   assign data_width_o = vector_instr_i[14:12];
+   assign mop_o        = vector_instr_i[27:26];
+   
 endmodule
 

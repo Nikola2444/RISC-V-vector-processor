@@ -149,29 +149,26 @@ module scheduler
       v_idx_unordered_check = 1'b0;
       v_idx_ordered_check = 1'b0;
       
-      mcu_unit_ld_st_o = 1'b0;
-      mcu_strided_ld_st_o = 1'b0;
-      mcu_idx_ld_st_o = 1'b0;
 
       if (v_instr_mop == unit_stride)
       begin
 	 v_unit_check = 1'b1;
-	 mcu_unit_ld_st_o = 1'b1;
       end
       if (v_instr_mop == strided)
       begin
 	 v_strided_check = 1'b1;
-	 mcu_strided_ld_st_o = 1'b1;
       end
       if (v_instr_mop == idx_unordered)
       begin
 	 v_idx_unordered_check = 1'b1;
-	 mcu_idx_ld_st_o = 1'b1;
       end
       if (v_instr_mop == idx_ordered)
 	v_idx_ordered_check = 1'b1;
    end
 
+   assign 	 mcu_unit_ld_st_o = v_unit_check;
+   assign 	 mcu_idx_ld_st_o = v_idx_unordered_check;
+   assign 	 mcu_strided_ld_st_o = v_strided_check;
    //combinational logic bellow checks funct3 field of an 
    //vector instruction
    

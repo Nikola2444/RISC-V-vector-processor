@@ -3,10 +3,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit wire declaration.
 `default_nettype none
-timeunit 1ps;
-timeprecision 1ps;
 
 module axim_ctrl #(
+
   parameter integer C_M_AXI_ADDR_WIDTH       = 32,
   parameter integer C_M_AXI_DATA_WIDTH       = 32,
   parameter integer C_XFER_SIZE_WIDTH        = 32

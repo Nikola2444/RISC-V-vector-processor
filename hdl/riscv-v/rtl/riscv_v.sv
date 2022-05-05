@@ -59,7 +59,8 @@ module riscv_v #
       // Vector if
       .all_v_stores_executed_i ( all_v_stores_executed),
       .all_v_loads_executed_i  ( all_v_loads_executed),
-      .vector_stall_i          ( vector_stall),
+      //.vector_stall_i          ( vector_stall),
+      .vector_stall_i          ( 1'b0),
       .scalar_load_req_o       ( scalar_load_req),
       .scalar_store_req_o      ( scalar_store_req),
       .v_instruction_o         ( v_instruction),

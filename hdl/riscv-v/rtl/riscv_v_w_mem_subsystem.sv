@@ -1,4 +1,4 @@
-module risc_v_w_mem_subsystem #
+module riscv_v_w_mem_subsystem #
   (  parameter integer C_M_AXI_ADDR_WIDTH = 32,
      parameter integer C_M_AXI_DATA_WIDTH = 32,
      parameter integer C_XFER_SIZE_WIDTH = 32,

@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module Vector_Lane
     #(
         parameter R_PORTS_NUM = 2,

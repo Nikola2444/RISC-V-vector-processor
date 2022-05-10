@@ -5,8 +5,8 @@ class riscv_v_simple_seq extends riscv_v_base_seq;
 
    `uvm_object_utils (riscv_v_simple_seq)
    typedef  logic [31 : 0] instr_queue[$];
-   //string 		   assembly_file_path = "/home/nikola/Documents/git_repos/RISC-V-vector-processor/verif/Assembly_code/assembly_test.b";
-   string 		   assembly_file_path = "assembly_test.b";
+   string 		   assembly_file_path = "../../../../../../verif/Assembly_code/assembly_test.b";
+   //string 		   assembly_file_path = "assembly_test.b";
    instr_queue instr_queue_1;
 
    function new(string name = "riscv_v_simple_seq");

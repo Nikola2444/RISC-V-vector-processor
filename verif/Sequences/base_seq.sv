@@ -15,6 +15,7 @@ class riscv_v_base_seq extends uvm_sequence#(bd_instr_if_seq_item);
       uvm_phase phase = get_starting_phase();
       if (phase != null)
         phase.raise_objection(this, {"Running sequence '", get_full_name(), "'"});
+      uvm_test_done.set_drain_time(this, 100ms);
    endtask : pre_body
 
    // objections are dropped in post_body

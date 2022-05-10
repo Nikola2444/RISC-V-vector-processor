@@ -54,7 +54,7 @@ module riscv_v_verif_top;
    initial begin
       clk <= 0;
       rstn <= 0;
-      #1000 rstn <= 1;
+      #950 rstn <= 1;
    end
 
    // clock generation

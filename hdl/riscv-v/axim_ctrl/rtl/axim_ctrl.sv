@@ -73,7 +73,7 @@ axim_ctrl_axi_read_master #(
   .C_M_AXI_DATA_WIDTH  ( C_M_AXI_DATA_WIDTH    ) ,
   .C_XFER_SIZE_WIDTH   ( C_XFER_SIZE_WIDTH     ) ,
   .C_MAX_OUTSTANDING   ( LP_RD_MAX_OUTSTANDING ) ,
-  .C_INCLUDE_DATA_FIFO ( 1                     )
+  .C_INCLUDE_DATA_FIFO ( 0                     )
 )
 inst_axi_read_master (
   .aclk                    ( clk                     ) ,
@@ -105,7 +105,7 @@ axim_ctrl_axi_write_master #(
   .C_M_AXI_DATA_WIDTH  ( C_M_AXI_DATA_WIDTH    ) ,
   .C_XFER_SIZE_WIDTH   ( C_XFER_SIZE_WIDTH     ) ,
   .C_MAX_OUTSTANDING   ( LP_WR_MAX_OUTSTANDING ) ,
-  .C_INCLUDE_DATA_FIFO ( 1                     )
+  .C_INCLUDE_DATA_FIFO ( 0                     )
 )
 inst_axi_write_master (
   .aclk                    ( clk                     ) ,

@@ -4,6 +4,7 @@ module riscv_v #
    parameter CHAINING=4)
    (
     input 	  clk,
+    input 	  ce,
     input 	  rstn,
 
     // Instruction interface
@@ -12,15 +13,15 @@ module riscv_v #
     // Vector data interface
 
     // Scalar core interface
-   
+    output 	  fencei_o,
     input 	  instr_ready_i,
     input 	  data_ready_i,
    
     // Instruction memory interface
     output [31:0] instr_mem_address_o,
     input [31:0]  instr_mem_read_i, 
-    output 	  instr_mem_flush_o,
-    output 	  instr_mem_en_o,
+    //output 	  instr_mem_flush_o,
+    //output 	  instr_mem_en_o,
     // Scalar Data memory interface      
     output [31:0] data_mem_address_o,
     input [31:0]  data_mem_read_i,
@@ -48,14 +49,17 @@ module riscv_v #
 
    scalar_core scalar_core_inst
      (
-      .clk                     ( clk),          
+      .clk                     ( clk),
+      .ce                      ( ce),          
       .reset                   ( rstn),
       //instruction if
      .instr_ready_i           ( instr_ready_i),
-     .instr_mem_address_o     ( instr_mem_address_o),
-     .instr_mem_read_i        ( instr_mem_read_i),
-     .instr_mem_flush_o       ( instr_mem_flush_o),
-     .instr_mem_en_o          ( instr_mem_en_o),
+     .fencei_o                (fencei_o),
+      .instr_mem_address_o     ( instr_mem_address_o),
+     .pc_reg_o                (),
+      .instr_mem_read_i        ( instr_mem_read_i),
+      //.instr_mem_flush_o       ( instr_mem_flush_o),
+     //.instr_mem_en_o          ( instr_mem_en_o),
       // Vector if
       .all_v_stores_executed_i ( all_v_stores_executed),
       .all_v_loads_executed_i  ( all_v_loads_executed),

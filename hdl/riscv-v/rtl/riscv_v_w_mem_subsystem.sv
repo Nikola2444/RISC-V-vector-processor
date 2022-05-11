@@ -6,6 +6,7 @@ module riscv_v_w_mem_subsystem #
      parameter integer V_LANES = 16,
      parameter integer CHAINING = 4)
    (input clk,
+    
     input 				    rstn,
     // AXI FULL VECTOR CORE IF
     output logic 			    v_m_axi_awvalid ,
@@ -118,12 +119,14 @@ module riscv_v_w_mem_subsystem #
    riscv_v_inst(/*AUTO_INST*/
 		// Outputs
 		.instr_mem_address_o	(instr_mem_address[31:0]),
-		.instr_mem_flush_o	(instr_mem_flush),
-		.instr_mem_en_o		(instr_mem_en),
+		//.instr_mem_flush_o	(instr_mem_flush),
+		//.instr_mem_en_o		(instr_mem_en),
 		.data_mem_address_o	(data_mem_address[31:0]),
 		.data_mem_we_o		(data_mem_we[3:0]),
 		// Inputs
 		.clk			(clk),
+		.ce			(1'b1),
+		.fencei_o		(),
 		.rstn			(rstn),
 		.instr_ready_i		(instr_ready),
 		.data_ready_i		(data_ready),

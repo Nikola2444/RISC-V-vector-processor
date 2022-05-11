@@ -236,7 +236,7 @@ module scheduler
 
    //check handshake between scheduler and V_CU
 
-   assign next_instr_rdy = (instr_vld_o & instr_rdy_i) != 'h0;
+   assign next_instr_rdy = (instr_vld_o & instr_rdy_i) != 'h0 || instr_vld_o == 0;
 
    // maybe extented
    // Stall if new instructions is valid but v_cu is not ready,
@@ -252,6 +252,7 @@ module scheduler
    assign mcu_rs2_o        = rs2_i;
    assign data_width_o = vector_instr_i[14:12];
    assign mop_o        = vector_instr_i[27:26];
+   assign vector_instr_o = vector_instr_reg;
    
 endmodule
 

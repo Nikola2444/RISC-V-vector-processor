@@ -34,13 +34,15 @@ class bd_instr_if_monitor extends uvm_monitor;
    endfunction : connect_phase
 
    task main_phase(uvm_phase phase);
-      // forever begin
+       forever begin
+	  @(negedge vif.clk);
       // curr_it = bd_instr_if_seq_item::type_id::create("curr_it", this);
       // ...
       // collect transactions
       // ...
       // item_collected_port.write(curr_it);
-      // end
+	  
+       end
    endtask : main_phase
 
 endclass : bd_instr_if_monitor

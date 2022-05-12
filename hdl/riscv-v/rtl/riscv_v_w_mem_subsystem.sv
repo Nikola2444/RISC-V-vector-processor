@@ -120,7 +120,7 @@ module riscv_v_w_mem_subsystem #
 		// Outputs
 		.instr_mem_address_o	(instr_mem_address[31:0]),
 		//.instr_mem_flush_o	(instr_mem_flush),
-		//.instr_mem_en_o		(instr_mem_en),
+		.instr_mem_en_o		(instr_mem_en),
 		.data_mem_address_o	(data_mem_address[31:0]),
 		.data_mem_we_o		(data_mem_we[3:0]),
 		// Inputs

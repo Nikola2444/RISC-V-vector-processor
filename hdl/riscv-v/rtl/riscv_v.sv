@@ -21,7 +21,7 @@ module riscv_v #
     output [31:0] instr_mem_address_o,
     input [31:0]  instr_mem_read_i, 
     //output 	  instr_mem_flush_o,
-    //output 	  instr_mem_en_o,
+    output 	  instr_mem_en_o,
     // Scalar Data memory interface      
     output [31:0] data_mem_address_o,
     input [31:0]  data_mem_read_i,
@@ -59,7 +59,7 @@ module riscv_v #
      .pc_reg_o                (),
       .instr_mem_read_i        ( instr_mem_read_i),
       //.instr_mem_flush_o       ( instr_mem_flush_o),
-     //.instr_mem_en_o          ( instr_mem_en_o),
+      .instr_mem_en_o          ( instr_mem_en_o),
       // Vector if
       .all_v_stores_executed_i ( all_v_stores_executed),
       .all_v_loads_executed_i  ( all_v_loads_executed),

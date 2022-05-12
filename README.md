@@ -1,4 +1,4 @@
-#RISC-V-vector-processor-for-the-acceleration-of-Machine-learning-algorithms
+# RISC-V-vector-processor-for-the-acceleration-of-Machine-learning-algorithms
 
 
 ## SIMULATION
@@ -17,7 +17,7 @@ RISCV-GCC-compile-scripts/assembly.dump
 
 If you want to generate you own assembly code RISCV-GCC compiler needs to be downloaded
 
-##RISCV-GCC compiler
+## RISCV-GCC compiler
 
 Create installs dir:
 

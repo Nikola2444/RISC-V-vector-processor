@@ -1,0 +1,20 @@
+
+/home/nikola/Documents/git_repos/RISC-V-vector-processor/ara/install/riscv-llvm/bin/clang -march=rv64gcv0p10 -mabi=lp64d -menable-experimental-extensions -mno-relax -fuse-ld=lld -mcmodel=medany -I/home/nikola/Documents/git_repos/RISC-V-vector-processor/ara/apps/common -std=gnu99 -O3 -ffast-math -fno-common -fno-builtin-printf -DNR_LANES=4 -DVLEN=4096 -Wunused-variable -Wall -Wextra -Wno-unused-command-line-argument  -c hello_world/main.c -o hello_world/main.c.o
+
+/home/nikola/Documents/git_repos/RISC-V-vector-processor/ara/install/riscv-llvm/bin/clang -march=rv64gcv0p10 -mabi=lp64d -menable-experimental-extensions -mno-relax -fuse-ld=lld -mcmodel=medany -I/home/nikola/Documents/git_repos/RISC-V-vector-processor/ara/apps/common -std=gnu99 -O3 -ffast-math -fno-common -fno-builtin-printf -DNR_LANES=4 -DVLEN=4096 -Wunused-variable -Wall -Wextra -Wno-unused-command-line-argument  -c common/crt0.S -o common/crt0-llvm.S.o
+
+# This command reads a binary file and creates a dump file with all instructions
+/home/nikola/Documents/git_repos/RISC-V-vector-processor/ara/install/riscv-llvm/bin/llvm-objdump --mattr=+experimental-v -D bcd2a > hello_world.dump
+
+
+
+
+## Two commands below use riscv64 tool chaing to generate outputs
+# This command takes an assembly file (.s) and creates and object file (.o)
+../installs/riscv-gcc/riscv64-unknown-elf/bin/as -march=rv64gcv -o bcd2ascii.o bcd2ascii.s
+
+# This command takes in object file and generates .elf file
+../installs/riscv-gcc/riscv64-unknown-elf/bin/ld start_bcd2a.o bcd2ascii.o -o bcd2a
+
+# Create object dump out of .o file. From this we can extract instruction hex
+../installs/riscv-gcc/riscv64-unknown-elf/bin/objdump -d bcd2ascii.o > bcd2ascii.dump

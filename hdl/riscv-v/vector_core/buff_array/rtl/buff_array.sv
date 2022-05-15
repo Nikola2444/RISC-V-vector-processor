@@ -15,42 +15,40 @@ module buff_array #(
 )
 (
   // System Signals
-  input  wire                                   clk                   ,
-  input  wire                                   rstn                  ,
+  input  wire                                   clk                     ,
+  input  wire                                   rstn                    ,
   // Current vector config
-  input  wire [2:0]                             cfg_lmul              ,
-  input  wire [2:0]                             cfg_data_sew          ,
-  input  wire [2:0]                             cfg_idx_sew           ,
+  input  wire [2:0]                             cfg_lmul_i                ,
+  input  wire [2:0]                             cfg_data_sew_i            ,
+  input  wire [2:0]                             cfg_idx_sew_i             ,
   // M_CU interface
   // TODO DEFINE
-  input  wire                                   cfg_update            ,
-  input  wire                                   cfg_rst               ,
-  input  wire                                   sbuff_read_en         ,
-  input  wire [1:0]                             store_type            ,
-  input  wire [31:0]                            store_stride          ,
-  input  wire [31:0]                            store_baseaddr        ,
-  input  wire                                   store_baseaddr_update ,
-  input  wire                                   sbuff_read_stall      ,
-  input  wire                                   sbuff_read_flush      ,
-  input  wire                                   sbuff_whs             ,
-  input  wire                                   sbuff_rhs             ,
-  input  wire                                   sbuff_strobe_ren      ,
-  output wire                                   sbuff_not_empty       ,
-  output wire                                   sbuff_store_done      ,
+  input  wire                                   cfg_update_i            ,
+  input  wire                                   cfg_cntr_rst_i          ,
+  input  wire [1:0]                             store_type_i            ,
+  input  wire [31:0]                            store_stride_i          ,
+  input  wire [31:0]                            store_baseaddr_i        ,
+  input  wire                                   store_baseaddr_update_i ,
+  input  wire                                   sbuff_read_stall_i      ,
+  input  wire                                   sbuff_read_flush_i      ,
+  input  wire                                   sbuff_wen_i             ,
+  input  wire                                   sbuff_ren_i             ,
+  output wire                                   sbuff_not_empty_o       ,
+  output wire                                   sbuff_write_done_o      ,
+  output wire                                   sbuff_read_done_o       ,
   // V_LANE interface
-  input  wire                                   vlane_store_valid     , 
-  input  wire [31:0]                            vlane_store_data [0:V_LANE_NUM-1],
-  input  wire [31:0]                            vlane_store_ptr  [0:V_LANE_NUM-1],
-  output wire [31:0]                            vlane_load_data  [0:V_LANE_NUM-1],
-  input  wire [31:0]                            vlane_load_ptr   [0:V_LANE_NUM-1],
+  input  wire [31:0]                            vlane_store_data_i [0:V_LANE_NUM-1],
+  input  wire [31:0]                            vlane_store_ptr_i  [0:V_LANE_NUM-1],
+  output wire [31:0]                            vlane_load_data_o  [0:V_LANE_NUM-1],
+  input  wire [31:0]                            vlane_load_ptr_i   [0:V_LANE_NUM-1],
   // AXIM_CTRL interface
-  input  wire                                   axi_rd_tvalid          ,
-  output wire                                   axi_rd_tready          ,
-  output wire                                   axi_rd_tlast           ,
-  input  wire [C_M_AXI_DATA_WIDTH-1:0]          axi_rd_tdata           ,
-  output wire                                   axi_wr_tvalid          ,
-  input  wire                                   axi_wr_tready          ,
-  output wire [C_M_AXI_DATA_WIDTH-1:0]          axi_wr_tdata
+  // read channel
+  output wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ,
+  input  wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_i       ,
+  output wire [C_M_AXI_DATA_WIDTH-1:0]          rd_tdata_o              ,
+  // write channel
+  input  wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_waddr_offset_i     ,
+  input  wire [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_i
 );
   ///////////////////////////////////////////////////////////////////////////////
   // Local Parameters
@@ -97,6 +95,7 @@ module buff_array #(
   logic [31:0]                              sdbuff_rdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr;
   logic [31:0]                              sdbuff_rptr  [0:V_LANE_NUM-1];
+  logic                                     sdbuff_ren;
   logic                                     sdbuff_roen;
   logic                                     sdbuff_rocl;
 
@@ -106,6 +105,7 @@ module buff_array #(
   logic [31:0]                              sibuff_rdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr;
   logic [31:0]                              sibuff_rptr  [0:V_LANE_NUM-1];
+  logic                                     sibuff_ren;
   logic                                     sibuff_roen;
   logic                                     sibuff_rocl;
 
@@ -117,6 +117,7 @@ module buff_array #(
   logic [$clog2(BUFF_DEPTH)-1:0]            lbuff_raddr;
   logic [31:0]                              lbuff_rptr  [0:V_LANE_NUM-1];
   logic                                     lbuff_roen;
+  logic                                     lbuff_ren;
   logic                                     lbuff_rocl;
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -128,50 +129,50 @@ module buff_array #(
     if (!rstn) begin
       store_baseaddr_reg <= 0;
     end
-    else if(store_baseaddr_update) begin
-      case(store_type)
+    else if(store_baseaddr_update_i) begin
+      case(store_type_i)
       2:      // indexed
-        store_baseaddr_reg <= store_baseaddr_reg + sbuff_rptr_ext - (1<<cfg_idx_sew[0]); // TODO doublecheck this
+        store_baseaddr_reg <= store_baseaddr_reg + sbuff_rptr_ext - (1<<cfg_idx_sew_i[0]); // TODO double-check this
       1:      // strided
-        store_baseaddr_reg <= store_baseaddr_reg + store_stride - (1<<cfg_idx_sew[0]); // TODO doublecheck this
+        store_baseaddr_reg <= store_baseaddr_reg + store_stride_i - (1<<cfg_idx_sew_i[0]); // TODO double-check this
       default:// unit_stride
-        store_baseaddr_reg <= store_baseaddr;
+        store_baseaddr_reg <= store_baseaddr_i;
       endcase
     end
   end
 
+  assign ctrl_waddr_offset = store_baseaddr_reg;
+  assign ctrl_raddr_offset = store_baseaddr_reg;
 
   // Counter selects data from one store buffer to forward to axi
   always_ff @(posedge clk) begin
-    if (!rstn) begin
+    if (!rstn || cfg_cntr_rst_i) begin
       sbuff_read_cntr <= 0;
     end
-    else if(sbuff_rhs) begin
+    else if(sbuff_ren_i) begin
       sbuff_read_cntr <= sbuff_read_cntr + 1;
     end
   end
+  assign sbuff_read_done_o = (sbuff_read_cntr == sbuff_word_cnt);
+
 
   // Write counter addresses write ports of all store buffers
-  // Each store buffer is then selected with sbuff_wen
-  // Write counter is incremented:
+  // Each store buffer is then selected with sbuff_wen_i
+  // Write counter finishes writing to same address of sbuff:
   // For SEW=32, every single write
   // For SEW=16, every second write
   // For SEW=8,  every fourth write
-
-  // To simplify counter combinatorial logic, we increment
-  //  only after we write to the last store buffer
-
-  assign sbuff_not_empty = (sbuff_write_cntr != 0);
-
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_rst)
+    if (!rstn || cfg_cntr_rst_i)
       sbuff_write_cntr <= 0;
-    else if (sbuff_whs) begin
+    else if (sbuff_wen_i) begin
       sbuff_write_cntr <= sbuff_write_cntr + 1;
       if (sbuff_write_cntr >= sbuff_word_cnt)
-        sbuff_store_done <= 1'b1;
+        sbuff_write_done_o <= 1'b1;
     end
   end
+  assign sbuff_not_empty_o = (sbuff_write_cntr != 0);
+
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
@@ -206,7 +207,7 @@ module buff_array #(
   end
 
   always_comb begin
-    case(cfg_idx_sew[1:0])
+    case(cfg_idx_sew_i[1:0])
       2: // FOR SEW = 32
       begin
         sbuff_rptr_ext = sbuff_rptr_rol;
@@ -227,14 +228,14 @@ module buff_array #(
     if (!rstn) begin
        sbuff_word_cnt <= 0;
     end
-    else if(cfg_update) begin
-      case(cfg_data_sew[1:0])
+    else if(cfg_update_i) begin
+      case(cfg_data_sew_i[1:0])
         2: // FOR SEW = 32
-          sbuff_word_cnt <= ((VLEN)<<cfg_lmul);
+          sbuff_word_cnt <= ((VLEN)<<cfg_lmul_i);
         1: // FOR SEW = 16
-          sbuff_word_cnt <= ((VLEN<<2)<<cfg_lmul);
+          sbuff_word_cnt <= ((VLEN<<2)<<cfg_lmul_i);
         default: // FOR SEW = 8
-          sbuff_word_cnt <= ((VLEN<<4)<<cfg_lmul);
+          sbuff_word_cnt <= ((VLEN<<4)<<cfg_lmul_i);
       endcase
     end
   end
@@ -242,24 +243,24 @@ module buff_array #(
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of V_LANE_NUM buffers to output 
   always_comb  begin
-    case(cfg_data_sew[1:0])
+    case(cfg_data_sew_i[1:0])
       2: // FOR SEW = 32
       begin
         sdbuff_waddr = sbuff_write_cntr;
         sdbuff_raddr = (sbuff_read_cntr>>$clog2(V_LANE_NUM));
-        sbuff_rdata_mux = sbuff_rdata[sbuff_read_cntr[0+:$clog2(V_LANE_NUM)]];
+        sbuff_rdata_mux = sdbuff_rdata[sbuff_read_cntr[0+:$clog2(V_LANE_NUM)]];
       end
       1: // FOR SEW = 16
       begin
         sdbuff_waddr = sbuff_write_cntr>>2;
         sdbuff_raddr = (sbuff_read_cntr>>$clog2(V_LANE_NUM))>>2;
-        sbuff_rdata_mux = sbuff_rdata[sbuff_read_cntr[2+:$clog2(V_LANE_NUM)]];
+        sbuff_rdata_mux = sdbuff_rdata[sbuff_read_cntr[2+:$clog2(V_LANE_NUM)]];
       end
       default: // FOR SEW = 8
       begin
         sdbuff_waddr = sbuff_write_cntr>>4;
         sdbuff_raddr = (sbuff_read_cntr>>$clog2(V_LANE_NUM))>>4;
-        sbuff_rdata_mux = sbuff_rdata[sbuff_read_cntr[4+:$clog2(V_LANE_NUM)]];
+        sbuff_rdata_mux = sdbuff_rdata[sbuff_read_cntr[4+:$clog2(V_LANE_NUM)]];
       end
     endcase
   end
@@ -267,7 +268,7 @@ module buff_array #(
   // Selecting current addresses for sibuff
   // Multiplex selecting index from one of V_LANE_NUM buffers to output 
   always_comb  begin
-    case(cfg_idx_sew[1:0])
+    case(cfg_idx_sew_i[1:0])
       2: // FOR SEW = 32
       begin
         sibuff_waddr = sbuff_write_cntr;
@@ -296,24 +297,24 @@ module buff_array #(
     if (!rstn) begin
       sdbuff_wen <= 0;
     end
-    case(cfg_data_sew[1:0])
+    case(cfg_data_sew_i[1:0])
       2: begin      // FOR SEW = 32
         for(int vlane=0; vlane<V_LANE_NUM; vlane++)
           sdbuff_wen[vlane] = 1'b1;
       end
       1: begin      // FOR SEW = 16
-        if(cfg_update)
+        if(cfg_update_i)
           for(int vlane=0; vlane<V_LANE_NUM; vlane++)
             sdbuff_wen[vlane] = (vlane<V_LANE_NUM/2) ? 1'b1 : 1'b0;
-        else if (sbuff_whs)
+        else if (sbuff_wen_i)
           sdbuff_wen <= (sdbuff_wen<<(V_LANE_NUM/2)) | (sdbuff_wen>>(V_LANE_NUM-V_LANE_NUM/2));
           //sdbuff_wen <= {sdbuff_wen[(V_LANE_NUM/2-1):0],sdbuff_wen[(V_LANE_NUM-1):(V_LANE_NUM/2-1)]};
       end
       default: begin // FOR SEW = 8
-        if(cfg_update)
+        if(cfg_update_i)
           for(int vlane=0; vlane<V_LANE_NUM; vlane++)
             sdbuff_wen[vlane] = (vlane<V_LANE_NUM/2) ? 1'b1 : 1'b0;
-        else if (sbuff_whs)
+        else if (sbuff_wen_i)
           sdbuff_wen <= (sdbuff_wen<<(V_LANE_NUM/4)) | (sdbuff_wen>>(V_LANE_NUM-V_LANE_NUM/4));
           //sdbuff_wen <= {sdbuff_wen[(V_LANE_NUM/4-1):0],sdbuff_wen[(V_LANE_NUM-1):(V_LANE_NUM/4-1)]};
       end
@@ -326,24 +327,24 @@ module buff_array #(
     if (!rstn) begin
       sibuff_wen <= 0;
     end
-    case(cfg_data_sew[1:0])
+    case(cfg_data_sew_i[1:0])
       2: begin      // FOR SEW = 32
         for(int vlane=0; vlane<V_LANE_NUM; vlane++)
           sibuff_wen[vlane] = 1'b1;
       end
       1: begin      // FOR SEW = 16
-      if(cfg_update)
+      if(cfg_update_i)
         for(int vlane=0; vlane<V_LANE_NUM; vlane++)
           sibuff_wen[vlane] = (vlane<V_LANE_NUM/2) ? 1'b1 : 1'b0;
-      else if (sbuff_whs)
+      else if (sbuff_wen_i)
         sibuff_wen <= (sibuff_wen<<(V_LANE_NUM/2)) | (sibuff_wen>>(V_LANE_NUM-V_LANE_NUM/2));
         //sibuff_wen <= {sibuff_wen[(V_LANE_NUM/2-1):0],sibuff_wen[(V_LANE_NUM-1):(V_LANE_NUM/2-1)]};
       end
       default: begin // FOR SEW = 8
-      if(cfg_update)
+      if(cfg_update_i)
         for(int vlane=0; vlane<V_LANE_NUM; vlane++)
           sibuff_wen[vlane] = (vlane<V_LANE_NUM/2) ? 1'b1 : 1'b0;
-      else if (sbuff_whs)
+      else if (sbuff_wen_i)
         sibuff_wen <= (sibuff_wen<<(V_LANE_NUM/4)) | (sibuff_wen>>(V_LANE_NUM-V_LANE_NUM/4));
         //sibuff_wen <= {sibuff_wen[(V_LANE_NUM/4-1):0],sibuff_wen[(V_LANE_NUM-1):(V_LANE_NUM/4-1)]};
       end
@@ -358,20 +359,20 @@ module buff_array #(
 
       // Multiplex narrower data in so writes are in the correct position for byte-write enable
       always_comb begin
-        case(cfg_data_sew[1:0])
+        case(cfg_data_sew_i[1:0])
           2: begin       // FOR SEW = 32
-            sdbuff_wdata[vlane] = vlane_store_data[vlane];
-            sibuff_wdata[vlane] = vlane_store_ptr [vlane];
+            sdbuff_wdata[vlane] = vlane_store_data_i[vlane];
+            sibuff_wdata[vlane] = vlane_store_ptr_i [vlane];
           end
           1: begin       // FOR SEW = 16
-            sdbuff_wdata[vlane] = {vlane_store_data[(vlane*2)%V_LANE_NUM+1][15:0], vlane_store_data[(vlane*2)%V_LANE_NUM][15:0]};
-            sibuff_wdata[vlane] = {vlane_store_ptr [(vlane*2)%V_LANE_NUM+1][15:0], vlane_store_ptr [(vlane*2)%V_LANE_NUM][15:0]};
+            sdbuff_wdata[vlane] = {vlane_store_data_i[(vlane*2)%V_LANE_NUM+1][15:0], vlane_store_data_i[(vlane*2)%V_LANE_NUM][15:0]};
+            sibuff_wdata[vlane] = {vlane_store_ptr_i [(vlane*2)%V_LANE_NUM+1][15:0], vlane_store_ptr_i [(vlane*2)%V_LANE_NUM][15:0]};
           end
           default: begin // FOR SEW = 8
-            sdbuff_wdata[vlane] = {vlane_store_data[(vlane*4)%V_LANE_NUM+3][7:0], vlane_store_data[(vlane*4)%V_LANE_NUM+2][7:0],
-                                   vlane_store_data[(vlane*4)%V_LANE_NUM+1][7:0], vlane_store_data[(vlane*4)%V_LANE_NUM  ][7:0]};
-            sibuff_wdata[vlane] = {vlane_store_ptr [(vlane*4)%V_LANE_NUM+3][7:0], vlane_store_ptr [(vlane*4)%V_LANE_NUM+2][7:0],
-                                   vlane_store_ptr [(vlane*4)%V_LANE_NUM+1][7:0], vlane_store_ptr [(vlane*4)%V_LANE_NUM  ][7:0]};
+            sdbuff_wdata[vlane] = {vlane_store_data_i[(vlane*4)%V_LANE_NUM+3][7:0], vlane_store_data_i[(vlane*4)%V_LANE_NUM+2][7:0],
+                                   vlane_store_data_i[(vlane*4)%V_LANE_NUM+1][7:0], vlane_store_data_i[(vlane*4)%V_LANE_NUM  ][7:0]};
+            sibuff_wdata[vlane] = {vlane_store_ptr_i [(vlane*4)%V_LANE_NUM+3][7:0], vlane_store_ptr_i [(vlane*4)%V_LANE_NUM+2][7:0],
+                                   vlane_store_ptr_i [(vlane*4)%V_LANE_NUM+1][7:0], vlane_store_ptr_i [(vlane*4)%V_LANE_NUM  ][7:0]};
           end
         endcase
       end
@@ -391,12 +392,15 @@ module buff_array #(
         .dina     (sdbuff_wdata[vlane]),
         .wea      ({4{sdbuff_wen[vlane]}}),
         .enb      (sdbuff_ren),
-        .rstb     (sdbuff_ocl),
-        .regceb   (sdbuff_oen),
+        .rstb     (sdbuff_rocl),
+        .regceb   (sdbuff_roen),
         .doutb    (sdbuff_rdata[vlane])
       );
 
-      assign sdbuff_wdata[vlane] = vlane_store_data[vlane];
+      assign sdbuff_wdata[vlane] = vlane_store_data_i[vlane];
+      assign sdbuff_ren  = sbuff_read_stall_i;
+      assign sdbuff_roen = sbuff_read_stall_i;
+      assign sdbuff_rocl = sbuff_read_flush_i;
 
       // VFR -> DDR Buffer (STORE)
       // Xilinx Simple Dual Port Single Clock RAM with Byte-write
@@ -413,12 +417,15 @@ module buff_array #(
         .dina     (sibuff_wdata[vlane]),
         .wea      ({4{sibuff_wen[vlane]}}),
         .enb      (sibuff_ren),
-        .rstb     (sibuff_ocl),
-        .regceb   (sibuff_oen),
+        .rstb     (sibuff_rocl),
+        .regceb   (sibuff_roen),
         .doutb    (sibuff_rdata[vlane])
       );
 
-      assign sibuff_wdata[vlane] = vlane_store_ptr[vlane];
+      assign sibuff_ren  = sbuff_read_stall_i;
+      assign sibuff_roen = sbuff_read_stall_i;
+      assign sibuff_rocl = sbuff_read_flush_i;
+      assign sibuff_wdata[vlane] = vlane_store_ptr_i[vlane];
 
       // DDR -> VFR Buffer (LOAD)
       //  Xilinx Simple Dual Port Single Clock RAM with Byte-write
@@ -454,20 +461,20 @@ module buff_array #(
     if (!rstn) begin
       sbuff_strobe_reg <= 4'b0000;
     end
-    case(cfg_data_sew[1:0])
+    case(cfg_data_sew_i[1:0])
       2: begin      // FOR SEW = 32
         sbuff_strobe_reg <= 4'b1111;
       end
       1: begin      // FOR SEW = 16
-      if(cfg_update)
+      if(cfg_update_i)
         sbuff_strobe_reg <= 4'b0011;
-      else if (sbuff_rhs)
+      else if (sbuff_ren_i)
         sbuff_strobe_reg <= sbuff_strobe_next;
       end
       default: begin // FOR SEW = 8
-      if(cfg_update)
+      if(cfg_update_i)
         sbuff_strobe_reg <= 4'b0001;
-      else if (sbuff_rhs)
+      else if (sbuff_ren_i)
         sbuff_strobe_reg <= sbuff_strobe_next;
       end
     endcase
@@ -486,10 +493,6 @@ module buff_array #(
       sbuff_strobe_next = sbuff_strobe_reg;
     endcase
   end
-
-
-  assign sdbuff_rdata_mux = sdbuff_rdata[];
-  assign sibuff_rdata_mux = sibuff_rdata[];
 
 
  endmodule : buff_array

@@ -11,6 +11,8 @@ module riscv_v_verif_top;
    // interface
    axi4_if axi4_vif(clk, rstn);
    backdoor_instr_if backdoor_instr_vif(clk, rstn);
+   backdoor_register_bank_if backdoor_register_bank_vif (clk, rstn);
+   backdoor_sc_data_if backdoor_sc_data_vif (clk, rstn);
    
    
    // DUT

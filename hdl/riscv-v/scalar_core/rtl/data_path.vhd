@@ -60,7 +60,7 @@ architecture Behavioral of data_path is
   signal pc_reg_if_s   : std_logic_vector (31 downto 0);
   signal pc_next_if_s  : std_logic_vector (31 downto 0);
   signal pc_adder_if_s : std_logic_vector (31 downto 0);
-
+  -- 
   --*********  INSTRUCTION DECODE **************
   signal pc_adder_id_s           : std_logic_vector (31 downto 0);
   signal pc_reg_id_s             : std_logic_vector (31 downto 0);
@@ -104,6 +104,18 @@ architecture Behavioral of data_path is
 
 begin
 
+  --***********Debug logic***************************
+
+  white_box_inst: entity work.white_box
+    port map (
+       	  rd_we_i => rd_we_i,
+       	  rs1_address_i => rs1_address_id_s,
+       	  rs2_address_i => rs2_address_id_s,
+       	  rs1_data_o => rs1_data_id_s,
+       	  rs2_data_o => rs2_data_id_s, 
+       	  rd_address_i => rd_address_wb_s, 
+       	  rd_data_i => rd_data_wb_s);
+  
   --***********  Sequential logic  ******************
   --Program Counter
   pc_proc : process (clk) is

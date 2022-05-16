@@ -71,12 +71,12 @@ module riscv_v #
       .rs1_o                   ( rs1),
       .rs2_o                   ( rs2),
       //data if
-     .data_ready_i            ( data_ready_i),
-     .data_mem_address_o      ( data_mem_address_o),
-     .data_mem_read_i         ( data_mem_read_i),
-     .data_mem_write_o        ( data_mem_write_o),
-     .data_mem_we_o           ( data_mem_we_o),
-     .data_mem_re_o           ( data_mem_re_o));
+      .data_ready_i            ( data_ready_i),
+      .data_mem_address_o      ( data_mem_address_o),
+      .data_mem_read_i         ( data_mem_read_i),
+      .data_mem_write_o        ( data_mem_write_o),
+      .data_mem_we_o           ( data_mem_we_o),
+      .data_mem_re_o           ( data_mem_re_o));
 
    vector_core vector_core_inst
      (/*AUTOINST*/

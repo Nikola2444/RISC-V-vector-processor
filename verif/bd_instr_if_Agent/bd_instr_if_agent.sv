@@ -4,7 +4,7 @@ class bd_instr_if_agent extends uvm_agent;
    bd_instr_if_driver drv;
    bd_instr_if_sequencer seqr;
    bd_instr_if_monitor mon;
-   virtual interface riscv_v_if vif;
+   
    virtual interface backdoor_instr_if backdoor_instr_vif;
    // configuration
    riscv_v_config cfg;
@@ -20,9 +20,6 @@ class bd_instr_if_agent extends uvm_agent;
    function void build_phase(uvm_phase phase);
       super.build_phase(phase);
       /************Geting from configuration database*******************/
-      if (!uvm_config_db#(virtual riscv_v_if)::get(this, "", "riscv_v_if", vif))
-        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
-
       if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", backdoor_instr_vif))
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
 
@@ -32,7 +29,6 @@ class bd_instr_if_agent extends uvm_agent;
       /*****************************************************************/
       
       /************Setting to configuration database********************/
-      uvm_config_db#(virtual riscv_v_if)::set(this, "*", "riscv_v_if", vif);
       uvm_config_db#(virtual backdoor_instr_if)::set(this, "*", "backdoor_instr_if", backdoor_instr_vif);
       /*****************************************************************/
       

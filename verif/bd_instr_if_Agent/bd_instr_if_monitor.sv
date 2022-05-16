@@ -14,7 +14,7 @@ class bd_instr_if_monitor extends uvm_monitor;
    `uvm_component_utils_end
 
    // The virtual interface used to drive and view HDL signals.
-   virtual interface riscv_v_if vif;
+   virtual interface backdoor_instr_if vif;
 
    // current transaction
    bd_instr_if_seq_item curr_it;
@@ -25,12 +25,13 @@ class bd_instr_if_monitor extends uvm_monitor;
    function new(string name = "bd_instr_if_monitor", uvm_component parent = null);
       super.new(name,parent);      
       item_collected_port = new("item_collected_port", this);
+      if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", vif))
+        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
    endfunction
 
    function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
-      if (!uvm_config_db#(virtual riscv_v_if)::get(this, "", "riscv_v_if", vif))
-        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
+      
    endfunction : connect_phase
 
    task main_phase(uvm_phase phase);

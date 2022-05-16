@@ -4,20 +4,16 @@ class bd_instr_if_driver extends uvm_driver#(bd_instr_if_seq_item);
 
    `uvm_component_utils(bd_instr_if_driver)
    
-   virtual interface riscv_v_if vif;
    virtual interface backdoor_instr_if backdoor_instr_vif;
    function new(string name = "bd_instr_if_driver", uvm_component parent = null);
       super.new(name,parent);
-      if (!uvm_config_db#(virtual riscv_v_if)::get(this, "", "riscv_v_if", vif))
+      if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", backdoor_instr_vif))
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
    endfunction
 
    function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
-      if (!uvm_config_db#(virtual riscv_v_if)::get(this, "", "riscv_v_if", vif))
-        `uvm_fatal("NOVIF",{"virtual interface must be set for: ",get_full_name(),".vif"})
-      if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", backdoor_instr_vif))
-        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
+
    endfunction : connect_phase
 
    

@@ -37,6 +37,7 @@ add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/scheduler\/rtl\/scheduler.sv
 #vector core
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/rtl\/vector_core.sv
 #scalar core
+add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/white_box.sv
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/alu_decoder.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/ALU.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/control_path.vhd

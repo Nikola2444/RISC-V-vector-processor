@@ -49,6 +49,8 @@ module riscv_v_verif_top;
    initial begin      
       uvm_config_db#(virtual axi4_if)::set(null, "uvm_test_top.env", "axi4_if", axi4_vif);
       uvm_config_db#(virtual backdoor_instr_if)::set(null, "uvm_test_top.env", "backdoor_instr_if", backdoor_instr_vif);
+      uvm_config_db#(virtual backdoor_register_bank_if)::set(null, "uvm_test_top.env", "backdoor_register_bank_if", backdoor_register_bank_vif);
+      uvm_config_db#(virtual backdoor_sc_data_if)::set(null, "uvm_test_top.env", "backdoor_sc_data_if", backdoor_sc_data_vif);
       run_test();
    end
 

@@ -6,6 +6,8 @@ class bd_instr_if_agent extends uvm_agent;
    bd_instr_if_monitor mon;
    
    virtual interface backdoor_instr_if backdoor_instr_vif;
+   virtual interface backdoor_register_bank_if backdoor_register_bank_vif;
+   virtual interface backdoor_sc_data_if backdoor_sc_data_vif;
    // configuration
    riscv_v_config cfg;
    int value;   
@@ -22,6 +24,10 @@ class bd_instr_if_agent extends uvm_agent;
       /************Geting from configuration database*******************/
       if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", backdoor_instr_vif))
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
+      if (!uvm_config_db#(virtual backdoor_sc_data_if)::get(this, "", "backdoor_sc_data_if", backdoor_sc_data_vif))
+        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
+      if (!uvm_config_db#(virtual backdoor_register_bank_if)::get(this, "", "backdoor_register_bank_if", backdoor_register_bank_vif))
+        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
 
       if(!uvm_config_db#(riscv_v_config)::get(this, "", "riscv_v_config", cfg))
         `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})
@@ -30,6 +36,8 @@ class bd_instr_if_agent extends uvm_agent;
       
       /************Setting to configuration database********************/
       uvm_config_db#(virtual backdoor_instr_if)::set(this, "*", "backdoor_instr_if", backdoor_instr_vif);
+      uvm_config_db#(virtual backdoor_sc_data_if)::set(this, "*", "backdoor_sc_data_if", backdoor_sc_data_vif);
+      uvm_config_db#(virtual backdoor_register_bank_if)::set(this, "*", "backdoor_register_bank_if", backdoor_register_bank_vif);
       /*****************************************************************/
       
       mon = bd_instr_if_monitor::type_id::create("mon", this);

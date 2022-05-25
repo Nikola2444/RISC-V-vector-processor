@@ -1,32 +1,44 @@
 `ifndef TYPEDEF_ENUM_PKG
 `define TYPEDEF_ENUM_PKG
 
-typedef enum logic [6:0] {// add sub
-			  add_op=7'b000000, sub_op=7'b000011,
+// 8 bits for alu mode, MSB bit says if operations is signed or not
+
+typedef enum logic [8:0] {// add sub
+			  add_op=9'b110000000, sub_op=9'b110000011,
+			  addu_op=9'b000000000, subu_op=9'b000000011,
 			  // logic operations
-			  xor_op=7'b0000100,xnor_op=7'b0000101, and_op=7'b0001100, nand_op=7'b0001110, 
-			  or_op=7'b0011100, nor_op=7'b0011110,
-			  // Compare operations
-			  slt_op=7'b0100000, sgt_op=7'b0100001, seq_op=7'b0100010, sltu_op=7'b0100011,
-			  sgtu_op=7'b0100100,
+			  xor_op=9'b000000100,xnor_op=9'b000000101, and_op=9'b000001100, nand_op=9'b000001110, 
+			  or_op=9'b000011100, nor_op=9'b000011110,
+			  // Compare operations, output is one bit LSB
+  			  slt_op=9'b110100000, sgt_op=9'b110100001, seq_op=9'b110100010, sle_op=9'b110100101,
+			  sltu_op=9'b000100011, sgtu_op=9'b000100100, sleu_op=9'b000100101, sneq_op=9'b000100110, andnot_op=9'b000100111,
+			  ornot_op=9'b000101000,
+			  
 			  // Multiply operations
-			  mul_op=7'b1000000, mulhu_op=7'b1000001, mulhsu_op=7'b1000010, mulh_op=7'b1000011,
-			  // Widening multiply
-			  wmul_op=7'b1001000, wmulu_op=7'b1001001, wmulsu_op=7'b1001010,
+			  mul_op=9'b111010000, mulhu_op=9'b001010001, mulu_op=9'b001010010, mulh_op=9'b111010011, mulhsu_op=9'b101010011,  mulsu_op=9'b101000010,
+			  mul_add_op=9'b111000000, mul_acc_op=9'b111000100, mul_subacc_op=9'b111000111, mulu_add_op=9'b001000000,
+			  mulus_add_op=9'b011000000, mulsu_add_op=9'b101000000, mul_sub_op=9'b111000011,
+			  
 			  // Shifts 
-			  sll_op=7'b1100000, srl_op=7'b1100001, sra_op=7'b1100010, nsrl_op=7'b1100011, 
-			  nsra_op=7'b1100100
+			  sll_op=9'b01100000, srl_op=9'b01100001, sra_op=9'b11100010, nsrl_op=9'b01100011,
+			  nsra_op=9'b11100100
 			  } alu_op;
 
-typedef enum logic [10:0] {OPMVV_101xxx_rdy=0, OPMVX_101xxx_rdy=1,
+/* -----\/----- EXCLUDED -----\/-----
+typedef enum logic [11:0] {OPMVV_101xxx_rdy=0, OPMVX_101xxx_rdy=1,
 			   STORE_IDX_rdy=2,STORE_rdy=3, LOAD_IDX_rdy=4,
 			   LOAD_rdy=5, OPMVV_rdy=6, OPMVX_rdy=7,
 			   OPIVV_rdy=8, OPIVI_rdy=9, OPIVX_rdy=10} instruction_rdy;
+ -----/\----- EXCLUDED -----/\----- */
 
 typedef enum logic [11:0] {OPMVV_101xxx_vld=12'b000000000001, OPMVX_101xxx_vld=12'b000000000010,
 			   STORE_IDX_vld=12'b000000000100,STORE_vld=12'b000000001000, LOAD_IDX_vld=12'b000000010000,
 			   LOAD_vld=12'b000000100000, OPMVV_vld=12'b000001000000, OPMVX_vld=12'b000010000000,
 			   OPIVV_vld=12'b000100000000, OPIVI_vld=12'b001000000000, OPIVX_vld=12'b010000000000, OPCFG_vld= 12'b100000000000} instruction_vld;
+typedef enum logic [11:0] {OPMVV_101xxx_rdy=12'b000000000001, OPMVX_101xxx_rdy=12'b000000000010,
+			   STORE_IDX_rdy=12'b000000000100,STORE_rdy=12'b000000001000, LOAD_IDX_rdy=12'b000000010000,
+			   LOAD_rdy=12'b000000100000, OPMVV_rdy=12'b000001000000, OPMVX_rdy=12'b000010000000,
+			   OPIVV_rdy=12'b000100000000, OPIVI_rdy=12'b001000000000, OPIVX_rdy=12'b010000000000, OPCFG_rdy= 12'b100000000000} instruction_rdy;
 
 typedef enum logic [6:0] {v_st_opcode=7'b0100111, v_ld_opcode=7'b0000111,
 			  v_arith_opcode=7'b1010111} opcode;

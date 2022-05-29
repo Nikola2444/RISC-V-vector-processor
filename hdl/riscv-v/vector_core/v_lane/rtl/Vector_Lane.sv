@@ -194,6 +194,7 @@ vrf
 (
     .R_PORTS_NUM(R_PORTS_NUM),
     .W_PORTS_NUM(W_PORTS_NUM),
+    .RAM_TYPE("BRAM"),
     .MEM_DEPTH(MEM_DEPTH),
     .MEM_WIDTH(MEM_WIDTH),
     .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
@@ -219,32 +220,38 @@ VRF_inst
     .din_i(vrf_wdata)
 );
 
-Register_File
+vrf
 #(
-    .data_width(1),
-    .r_ports_num(W_PORTS_NUM),
-    .w_ports_num(W_PORTS_NUM),
-    .rf_depth(MAX_VL_PER_LANE)
+  .R_PORTS_NUM(W_PORTS_NUM),
+  .W_PORTS_NUM(W_PORTS_NUM),
+  .RAM_TYPE("DISTRAM"),
+  .MEM_DEPTH(MAX_VL_PER_LANE),
+  .MEM_WIDTH(1),
+  .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
+  .MULTIPUMP_READ(MULTIPUMP_READ),
+  .RAM_PERFORMANCE(RAM_PERFORMANCE)
 )
 VMRF
 (
-    .clk_i(clk_i),
-    .rst_i(rst_i),
+    .clk(clk_i),
+    .clk2(clk2_i),
+    .rstn(rst_i),
     
-    .read_data_o(vmrf_rdata),
-    .read_addr_i(vmrf_addr_i),
-    
-    .write_data_i(vmrf_wdata),                  
-    .write_addr_i(vmrf_waddr),
-    .write_en_i(vmrf_wen)
+    .dout_o(vmrf_rdata),
+    .raddr_i(vmrf_addr_i),
+    .ren_i(4'hff),
+    .oreg_en_i(4'hff), 
+    .din_i(vmrf_wdata),                  
+    .waddr_i(vmrf_waddr),
+    .bwe_i(vmrf_wen)
 );
 
 alu 
 #
 (
     .OP_WIDTH(32),
-    .PARALLEL_IF_NUM(W_PORTS_NUM),
-    .CTRL_WIDTH(ALU_CTRL_WIDTH)
+    .PARALLEL_IF_NUM(W_PORTS_NUM)
+//    .CTRL_WIDTH(ALU_CTRL_WIDTH)
 )
 ALU_inst
 (
@@ -260,7 +267,7 @@ ALU_inst
     .alu_vld_o(alu_output_valid_next),
     .alu_o(ALU_data_o[W_PORTS_NUM - 1 : 0]),
     .alu_mask_vector_o(ALU_vector_mask_o),
-    .alu_en_32bit_mul_i(1'b0),                                          // Need more details
+    .alu_en_32bit_mul_i(1'b0),                                           //Need more details
     .alu_stall_i(1'b0)                                                  // Need more details
     
 );

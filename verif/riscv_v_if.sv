@@ -1,7 +1,7 @@
 `ifndef RISCV_V_IF_SV
  `define RISCV_V_IF_SV
 
-interface riscv_v_if (input clk, logic rstn);
+interface axi4_if (input clk, logic rstn);
    // AXI FULL VECTOR CORE IF
    parameter integer C_M_AXI_ADDR_WIDTH = 32;
    parameter integer C_M_AXI_DATA_WIDTH = 32;
@@ -29,6 +29,6 @@ interface riscv_v_if (input clk, logic rstn);
    logic 			    v_m_axi_bvalid ;
    logic 			    v_m_axi_bready;
 
-endinterface : riscv_v_if
+endinterface : axi4_if
 
 `endif

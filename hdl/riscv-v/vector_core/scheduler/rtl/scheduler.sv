@@ -17,6 +17,7 @@ module scheduler
    input logic [10:0]  instr_rdy_i,
    output logic [10:0] instr_vld_o,
    output logic [31:0] vector_instr_o,
+   output logic [31:0] rs1_o,
    //*** Scheduler-M_CU interface****
    //Load handshake
    input logic 	       mcu_ld_rdy_i,
@@ -235,7 +236,7 @@ module scheduler
    assign mcu_st_vld_o = v_st_instr_check && !v_idx_unordered_check;
 
    //check handshake between scheduler and V_CU
-
+   
    assign next_instr_rdy = (instr_vld_o & instr_rdy_i) != 'h0 || instr_vld_o == 0;
 
    // maybe extented
@@ -253,6 +254,7 @@ module scheduler
    assign data_width_o = vector_instr_i[14:12];
    assign mop_o        = vector_instr_i[27:26];
    assign vector_instr_o = vector_instr_reg;
+   assign rs1_o = rs1_i;
    
 endmodule
 

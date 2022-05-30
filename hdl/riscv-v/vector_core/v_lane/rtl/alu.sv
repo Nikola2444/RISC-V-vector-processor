@@ -80,9 +80,9 @@ module alu #
 					    dspsu_m_reg[i][63:32];
 		 mulh_op: dsp_p_reg[i] 	 <= dsp_m_reg[i][31:0];
 
-		 wmul_op: dsp_p_reg[i] 	 <= dsp_m_reg[i][31:0];
-		 wmulu_op: dsp_p_reg[i]  <= dspu_m_reg[i][31:0];
-		 wmulsu_op: dsp_p_reg[i] <= dspsu_m_reg[i][31:0];
+		 //wmul_op: dsp_p_reg[i] 	 <= dsp_m_reg[i][31:0];
+		 //wmulu_op: dsp_p_reg[i]  <= dspu_m_reg[i][31:0];
+		 //wmulsu_op: dsp_p_reg[i] <= dspsu_m_reg[i][31:0];
 		 //Finish shifting		 
 	      endcase
 	   end

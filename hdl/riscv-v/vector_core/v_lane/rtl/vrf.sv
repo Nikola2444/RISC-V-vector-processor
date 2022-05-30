@@ -3,10 +3,12 @@ module vrf #
    parameter W_PORTS_NUM = 4,
    parameter MULTIPUMP_WRITE = 2,
    parameter MULTIPUMP_READ = 2,
+   parameter RAM_TYPE = "DISTRAM",
    parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
    // 
    parameter MEM_DEPTH = 512,
-   parameter MEM_WIDTH = 32)
+   parameter MEM_WIDTH = 1,
+   parameter NUM_OF_BYTES = MEM_WIDTH < 8 ? 1 : MEM_WIDTH/8)
    (
     input 					   clk,
     input 					   clk2,
@@ -21,7 +23,7 @@ module vrf #
    
     // write IF
     input [W_PORTS_NUM-1:0][$clog2(MEM_DEPTH)-1:0] waddr_i,
-    input [W_PORTS_NUM-1:0][MEM_WIDTH/8-1:0] 	   bwe_i,
+    input [W_PORTS_NUM-1:0][NUM_OF_BYTES-1:0] 	   bwe_i,
     input [W_PORTS_NUM-1:0] 			   wen_i,
     input [W_PORTS_NUM-1:0] [MEM_WIDTH-1:0] 	   din_i
     );
@@ -31,7 +33,7 @@ module vrf #
    localparam LP_READ_BRAM_PER_BANK = R_PORTS_NUM/MULTIPUMP_READ;
    localparam LP_INPUT_REG_NUM      = RAM_PERFORMANCE == "HIGH_PERFORMANCE" && MULTIPUMP_WRITE==1 ? 2 : 1;
    //localparam LP_INPUT_REG_NUM      = RAM_PERFORMANCE == "HIGH_PERFORMANCE" ? 2 : 1;
-   typedef int lvt_raddr_type[LP_BANK_NUM][LP_LVT_BRAM_PER_BANK];
+   typedef int 					   lvt_raddr_type[LP_BANK_NUM][LP_LVT_BRAM_PER_BANK];
    localparam lvt_raddr_type lvt_raddr_array=lvt_raddr_set();
 
    
@@ -46,7 +48,7 @@ module vrf #
 	 begin
 	    if (j!=i*MULTIPUMP_WRITE)
 	    begin
-		 lvt_raddr_array[i][k]=j;		 
+	       lvt_raddr_array[i][k]=j;		 
 	       k++;
 	    end
 	 end
@@ -65,7 +67,7 @@ module vrf #
    
    // LVT BRAMs IF
    logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0] lvt_ram_waddr;
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][MEM_WIDTH/8-1:0] 	    lvt_ram_bwe;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][NUM_OF_BYTES-1:0] 	    lvt_ram_bwe;
    logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0] 			    lvt_ram_wen;
    logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][MEM_WIDTH-1:0] 	    lvt_ram_din;
 
@@ -76,7 +78,7 @@ module vrf #
    
    // READ BRAMs IF
    logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0] read_ram_waddr;
-   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][MEM_WIDTH/8-1:0] 	     read_ram_bwe;
+   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][NUM_OF_BYTES-1:0] 	     read_ram_bwe;
    logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][MEM_WIDTH-1:0] 	     read_ram_din;
 
    //input registers
@@ -88,7 +90,7 @@ module vrf #
    
    // write IF
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][$clog2(MEM_DEPTH)-1:0]      waddr_reg;
-   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][MEM_WIDTH/8-1:0] 	     bwe_reg;
+   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][NUM_OF_BYTES-1:0] 	     bwe_reg;
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0] 			     wen_reg;
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][MEM_WIDTH-1:0] 	     din_reg;
 
@@ -150,27 +152,52 @@ module vrf #
       begin: gen_banks
 	 for (genvar j=0; j<LP_LVT_BRAM_PER_BANK;j++)
 	 begin: gen_BRAMs
-	    sdp_bwe_bram #(/*AUTO_INSTPARAM*/
-			   // Parameters
-			   .NB_COL		(MEM_WIDTH/8),
-			   .COL_WIDTH		(8),
-			   .RAM_DEPTH		(MEM_DEPTH),
-			   .RAM_PERFORMANCE	(RAM_PERFORMANCE),
-			   .INIT_FILE		(""))
-	    LVT_BRAMs(/*AUTO_INST*/
-		      // Outputs
-		      .doutb		(lvt_ram_dout[i][j]),
-		      // Inputs
-		      .addra		(lvt_ram_waddr[i][j]),
-		      .addrb		(lvt_ram_raddr[i][j]),
-		      .dina		(lvt_ram_din[i][j]),
-		      .clka		(clk2),
-		      .wea		(lvt_ram_bwe[i][j]),
-		      .enb		(1'b1),
-		      .clkb		(clk2),
-		      .rstb		(),
-		      .regceb		(1'b1));
-	 end	 
+	    if (RAM_TYPE=="BRAM")
+	    begin
+	       sdp_bwe_bram #(/*AUTO_INSTPARAM*/
+			      // Parameters
+			      .NB_COL		(NUM_OF_BYTES),
+			      .COL_WIDTH	(8),
+			      .RAM_DEPTH	(MEM_DEPTH),
+			      .RAM_PERFORMANCE	(RAM_PERFORMANCE),
+			      .INIT_FILE		(""))
+	       LVT_RAMs(/*AUTO_INST*/
+			// Outputs
+			.doutb		(lvt_ram_dout[i][j]),
+			// Inputs
+			.addra		(lvt_ram_waddr[i][j]),
+			.addrb		(lvt_ram_raddr[i][j]),
+			.dina		(lvt_ram_din[i][j]),
+			.clka		(clk2),
+			.wea		(lvt_ram_bwe[i][j]),
+			.enb		(1'b1),
+			.clkb		(clk2),
+			.rstb		(1'b0),
+			.regceb		(1'b1));
+	    end
+	    else
+	    begin
+	       sdp_distram #(/*AUTOINST_PARAM*/
+			     // Parameters
+			     .WIDTH		(MEM_WIDTH),
+			     .DEPTH		(MEM_DEPTH),
+			     .OUT_PIPE_STAGES	(2))
+	       LVT_RAMs (/*AUTO_INST*/
+			 // Outputs
+			 .doutb			(lvt_ram_dout[i][j]),
+			 // Inputs
+			 .addra			(lvt_ram_waddr[i][j]),
+			 .addrb			(lvt_ram_raddr[i][j]),
+			 .dina			(lvt_ram_din[i][j]),
+			 .clka			(clk2),
+			 .wea			(lvt_ram_bwe[i][j]!=0),
+			 .enb		        (1'b1),
+			 .clkb			(clk2),
+			 .rstb			(1'b0),			 
+			 .regceb		(1'b1));
+	    end
+	 end
+
       end
 
 
@@ -193,7 +220,7 @@ module vrf #
 	    end
 	 end
       end
-         
+      
       for (genvar i=0; i<LP_BANK_NUM;i++)
       begin	 
 	 for (genvar k=0; k<LP_LVT_BRAM_PER_BANK;k++)
@@ -216,8 +243,8 @@ module vrf #
 	 for (genvar j=0; j<LP_BANK_NUM;j++)
 	 begin
 	    for (genvar k = 0;k<LP_LVT_BRAM_PER_BANK;k++)
-		if (j!=(i/MULTIPUMP_WRITE) && i==lvt_raddr_array[j][k])//TODO: enable mulitpumpa
-		  assign lvt_write_xor_in[i/2][j] = lvt_ram_dout[j][k];
+	      if (j!=(i/MULTIPUMP_WRITE) && i==lvt_raddr_array[j][k])//TODO: enable mulitpumpa
+		assign lvt_write_xor_in[i/2][j] = lvt_ram_dout[j][k];
 	 end
       end
 
@@ -254,28 +281,53 @@ module vrf #
       begin: gen_read_banks
 	 for (genvar j=0; j<LP_READ_BRAM_PER_BANK;j++)
 	 begin: gen_BRAMs
-	    sdp_bwe_bram #(/*AUTO_INSTPARAM*/
-			   // Parameters
-			   .NB_COL		(MEM_WIDTH/8),
-			   .COL_WIDTH		(8),
-			   .RAM_DEPTH		(MEM_DEPTH),
-			   .RAM_PERFORMANCE	(RAM_PERFORMANCE),
-			   .INIT_FILE		(""))
-	    READ_BRAMs(/*AUTO_INST*/
-		       // Outputs
-		       .doutb		(read_ram_dout[i][j]),
-		       // Inputs
-		       .addra		(read_ram_waddr[i][j]),
-		       .addrb		(read_ram_raddr[i][j]),
-		       .dina		(read_ram_din[i][j]),
-		       .clka		(clk2),
-		       .wea		(read_ram_bwe[i][j]),
-		       
-		       .enb		(read_ram_ren[i][j]),
-		       .clkb		(read_clk),
-		       .rstb		(1'b0),
-		       .regceb		(read_ram_oreg_en[i][j]));
-
+	    if (RAM_TYPE=="BRAM")
+	    begin
+	       sdp_bwe_bram #(/*AUTO_INSTPARAM*/
+			      // Parameters
+			      .NB_COL		(NUM_OF_BYTES),
+			      .COL_WIDTH		(8),
+			      .RAM_DEPTH		(MEM_DEPTH),
+			      .RAM_PERFORMANCE	(RAM_PERFORMANCE),
+			      .INIT_FILE		(""))
+	       READ_BRAMs(/*AUTO_INST*/
+			  // Outputs
+			  .doutb		(read_ram_dout[i][j]),
+			  // Inputs
+			  .addra		(read_ram_waddr[i][j]),
+			  .addrb		(read_ram_raddr[i][j]),
+			  .dina		(read_ram_din[i][j]),
+			  .clka		(clk2),
+			  .wea		(read_ram_bwe[i][j]),
+		  
+			  .enb		(read_ram_ren[i][j]),
+			  .clkb		(read_clk),
+			  .rstb		(1'b0),
+			  .regceb		(read_ram_oreg_en[i][j]));
+	    end
+	    else
+	    begin
+	       sdp_distram #(/*AUTO_INSTPARAM*/
+			      // Parameters
+			     // Parameters
+			     .WIDTH		(MEM_WIDTH),
+			     .DEPTH		(MEM_DEPTH),
+			     .OUT_PIPE_STAGES	(2))
+	       READ_BRAMs(/*AUTO_INST*/
+			  // Outputs
+			  .doutb	(read_ram_dout[i][j]),
+			  // Inputs
+			  .addra	(read_ram_waddr[i][j]),
+			  .addrb	(read_ram_raddr[i][j]),
+			  .dina		(read_ram_din[i][j]),
+			  .clka		(clk2),
+			  .wea		(read_ram_bwe[i][j]!=0),
+		  
+			  .enb		(read_ram_ren[i][j]),
+			  .clkb		(read_clk),
+			  .rstb		(1'b0),
+			  .regceb	(read_ram_oreg_en[i][j]));
+	    end
 
 	    assign read_ram_waddr[i][j]	= !multipump_sel_reg ? waddr_reg[i*MULTIPUMP_WRITE][LP_INPUT_REG_NUM-1] : waddr_reg[i*MULTIPUMP_WRITE+1][LP_INPUT_REG_NUM-1];
 	    assign read_ram_bwe[i][j]	= !multipump_sel_reg ? bwe_reg[i*MULTIPUMP_WRITE][LP_INPUT_REG_NUM-1] : bwe_reg[i*MULTIPUMP_WRITE+1][LP_INPUT_REG_NUM-1];
@@ -369,7 +421,7 @@ module vrf #
    endgenerate
 
    
-      
+   
    
    
    

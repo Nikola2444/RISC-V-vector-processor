@@ -18,7 +18,7 @@ class test_simple extends test_base;
 
    task main_phase(uvm_phase phase);
       phase.raise_objection(this);
-      simple_seq.start(env.agent.seqr);
+      simple_seq.start(env.bd_instr_agent.seqr);
       phase.drop_objection(this);
    endtask : main_phase
 

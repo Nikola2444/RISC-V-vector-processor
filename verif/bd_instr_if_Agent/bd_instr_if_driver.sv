@@ -3,31 +3,31 @@
 class bd_instr_if_driver extends uvm_driver#(bd_instr_if_seq_item);
 
    `uvm_component_utils(bd_instr_if_driver)
-   
-   virtual interface riscv_v_if vif;
+
+   typedef enum {idle, send_instruction} instr_send_states;
+   instr_send_states instr_send_fsm = idle;
+
    virtual interface backdoor_instr_if backdoor_instr_vif;
    function new(string name = "bd_instr_if_driver", uvm_component parent = null);
       super.new(name,parent);
-      if (!uvm_config_db#(virtual riscv_v_if)::get(this, "", "riscv_v_if", vif))
+      if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", backdoor_instr_vif))
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
    endfunction
 
    function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
-      if (!uvm_config_db#(virtual riscv_v_if)::get(this, "", "riscv_v_if", vif))
-        `uvm_fatal("NOVIF",{"virtual interface must be set for: ",get_full_name(),".vif"})
-      if (!uvm_config_db#(virtual backdoor_instr_if)::get(this, "", "backdoor_instr_if", backdoor_instr_vif))
-        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
+
    endfunction : connect_phase
 
    
    task main_phase(uvm_phase phase);
-      
+      backdoor_instr_vif.instr_ready = 1'b0;
       forever begin
-	 backdoor_instr_vif.instr_ready = 1'b1;
+	 
 	 @(negedge backdoor_instr_vif.clk);
-	 if (backdoor_instr_vif.rstn)
+	 if (backdoor_instr_vif.rstn && backdoor_instr_vif.instr_mem_en)
 	 begin
+
 	    seq_item_port.get_next_item(req);
 	    req.instruction_addr = backdoor_instr_vif.instr_mem_address;
 	    seq_item_port.item_done();
@@ -37,7 +37,7 @@ class bd_instr_if_driver extends uvm_driver#(bd_instr_if_seq_item);
                       $sformatf("Driver sending...\n%s", req.sprint()),
                       UVM_HIGH)
 	    backdoor_instr_vif.instr_mem_read = req.instruction;
-
+	    backdoor_instr_vif.instr_ready = 1'b1;
             // do actual driving here
 	    /* TODO */	    
             seq_item_port.item_done();

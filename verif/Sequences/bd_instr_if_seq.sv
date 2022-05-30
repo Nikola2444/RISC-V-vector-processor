@@ -55,7 +55,7 @@ class riscv_v_simple_seq extends riscv_v_base_seq;
 	 $fgets(instr_string, fd);
 	 for (int i = 0; i < instr_string.len(); i++)
 	 begin
-	    if (instr_string[i]==".")
+	    if (instr_string[i]=="." || instr_string[i]==">")
 	      break;
 	    if (instr_string[i]==":")
 	    begin

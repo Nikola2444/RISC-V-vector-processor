@@ -58,10 +58,25 @@ module riscv_v_w_mem_subsystem #
    logic [C_XFER_SIZE_WIDTH-1:0] 	    ctrl_rxfer_size;
    logic 				    rd_tready;
    logic 				    ctrl_wstart;
-   logic [C_M_AXI_ADDR_WIDTH-1:0] 	    ctrl_waddr_offset;
-   logic [C_XFER_SIZE_WIDTH-1:0] 	    ctrl_wxfer_size;
-   logic 				    wr_tvalid;
-   logic [C_M_AXI_DATA_WIDTH-1:0] 	    wr_tdata;
+   logic [C_M_AXI_ADDR_WIDTH-1:0] 	    ctrl_waddr_offset=0;
+   logic [C_XFER_SIZE_WIDTH-1:0] 	    ctrl_wxfer_size=16;
+   logic 				    wr_tvalid=1;
+   logic [C_M_AXI_DATA_WIDTH-1:0] 	    wr_tdata = 10;
+
+   /*******DEBUG logic*******/
+/* -----\/----- EXCLUDED -----\/-----
+   always @(posedge clk)
+   begin
+      if (!rstn)begin
+	 ctrl_wstart <=1;
+      end
+      else if (ctrl_wstart)
+	ctrl_wstart <=0;
+      else if (v_m_axi_wlast)
+	ctrl_wstart <=1;	
+   end
+ -----/\----- EXCLUDED -----/\----- */
+   /*************************/
 
    
    axim_ctrl #(/*AUTOINST_PARAM*/

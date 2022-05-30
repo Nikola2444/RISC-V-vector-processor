@@ -70,6 +70,7 @@ module axim_ctrl_axi_write_master #(
   // The following ctrl signals are sampled when ctrl_start is asserted
   input  wire [C_M_AXI_ADDR_WIDTH-1:0]   ctrl_addr_offset,        // Starting Address offset
   input  wire [C_XFER_SIZE_WIDTH-1:0]    ctrl_xfer_size_in_bytes, // Length in number of bytes, limited by the address width.
+  input  wire [C_M_AXI_DATA_WIDTH/8-1:0] wr_tstrb           ,
 
   // AXI4 master interface (write only)
   output wire                            m_axi_awvalid,
@@ -287,6 +288,7 @@ endgenerate
 assign wxfer = m_axi_wvalid & m_axi_wready;
 
 assign w_final_transfer = m_axi_wlast & w_final_transaction & wxfer;
+//assign m_axi_wstrb   = m_axi_wlast & w_final_transaction ? final_strb : {(C_M_AXI_DATA_WIDTH/8){1'b1}};
 assign m_axi_wstrb   = m_axi_wlast & w_final_transaction ? final_strb : {(C_M_AXI_DATA_WIDTH/8){1'b1}};
 
 always @(posedge aclk) begin

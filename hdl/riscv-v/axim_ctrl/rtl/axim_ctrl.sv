@@ -48,6 +48,7 @@ module axim_ctrl #(
   input  wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size    ,
   input  wire                                   wr_tvalid          ,
   output wire                                   wr_tready          ,
+  input  wire [C_M_AXI_DATA_WIDTH/8-1:0]        wr_tstrb           ,
   input  wire [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata
 );
 

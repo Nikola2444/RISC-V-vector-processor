@@ -18,12 +18,12 @@ module vector_core #
    logic [10:0]		instr_vld;		// From scheduler_inst of scheduler.v
    logic [31:0]		mcu_base_addr;	// From scheduler_inst of scheduler.v
    logic [2:0]		mcu_data_width;	// From scheduler_inst of scheduler.v
-   logic		mcu_idx_ld_st;	// From scheduler_inst of scheduler.v
-   logic		mcu_ld_vld;		// From scheduler_inst of scheduler.v
-   logic		mcu_st_vld;		// From scheduler_inst of scheduler.v
+   logic		      mcu_idx_ld_st;	// From scheduler_inst of scheduler.v
+   logic		      mcu_ld_vld;		// From scheduler_inst of scheduler.v
+   logic		      mcu_st_vld;		// From scheduler_inst of scheduler.v
    logic [31:0]		mcu_stride;		// From scheduler_inst of scheduler.v
-   logic		mcu_strided_ld_st;	// From scheduler_inst of scheduler.v
-   logic		mcu_unit_ld_st;	// From scheduler_inst of scheduler.v
+   logic		      mcu_strided_ld_st;	// From scheduler_inst of scheduler.v
+   logic		      mcu_unit_ld_st;	// From scheduler_inst of scheduler.v
    logic [31:0]		vector_instr;		// From scheduler_inst of scheduler.v
 
    //Scheduler inputs

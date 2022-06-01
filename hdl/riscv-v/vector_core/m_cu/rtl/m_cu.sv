@@ -27,10 +27,10 @@ module m_cu #(
   input  logic                                  mcu_strided_ld_st_i     ,
   input  logic                                  mcu_unit_ld_st_i        ,
   // Send config to buff array
-  output wire [2:0]                             cfg_data_lmul_o         ,
-  output wire [2:0]                             cfg_data_sew_o          ,
-  output wire [2:0]                             cfg_idx_sew_o           ,
-  output wire [2:0]                             cfg_idx_lmul_o          ,
+  output wire [2:0]                             cfg_store_data_lmul_o         ,
+  output wire [2:0]                             cfg_store_data_sew_o          ,
+  output wire [2:0]                             cfg_store_idx_sew_o           ,
+  output wire [2:0]                             cfg_store_idx_lmul_o          ,
   //
   output wire                                   cfg_store_update_o      ,
   output wire                                   cfg_store_cntr_rst_o    ,
@@ -184,10 +184,10 @@ module m_cu #(
   end
 
   assign store_type_o     = store_type_reg;
-  assign cfg_data_lmul_o  = data_lmul_reg;
-  assign cfg_data_sew_o   = data_sew_reg;
-  assign cfg_idx_lmul_o   = idx_lmul_reg;
-  assign cfg_idx_sew_o    = idx_sew_reg;
+  assign cfg_store_data_lmul_o  = data_lmul_reg;
+  assign cfg_store_data_sew_o   = data_sew_reg;
+  assign cfg_store_idx_lmul_o   = idx_lmul_reg;
+  assign cfg_store_idx_sew_o    = idx_sew_reg;
 
   // MAIN STORE FSM M_CU NEXTSTATE & CONTROL
   always_comb begin

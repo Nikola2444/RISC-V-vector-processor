@@ -22,7 +22,7 @@ module Driver_vlane_interconnect
     input logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren_i,                                                                   // READ RELATED SIGNAL
     input logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial_i,                                   // Write address for the N - 1 out of N instructions  
     input logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete_i,                                    // Just for the complete sublane driver
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_i,                                           // READ RELATED SIGNAL
+    input logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_i,                                    // READ RELATED SIGNAL, UPDATED
     input logic [W_PORTS_NUM - 2 : 0][3 : 0] vrf_bwen_partial_i,                                                        // Byte write enable for the N - 1 out of N instructions
     input logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_complete_i,                                                         // Just for the complete sublane driver
     output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_ren_o,                                                    // HAS TO BE DONE
@@ -37,7 +37,10 @@ module Driver_vlane_interconnect
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_o,   
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vmrf_wen_o,
     
-    // Load and Store signals
+    // Load and Store
+    input logic [VLANE_NUM - 1 : 0][31 : 0] load_data_i,                                                                // UPDATED
+    output logic [VLANE_NUM - 1 : 0][31 : 0] load_data_o,                                                                       // UPDATED
+    
     input logic [W_PORTS_NUM - 1 : 0] store_data_valid_i,
     input logic [W_PORTS_NUM - 1 : 0] store_load_index_valid_i,
     input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
@@ -54,35 +57,44 @@ module Driver_vlane_interconnect
     input logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_i,
     input logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_i,
     input logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_i,
+    input logic alu_en_32bit_mul_i,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] op2_sel_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_o,
+    output logic [VLANE_NUM - 1 : 0] alu_en_32bit_mul_o,
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
     input logic up_down_slide_i,
-    input logic request_write_control_i,
+    input logic [W_PORTS_NUM - 1 : 0] request_write_control_i,
     output logic [VLANE_NUM - 1 : 0] up_down_slide_o,
-    output logic [VLANE_NUM - 1 : 0] request_write_control_o,
+    output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] request_write_control_o,                                      // UPDATED
     
     // Misc signals
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] el_extractor_i,                                                            // READ RELATED SIGNAL
     input logic [W_PORTS_NUM - 1 : 0] vector_mask_i,
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_i,
-    // input logic [W_PORTS_NUM - 1 : 0] rdata_sign_i,                                                                     // READ RELATED SIGNAL
-    // input logic [W_PORTS_NUM - 1 : 0] imm_sign_i,
     output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] el_extractor_o,                                        // HAS TO BE DONE
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vector_mask_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_o,
-    // output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] rdata_sign_o,                                                 // HAS TO BE DONE
-    // output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] imm_sign_o,
     
     // A group signals determining where to route read related signals
-    input logic [R_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] read_port_allocation_i                               // 0 - RP0, 1 RP1, ... 
+    input logic [R_PORTS_NUM - 1 : 0][$clog2(W_PORTS_NUM) - 1 : 0] read_port_allocation_i,                              // 0 - RP0, 1 RP1, ...
+    input logic [R_PORTS_NUM - 1 : 0] primary_read_data_i 
     
 );
+
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] primary_vrf_ren;
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] primary_vrf_oreg_ren;
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] primary_vrf_raddr;
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] primary_el_extractor;
+
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] secondary_vrf_ren;
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] secondary_vrf_oreg_ren;
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] secondary_vrf_raddr;
+logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] secondary_el_extractor;
 
 // Registers for inputs
 typedef struct packed
@@ -95,7 +107,7 @@ typedef struct packed
     logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vrf_oreg_ren;
     logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial;
     logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete;
-    logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr;
+    logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr;
     logic [W_PORTS_NUM - 2 : 0][3 : 0] vrf_bwen_partial;
     logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_complete;
     
@@ -104,6 +116,7 @@ typedef struct packed
     logic [W_PORTS_NUM - 1 : 0] vmrf_wen;
     
     // Load and Store signals
+    logic [VLANE_NUM - 1 : 0][31 : 0] load_data;
     logic [W_PORTS_NUM - 1 : 0] store_data_valid;
     logic [W_PORTS_NUM - 1 : 0] store_load_index_valid;
     logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel;
@@ -116,17 +129,16 @@ typedef struct packed
     logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm;
     logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data;
     logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl;
+    logic alu_en_32bit_mul;
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
     logic up_down_slide;
-    logic request_write_control; 
+    logic [W_PORTS_NUM - 1 : 0] request_write_control; 
     
     // Misc signals
     logic [W_PORTS_NUM - 1 : 0][1 : 0] el_extractor;
     logic [W_PORTS_NUM - 1 : 0] vector_mask;
-    logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel;
-    // logic [W_PORTS_NUM - 1 : 0] rdata_sign;
-    // logic [W_PORTS_NUM - 1 : 0] imm_sign;           
+    logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel;     
     
 }input_layer;
 
@@ -152,6 +164,7 @@ assign input_next.vmrf_addr = vmrf_addr_i;
 assign input_next.vmrf_wen = vmrf_wen_i;
 
 // Load and Store signals
+assign input_next.load_data = load_data_i;
 assign input_next.store_data_valid = store_data_valid_i;
 assign input_next.store_load_index_valid = store_load_index_valid_i;
 assign input_next.store_data_mux_sel = store_data_mux_sel_i;
@@ -164,6 +177,7 @@ assign input_next.ALU_x_data = ALU_x_data_i;
 assign input_next.ALU_imm = ALU_imm_i;
 assign input_next.ALU_reduction_data = ALU_reduction_data_i;
 assign input_next.ALU_ctrl = ALU_ctrl_i;
+assign input_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
 
 // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
 assign input_next.up_down_slide = up_down_slide_i;
@@ -173,8 +187,6 @@ assign input_next.request_write_control = request_write_control_i;
 assign input_next.el_extractor = el_extractor_i;
 assign input_next.vector_mask = vector_mask_i;
 assign input_next.write_data_sel = write_data_sel_i;
-// assign input_next.rdata_sign = rdata_sign_i;
-// assign input_next.imm_sign = imm_sign_i;
 /////////////////////////////////////////////////////////////
 
 generate
@@ -182,6 +194,8 @@ generate
         
         assign up_down_slide_o[i] = input_reg.up_down_slide;
         assign request_write_control_o[i] = input_reg.request_write_control;
+        assign alu_en_32bit_mul_o[i] = input_reg.alu_en_32bit_mul;
+        assign load_data_o[i] = input_reg.load_data[i];
     
         for(genvar j = 0; j < W_PORTS_NUM; j++) begin
             assign read_data_valid_o[i][j] = input_reg.read_data_valid[j][i];
@@ -199,7 +213,6 @@ generate
             assign ALU_ctrl_o[i][j] = input_reg.ALU_ctrl[j];
             assign vector_mask_o[i][j] = input_reg.vector_mask[j];
             assign write_data_sel_o[i][j] = input_reg.write_data_sel[j];
-            // assign imm_sign_o[i][j] = input_reg.imm_sign[j];
             
             // Write address and byte write enable
             if(j == 0) begin
@@ -211,20 +224,31 @@ generate
                 assign vrf_bwen_o[i][j] = input_reg.vrf_bwen_partial[j - 1];
             end
             
+            assign primary_vrf_raddr[i][2 * j] = input_reg.vrf_raddr[j][0];
+            assign primary_vrf_raddr[i][2 * j + 1] = input_reg.vrf_raddr[j][1];
+            
         end
         
         for(genvar k = 0; k < R_PORTS_NUM; k++) begin
-            // Read related signals
-            assign vrf_ren_o[i][k] = input_reg.vrf_ren[read_port_allocation_i[k]];
-            assign vrf_oreg_ren_o[i][k] = input_reg.vrf_oreg_ren[read_port_allocation_i[k]];
-            assign vrf_raddr_o[i][k] = input_reg.vrf_raddr[read_port_allocation_i[k]];
-            assign el_extractor_o[i][k] = input_reg.el_extractor[read_port_allocation_i[k]];
-            // assign rdata_sign_o[i][k] = input_reg.rdata_sign[read_port_allocation_i[k]];
+            
+            assign primary_vrf_ren[i][k] = input_reg.vrf_ren[k >> 1];;              // R0, R1 -> W0, R2, R3 -> W1, R4, R5 -> W3, ... 
+            assign primary_vrf_oreg_ren[i][k] = input_reg.vrf_oreg_ren[k >> 1];
+            assign primary_el_extractor[i][k] = input_reg.el_extractor[k >> 1];
+            
+            assign secondary_vrf_ren[i][k] = input_reg.vrf_ren[read_port_allocation_i[k]];
+            assign secondary_vrf_oreg_ren[i][k] = input_reg.vrf_oreg_ren[read_port_allocation_i[k]];
+            assign secondary_vrf_raddr[i][k] = input_reg.vrf_raddr[read_port_allocation_i[k]][2];
+            assign secondary_el_extractor[i][k] = input_reg.el_extractor[read_port_allocation_i[k]];
+            
+            assign vrf_ren_o[i][k] = (primary_read_data_i[k] == 1) ? primary_vrf_ren[i][k] : secondary_vrf_ren[i][k];
+            assign vrf_oreg_ren_o[i][k] = (primary_read_data_i[k] == 1) ? primary_vrf_oreg_ren[i][k] : secondary_vrf_oreg_ren[i][k];
+            assign vrf_raddr_o[i][k] = (primary_read_data_i[k] == 1) ? primary_vrf_raddr[i][k] : secondary_vrf_raddr[i][k];
+            assign el_extractor_o[i][k] = (primary_read_data_i[k] == 1) ? primary_el_extractor[i][k] : secondary_el_extractor[i][k];
+            
         end
         
     end 
 endgenerate;
-
 /////////////////////////////////////////////////////////////
 
 always_ff@(posedge clk_i) begin

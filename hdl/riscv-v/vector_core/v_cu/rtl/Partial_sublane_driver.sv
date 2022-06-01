@@ -2,14 +2,13 @@
 
 module Partial_sublane_driver
 #(
-    parameter MEM_DEPTH = 1024,
+    parameter MEM_DEPTH = 514,
     parameter MAX_VL_PER_LANE = 4 * 8 * 8,                                      // The biggest number of elements in one lane
     parameter VREG_LOC_PER_LANE = 8,                                            // The number of memory locations reserved for one vector register
     parameter R_PORTS_NUM = 8,
     parameter INST_TYPE_NUM = 7,
     parameter VLANE_NUM = 8,
-    parameter ALU_OPMODE = 6,
-    parameter STRIDE_ENABLE = "NO"
+    parameter ALU_OPMODE = 6
 )
 (
     // Clock and Reset
@@ -29,21 +28,20 @@ module Partial_sublane_driver
     
     // Inst timing signals
     input logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_delay_i,
-    // input logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_duration_i,
     
     // Signals for read data valid logic
     output logic [VLANE_NUM - 1 : 0] read_data_valid_o,
     
     // VRF
-    input logic vrf_ren_i,                                                     // unknown behaviour 
-    input logic vrf_oreg_ren_i,                                                // unknown behaviour
+    input logic vrf_ren_i,                                                      // unknown behaviour 
+    input logic vrf_oreg_ren_i,                                                 // unknown behaviour
     input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr_i,
-    input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr_i,
+    input logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr_i,    // UPDATED
     input logic [1 : 0] wdata_width_i,                                          // 1 - byte, 2 - halfword, 3 - word
     output logic vrf_ren_o,
     output logic vrf_oreg_ren_o,
     output logic [$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_o,
-    output logic [$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_o,
+    output logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_o,                // UPDATED, 0 - vs1, 1 - vs2, 2 - vs3(only for three operands)
     output logic [3 : 0] vrf_bwen_o,                                            // Very important
     
     // VMRF
@@ -51,7 +49,11 @@ module Partial_sublane_driver
     output logic vmrf_wen_o,                                                    // Very important
     
     // Load and Store
-    input logic load_ready_i,
+    input logic load_valid_i,                                                   // NEW SIGNAL
+    input logic load_last_i,                                                    // NEW SIGNAL
+    output logic ready_for_load_o,                                              // NEW SIGNAL
+    output logic request_write_control_o,                                       // NEW SIGNAL, 0 - ALU generates valid signal, 1 - only bwen is important
+    
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
     output logic store_data_valid_o,
@@ -77,14 +79,9 @@ module Partial_sublane_driver
     
     // Misc signals
     input vector_mask_i,
-    // input rdata_sign_i,
-    // input logic imm_sign_i,
     output logic[1 : 0] el_extractor_o,
     output logic vector_mask_o,
     output logic [1 : 0] write_data_sel_o
-    // output logic rdata_sign_o,
-    // output logic imm_sign_o
-    
 );
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -110,7 +107,6 @@ fsm_state current_state, next_state;
 typedef struct packed
 { 
     logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_delay;
-    // logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_duration;
     logic vrf_ren;
     logic vrf_oreg_ren;
     logic [1 : 0] wdata_width;
@@ -132,10 +128,8 @@ typedef struct packed
     logic [4 : 0] ALU_imm;
     logic vector_mask;
     logic [1 : 0] write_data_sel;
-    // logic rdata_sign;
-    // logic imm_sign;
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
-    logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
+    logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
     logic [ALU_OPMODE - 1 : 0] ALU_opmode;
     
 } dataPacket0;
@@ -148,6 +142,8 @@ logic [1 : 0] shift2_reg, shift2_next;
 logic [$clog2(MAX_VL_PER_LANE) : 0] main_cnt;
 logic main_cnt_en;
 logic rst_main_cnt;
+// Write address generation //
+logic [1 : 0] element_width_write;
 // VMRF //
 logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_cnt;
 logic rst_vmrf_cnt;
@@ -163,6 +159,8 @@ logic shift_data_validation;
 logic [VLANE_NUM - 1 : 0] read_data_valid;
 logic partial_results_valid;
 logic shift_partial;
+// Signals for load //
+logic [3 : 0] load_bwen;
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +175,7 @@ logic raddr_cnt_en;
 logic raddr_load;
 logic raddr_cnt_rst;
 logic [$clog2(MEM_DEPTH) - 1 : 0] waddr;
-logic [$clog2(MEM_DEPTH) - 1 : 0] raddr;
+logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] raddr;
 
 // comparators
 logic [5 : 0] inst_type_comp;
@@ -189,7 +187,7 @@ assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
 assign vmrf_wen_o = dp0_reg.vmrf_wen;
-assign vrf_bwen_o = bwen_mux;
+assign vrf_bwen_o = (current_state == LOAD_MODE) ? load_bwen : bwen_mux;
 assign vrf_ren_o = dp0_reg.vrf_ren;
 assign vrf_oreg_ren_o = dp0_reg.vrf_oreg_ren;
 assign dp0_next.vrf_ren = vrf_ren_i;
@@ -201,18 +199,19 @@ assign read_limit_add = (vl_i >> $clog2(VLANE_NUM)) + !read_limit_carry;
 assign read_limit_comp = (main_cnt == dp0_reg.read_limit - 1);
 assign store_load_index_valid_o = dp0_reg.store_load_index_valid;
 assign store_data_valid_o = dp0_reg.store_data_valid;
-assign op2_sel_o = dp0_reg.op2_sel;
+assign op2_sel_o = (current_state == REDUCTION_MODE) ? 2'b11 : dp0_reg.op2_sel;
 assign op3_sel_o = dp0_reg.op3_sel;
 assign ALU_x_data_o = dp0_reg.ALU_x_data;
 assign ALU_imm_o = dp0_reg.ALU_imm;
 assign el_extractor_o = main_cnt[1 : 0];
 assign vector_mask_o = dp0_reg.vector_mask;
-// assign rdata_sign_o = dp0_reg.rdata_sign;
-// assign imm_sign_o = dp0_reg.imm_sign;
 assign write_data_sel_o = dp0_reg.write_data_sel;
 assign read_data_valid_o[VLANE_NUM - 1 : 1] = read_data_valid[VLANE_NUM - 1 : 1];
 assign ALU_ctrl_o = dp0_reg.ALU_opmode;
 assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
+assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
+// Write address generation //
+assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -306,7 +305,7 @@ Address_counter
 #(
     .MEM_DEPTH(MEM_DEPTH),
     .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
-    .STRIDE_ENABLE(STRIDE_ENABLE)
+    .STRIDE_ENABLE("NO")
 )
 waddr_cnt
 (
@@ -315,32 +314,36 @@ waddr_cnt
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
     .up_down_i(1'b1),
-    .element_width_i(2'(dp0_reg.wdata_width - 1)),
+    .element_width_i(element_width_write),
     .rst_cnt_i(waddr_cnt_rst),
     .en_i(waddr_cnt_en),
     .secondary_en_i(1'b1),
     .addr_o(waddr)
 );
 
-Address_counter
-#(
-    .MEM_DEPTH(MEM_DEPTH),
-    .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
-    .STRIDE_ENABLE(STRIDE_ENABLE)
-)
-raddr_cnt
-(
-    .clk_i(clk_i),
-    .rst_i(rst_i),
-    .start_addr_i(dp0_reg.vrf_starting_raddr),
-    .load_i(raddr_load),
-    .up_down_i(1'b1),
-    .element_width_i(2'(vsew_i[1 : 0])),
-    .rst_cnt_i(raddr_cnt_rst),
-    .en_i(raddr_cnt_en),
-    .secondary_en_i(1'b1),
-    .addr_o(raddr)
-);
+generate
+    for(genvar i = 0; i < 3; i++) begin
+        Address_counter
+        #(
+            .MEM_DEPTH(MEM_DEPTH),
+            .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
+            .STRIDE_ENABLE("NO")
+        )
+        raddr_cnt
+        (
+            .clk_i(clk_i),
+            .rst_i(rst_i),
+            .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
+            .load_i(raddr_load),
+            .up_down_i(1'b1),
+            .element_width_i(2'(vsew_i[1 : 0])),
+            .rst_cnt_i(raddr_cnt_rst),
+            .en_i(raddr_cnt_en),
+            .secondary_en_i(1'b1),
+            .addr_o(raddr[i])
+        );
+    end
+endgenerate;
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -406,7 +409,6 @@ always_comb begin
     read_data_valid_o[0] = read_data_valid[0];
     // registers
     dp0_next.inst_delay = dp0_reg.inst_delay;
-    // dp0_next.inst_duration = dp0_reg.inst_duration;
     dp0_next.wdata_width = dp0_reg.wdata_width;
     dp0_next.inst_type = dp0_reg.inst_type;
     dp0_next.vmrf_wen = dp0_reg.vmrf_wen;
@@ -426,11 +428,12 @@ always_comb begin
     dp0_next.ALU_imm = dp0_reg.ALU_imm;
     dp0_next.vector_mask = dp0_reg.vector_mask;
     dp0_next.write_data_sel = dp0_reg.write_data_sel;
-    // dp0_next.rdata_sign = dp0_reg.rdata_sign;
-    // dp0_next.imm_sign = dp0_reg.imm_sign;
     dp0_next.vrf_starting_raddr = dp0_reg.vrf_starting_raddr;
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
     dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
+    // Loads //
+    ready_for_load_o = 0;
+    load_bwen = {4{1'b0}};
     
     case(current_state)
         IDLE : begin
@@ -447,8 +450,7 @@ always_comb begin
             
             load_data_validation = 1;
             
-            dp0_next.inst_delay = inst_delay_i;
-            // dp0_next.inst_duration = inst_duration_i;
+            dp0_next.inst_delay = inst_delay_i;;
             dp0_next.wdata_width = wdata_width_i;
             dp0_next.inst_type = inst_type_i;
             dp0_next.en_write = 0;
@@ -465,8 +467,6 @@ always_comb begin
             dp0_next.read_limit = read_limit_add;
             dp0_next.write_data_sel = 0;
             dp0_next.vector_mask = vector_mask_i;
-            // dp0_next.rdata_sign = rdata_sign_i;
-            // dp0_next.imm_sign = imm_sign_i;
             dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
             dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
             dp0_next.ALU_opmode = ALU_opmode_i;
@@ -497,7 +497,6 @@ always_comb begin
                     6'b100000 : begin                                            // INDEXED_LOAD
                         dp0_next.store_load_index_valid = 1;
                         next_state = READ_MODE;
-                        dp0_next.write_data_sel = 1;
                     end
                     default : begin                                             // An assert should be put here
                         next_state = IDLE;
@@ -570,6 +569,17 @@ always_comb begin
         end 
         LOAD_MODE : begin
             next_state = LOAD_MODE;
+            
+            if(load_valid_i) begin
+                dp0_next.waddr_cnt_en = 1;
+            end
+            ready_for_load_o = dp0_reg.waddr_cnt_en;
+            load_bwen = {4{dp0_reg.waddr_cnt_en}};
+            
+            if(load_last_i) begin
+                next_state = IDLE;
+                ready_for_load_o = 0;
+            end 
         end
         REDUCTION_MODE : begin
             // How is ALU going to know when not to accumulate results from other lanes?
@@ -591,9 +601,14 @@ always_comb begin
             main_cnt_en = 1;
             
             if(main_cnt == dp0_reg.inst_delay) begin
-                next_state = IDLE;
                 dp0_next.en_write = 1;
                 dp0_next.vmrf_wen = 1;
+            end
+            
+            if(dp0_reg.en_write) begin
+                next_state = IDLE;
+                dp0_next.en_write = 0;
+                dp0_next.vmrf_wen = 0;
             end
             
         end

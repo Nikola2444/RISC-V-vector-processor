@@ -15,9 +15,10 @@ module scheduler
    output logic        vector_stall_o,
    //*** Scheduler-V_CU interface****
    input logic [10:0]  instr_rdy_i,
-   output logic [10:0] instr_vld_o,
+   output logic [11:0] instr_vld_o,
    output logic [31:0] vector_instr_o,
-   output logic [31:0] rs1_o,
+   output logic [31:0] scalar_rs1_o,
+   output logic [31:0] scalar_rs2_o,
    //*** Scheduler-M_CU interface****
    //Load handshake
    input logic 	       mcu_ld_rdy_i,
@@ -39,6 +40,7 @@ module scheduler
 
 
    logic [31:0]        vector_instr_reg, vector_instr_next;
+   logic [31:0]        scalar_rs1_reg, scalar_rs2_reg;
    logic 	       v_st_instr_check;
    logic 	       v_ld_instr_check;
    logic 	       v_arith_instr_check;
@@ -73,8 +75,8 @@ module scheduler
    assign v_instr_funct6_upper = vector_instr_reg[31:29];
 
    // MCU signals
-   assign mcu_base_addr_o  = rs1_i;
-   assign mcu_stride_o     = rs2_i;
+   assign mcu_base_addr_o  = scalar_rs1_reg;
+   assign mcu_stride_o     = scalar_rs2_reg;
    assign mcu_data_width_o = vector_instr_reg[14:12];
 
 
@@ -83,10 +85,14 @@ module scheduler
       if (!rstn)
       begin
 	 vector_instr_reg <= 'h0;
+	 scalar_rs1_reg   <= 'h0;
+	 scalar_rs2_reg   <= 'h0;
       end
       else if (next_instr_rdy)
       begin
 	 vector_instr_reg <= vector_instr_next;
+	 scalar_rs1_reg   <= rs1_i;
+	 scalar_rs2_reg   <= rs2_i;
       end
    end
 
@@ -249,12 +255,13 @@ module scheduler
 			     (v_ld_instr_check && !mcu_ld_buffered_i);
 
 
-   assign mcu_rs1_o        = rs1_i;
-   assign mcu_rs2_o        = rs2_i;
+   assign mcu_rs1_o        = scalar_rs1_reg;
+   assign mcu_rs2_o        = scalar_rs2_reg;
    assign data_width_o = vector_instr_i[14:12];
    assign mop_o        = vector_instr_i[27:26];
    assign vector_instr_o = vector_instr_reg;
-   assign rs1_o = rs1_i;
+   assign scalar_rs1_o = scalar_rs1_reg;
+   assign scalar_rs2_o = scalar_rs2_reg;
    
 endmodule
 

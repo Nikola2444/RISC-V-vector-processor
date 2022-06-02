@@ -402,7 +402,7 @@ generate
             .vrf_raddr_i(vrf_raddr_il[i]),
             .vrf_waddr_i(vrf_waddr_il[i]), 
             .vrf_bwen_i(vrf_bwen_il[i]),
-            .load_data_i(load_data_i[i]),
+            .load_data_i(load_data_il[i]),
             .slide_data_i(slide_data_input[i]),
             .slide_data_o(slide_data_output[i]),
             .vmrf_addr_i(vmrf_addr_il[i]),

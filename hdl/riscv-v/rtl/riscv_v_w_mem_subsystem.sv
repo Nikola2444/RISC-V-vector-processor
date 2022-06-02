@@ -3,10 +3,10 @@ module riscv_v_w_mem_subsystem #
      parameter integer C_M_AXI_DATA_WIDTH = 32,
      parameter integer C_XFER_SIZE_WIDTH = 32,
      parameter integer VLEN = 4096,
-     parameter integer V_LANES = 16,
+     parameter integer V_LANES = 8,
      parameter integer CHAINING = 4)
    (input clk,
-    
+    input clk2,
     input 				    rstn,
     // AXI FULL VECTOR CORE IF
     output logic 			    v_m_axi_awvalid ,
@@ -140,6 +140,7 @@ module riscv_v_w_mem_subsystem #
 		.data_mem_we_o		(data_mem_we[3:0]),
 		// Inputs
 		.clk			(clk),
+		.clk2			(clk2),
 		.ce			(1'b1),
 		.fencei_o		(),
 		.rstn			(rstn),

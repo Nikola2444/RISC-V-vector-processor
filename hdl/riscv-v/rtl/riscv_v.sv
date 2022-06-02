@@ -4,6 +4,7 @@ module riscv_v #
    parameter CHAINING=4)
    (
     input 	  clk,
+    input 	  clk2,
     input 	  ce,
     input 	  rstn,
 
@@ -84,6 +85,7 @@ module riscv_v #
       .vector_stall_o			(vector_stall),
       // Inputs
       .clk				(clk),
+      .clk2				(clk2),
       .rstn				(rstn),
       .rs1_i				(rs1[31:0]),
       .rs2_i				(rs2[31:0]),

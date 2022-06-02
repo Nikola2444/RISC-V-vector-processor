@@ -51,7 +51,7 @@ module alu_tb();
       alu_opmode[0] <= sub_op;
       @(posedge clk);
       @(posedge clk);
-      alu_opmode[0] <= mul_op;            
+      alu_opmode[0] <= mul_op;
    end
 
 endmodule // alu_tb

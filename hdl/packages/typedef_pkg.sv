@@ -8,14 +8,13 @@ typedef enum logic [8:0] {// add sub
 			  addu_op=9'b000000000, subu_op=9'b000000011,
 			  // logic operations
 			  xor_op=9'b000000100,xnor_op=9'b000000101, and_op=9'b000001100, nand_op=9'b000001110, 
-			  or_op=9'b000011100, nor_op=9'b000011110,
+			  or_op=9'b000011100, nor_op=9'b000011110, andnot_op=9'b000001111, ornot_op=9'b000011111,
 			  // Compare operations, output is one bit LSB
   			  slt_op=9'b110100000, sgt_op=9'b110100001, seq_op=9'b110100010, sle_op=9'b110100101,
-			  sltu_op=9'b000100011, sgtu_op=9'b000100100, sleu_op=9'b000100101, sneq_op=9'b000100110, andnot_op=9'b000100111,
-			  ornot_op=9'b000101000,
+			  sltu_op=9'b000100011, sgtu_op=9'b000100100, sleu_op=9'b000100101, sneq_op=9'b000100110, 
 			  
 			  // Multiply operations
-			  mul_op=9'b111010000, mulhu_op=9'b001010001, mulu_op=9'b001010010, mulh_op=9'b111010011, mulhsu_op=9'b101010011,  mulsu_op=9'b101000010,
+			  mul_op=9'b111010000, mulhu_op=9'b001011000, mulu_op=9'b001010000, mulh_op=9'b111011000, mulhsu_op=9'b101011000,  mulsu_op=9'b101010000,
 			  mul_add_op=9'b111000000, mul_acc_op=9'b111000100, mul_subacc_op=9'b111000111, mulu_add_op=9'b001000000,
 			  mulus_add_op=9'b011000000, mulsu_add_op=9'b101000000, mul_sub_op=9'b111000011,
 			  

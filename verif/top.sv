@@ -6,6 +6,7 @@ module riscv_v_verif_top;
    import riscv_v_test_pkg::*;
 
    logic clk;
+   logic clk2;
    logic rstn;
 
    // interface
@@ -34,6 +35,7 @@ module riscv_v_verif_top;
       .v_m_axi_bready	(axi4_vif.v_m_axi_bready),
       // Inputs
       .clk		(axi4_vif.clk),
+      .clk2		(clk2),
       .rstn		(axi4_vif.rstn),
       .v_m_axi_awready	(axi4_vif.v_m_axi_awready),
       .v_m_axi_wready	(axi4_vif.v_m_axi_wready),
@@ -57,12 +59,14 @@ module riscv_v_verif_top;
    // clock and reset init.
    initial begin
       clk <= 0;
+      clk2 <= 0;
       rstn <= 0;
       #950 rstn <= 1;
    end
 
    // clock generation
    always #50 clk = ~clk;
+   always #100 clk2 = ~clk2;
 
 endmodule : riscv_v_verif_top
 // Local Variables:

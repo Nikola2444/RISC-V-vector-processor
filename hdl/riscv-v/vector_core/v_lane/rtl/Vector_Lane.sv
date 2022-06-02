@@ -6,10 +6,10 @@ module Vector_Lane
         parameter W_PORTS_NUM = 4,
         parameter MEM_DEPTH = 512,
         parameter MAX_VL_PER_LANE = 32,
-        parameter ALU_CTRL_WIDTH = 5,
+        parameter ALU_CTRL_WIDTH = 6,
         parameter MULTIPUMP_WRITE = 2,
         parameter MULTIPUMP_READ = 2,
-        parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
+        parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", /* Select "HIGH_PERFORMANCE" or "LOW_LATENCY" */
         parameter MEM_WIDTH = 32
     )
     (
@@ -40,9 +40,8 @@ module Vector_Lane
         input logic [R_PORTS_NUM - 1 : 0][1 : 0] el_extractor_i,
         input logic [W_PORTS_NUM - 1 : 0] vector_mask_i,
         input logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_i,
-        // input logic [R_PORTS_NUM - 1 : 0] rdata_sign_i,
-        input logic request_control_i,                                                                             // NEW SIGNAL
-        
+        input logic [W_PORTS_NUM - 1 : 0] request_control_i,                                                       // NEW SIGNAL
+    
         // Store/Load signals
         output logic [W_PORTS_NUM - 1 : 0] store_data_valid_o,
         input logic [W_PORTS_NUM - 1 : 0] store_data_valid_i,
@@ -58,7 +57,6 @@ module Vector_Lane
         input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_i,
         input logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_i,
         input logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_i,
-        // input logic [W_PORTS_NUM - 1 : 0] imm_sign_i,
         input logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_i,
         input logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] ALU_ctrl_i,
         input logic [W_PORTS_NUM - 1 : 0] read_data_valid_i,
@@ -96,10 +94,6 @@ logic [R_PORTS_NUM - 1 : 0][7 : 0] read_data_byte_mux;
 logic [R_PORTS_NUM - 1 : 0][1 : 0] read_data_byte_mux_sel;                                          // # Control signal # DONE
 logic [R_PORTS_NUM - 1 : 0][15 : 0] read_data_hw_mux;
 logic [R_PORTS_NUM - 1 : 0] read_data_hw_mux_sel;                                                   // # Control signal # DONE
-// logic [R_PORTS_NUM - 1 : 0][31 : 0] read_data_byte_us_mux;
-// logic [R_PORTS_NUM - 1 : 0] read_data_byte_us_mux_sel;                                              // # Control signal # DONE
-// logic [R_PORTS_NUM - 1 : 0][31 : 0] read_data_hw_us_mux;
-// logic [R_PORTS_NUM - 1 : 0] read_data_hw_us_mux_sel;                                                // # Control signal # DONE
 logic [R_PORTS_NUM - 1 : 0][31 : 0] read_data_mux;
 logic [R_PORTS_NUM - 1 : 0][1 : 0] read_data_mux_sel;                                               // # Control signal # DONE
 logic [R_PORTS_NUM - 1 : 0][3 * 32 - 1 : 0] read_data_prep_reg, read_data_prep_next;
@@ -122,19 +116,9 @@ logic [R_PORTS_NUM - 1 : 0][VRF_DELAY - 2 : 0][1 : 0] el_extractor_reg, el_extra
 // Vector mask pipeline register
 logic [W_PORTS_NUM - 1 : 0] vm_reg, vm_next;
 
-// Read data sign pipeline register
-// logic [R_PORTS_NUM - 1 : 0][VRF_DELAY - 2 : 0] rdata_sign_reg, rdata_sign_next;
-
-// Store and load pipeline registers
-// logic [W_PORTS_NUM - 1 : 0][2 : 0] store_data_valid_reg, store_data_valid_next,
-//                                   store_load_index_valid_reg, store_load_index_valid_next;
-
 // VMRF write pipeline register
 // vmrf_write_en | vmrf_wdata | vmrf_waddr
 logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1 : 0] vmrf_write_reg, vmrf_write_next;
-
-// Slide pipeline registers
-// logic [VRF_DELAY - 2 : 0][$clog2(R_PORTS_NUM) - 1 : 0] slide_data_mux_reg, slide_data_mux_next;
 
 // Pipeline registers for the signals on the same level as ALU
 typedef struct packed
@@ -194,7 +178,6 @@ vrf
 (
     .R_PORTS_NUM(R_PORTS_NUM),
     .W_PORTS_NUM(W_PORTS_NUM),
-    .RAM_TYPE("BRAM"),
     .MEM_DEPTH(MEM_DEPTH),
     .MEM_WIDTH(MEM_WIDTH),
     .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
@@ -239,8 +222,8 @@ VMRF
     
     .dout_o(vmrf_rdata),
     .raddr_i(vmrf_addr_i),
-    .ren_i(4'hff),
-    .oreg_en_i(4'hff), 
+    .ren_i(4'hf),
+    .oreg_en_i(4'hf), 
     .din_i(vmrf_wdata),                  
     .waddr_i(vmrf_waddr),
     .bwe_i(vmrf_wen)
@@ -250,8 +233,8 @@ alu
 #
 (
     .OP_WIDTH(32),
-    .PARALLEL_IF_NUM(W_PORTS_NUM)
-//    .CTRL_WIDTH(ALU_CTRL_WIDTH)
+    .PARALLEL_IF_NUM(W_PORTS_NUM),
+    .CTRL_WIDTH(ALU_CTRL_WIDTH)
 )
 ALU_inst
 (
@@ -267,7 +250,7 @@ ALU_inst
     .alu_vld_o(alu_output_valid_next),
     .alu_o(ALU_data_o[W_PORTS_NUM - 1 : 0]),
     .alu_mask_vector_o(ALU_vector_mask_o),
-    .alu_en_32bit_mul_i(1'b0),                                           //Need more details
+    .alu_en_32bit_mul_i(1'b0),                                          // Need more details
     .alu_stall_i(1'b0)                                                  // Need more details
     
 );
@@ -325,15 +308,8 @@ generate
         always_comb begin
             // Mux for choosing the right byte
             read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen] << 3 +: 8];
-            // Unsigned/Signed 8-bit extender
-            // read_data_byte_us_mux[i_gen] = (read_data_byte_us_mux_sel[i_gen] == 0) ? {{24{1'b0}}, read_data_byte_mux[i_gen]} :
-            //                               {{24{read_data_byte_mux[i_gen][7]}}, read_data_byte_mux[i_gen]};
-
             // Mux for choosing the right halfword
             read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen] << 4 +: 16];
-            // Unsigned/Signed 16-bit extender
-            // read_data_hw_us_mux[i_gen] = (read_data_hw_us_mux_sel[i_gen] == 0) ? {{16{1'b0}}, read_data_hw_mux[i_gen]} :
-            //                               {{16{read_data_hw_mux[i_gen][15]}}, read_data_hw_mux[i_gen]};
             // Mux for choosing the right data
             read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen] << 4 +: 32] : 0;
              
@@ -344,16 +320,14 @@ generate
             if(!rst_i) begin
                 read_data_prep_reg[i_gen] <= 0; 
                 for(int i = 0; i < VRF_DELAY - 1; i++) begin
-                    el_extractor_reg[i_gen][i] <= 0;
-                    // rdata_sign_reg[i_gen][i] <= 0;                    
+                    el_extractor_reg[i_gen][i] <= 0;               
                 end
             end
             else begin
                 read_data_prep_reg[i_gen] <= read_data_prep_next[i_gen];
                 
                 for(int i = 0; i < VRF_DELAY - 1; i++) begin
-                    el_extractor_reg[i_gen][i] <= el_extractor_next[i_gen][i];
-                    // rdata_sign_reg[i_gen][i] <= rdata_sign_next[i_gen][i];                    
+                    el_extractor_reg[i_gen][i] <= el_extractor_next[i_gen][i];                  
                 end
             end
         end
@@ -361,10 +335,8 @@ generate
         always_comb begin
             for(int i = 1; i < VRF_DELAY - 1; i++) begin
                 el_extractor_next[i_gen][i] = el_extractor_reg[i_gen][i - 1];
-                // rdata_sign_next[i_gen][i] = rdata_sign_reg[i_gen][i - 1];
             end
             el_extractor_next[i_gen][0] = el_extractor_i[i_gen];
-            // rdata_sign_next[i_gen][0] = rdata_sign_i[i_gen];
         end
         
         // Generate VRF read assignments
@@ -372,8 +344,6 @@ generate
         assign read_data_byte_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2];
         assign read_data_hw_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2][0];
         assign read_data_mux_sel[i_gen] = vsew_i;
-        // assign read_data_byte_us_mux_sel[i_gen] = rdata_sign_reg[i_gen][VRF_DELAY - 2];
-        // assign read_data_hw_us_mux_sel[i_gen] = rdata_sign_reg[i_gen][VRF_DELAY - 2];
         
     end
         
@@ -446,11 +416,7 @@ generate
         end
         
         // Generate VRF read assignments
-        assign vrf_waddr[j_gen] = vrf_write_reg[j_gen][32 + 4 +: $clog2(MEM_DEPTH)];
-        if(j_gen == SLIDE_PORT_ID)
-            assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[j_gen] | (~request_control_i))}};
-        else
-            assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{alu_output_valid_reg[j_gen]}};
+        assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[j_gen] | request_control_i[j_gen])}};
         assign vrf_write_next[j_gen] = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]}; 
         assign vrf_wdata[j_gen] = vrf_write_reg[j_gen][32 + 4 - 1 : 4];
         assign vmrf_write_next[j_gen] = {vmrf_wen_i[j_gen], ALU_vector_mask_o[j_gen], vmrf_addr_i[j_gen]};
@@ -460,7 +426,6 @@ generate
         assign vm_next[j_gen] = vector_mask_i[j_gen];
         assign bwen_mux_sel[j_gen] = vm_reg[j_gen];
         assign write_data_mux_sel[j_gen] = write_data_sel_i[j_gen];
-        // assign store_data_valid_o = store_data_valid_reg[j_gen][2];
         assign ALU_output_o[j_gen] = ALU_data_o[j_gen];
 
     end

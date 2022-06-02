@@ -27,48 +27,51 @@ module Vlane_with_low_lvl_ctrl
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,
     input logic [2 : 0] vsew_i,
+    input logic [2 : 0] vlmul_i,                                                                                        // NEW SIGNAL
     
     // Control Flow signals
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(INST_TYPE_NUM) - 1 : 0] inst_type_i,
+    input logic [$clog2(INST_TYPE_NUM) - 1 : 0] inst_type_i,
     
     // Handshaking
     input [W_PORTS_NUM - 1 : 0] start_i,
     output logic [W_PORTS_NUM - 1 : 0] ready_o,
     
     // Inst timing signals
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_delay_i,
+    input logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_delay_i,
     
     // VRF signals
-    input logic [W_PORTS_NUM - 1 : 0] vrf_ren_i,                                                
-    input logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren_i,
-    input logic [W_PORTS_NUM - 1 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr_i,
-    input logic [W_PORTS_NUM - 1 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr_i,
-    input logic [W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_i,    
+    input logic  vrf_ren_i,                                                
+    input logic  vrf_oreg_ren_i,
+    input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr_i,
+    input logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr_i,                       // UPDATED
+    input logic [1 : 0] wdata_width_i,    
     
     // Load and Store signals
-    input logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] load_data_i,
-    input logic [W_PORTS_NUM - 1 : 0] load_ready_i,
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
+    input logic load_valid_i,                                                                                           // UPDATED
+    input logic load_last_i,                                                                                            // UPDATED
+    output logic ready_for_load_o,                                                                                      // UPDATED
+    input logic [VLANE_NUM - 1 : 0][31 : 0] load_data_i,
+    input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
+    input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
     
     // ALU
-    input logic [W_PORTS_NUM - 1 : 0][1 : 0] op2_sel_i,
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_i,
-    input logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_i,
-    input logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_i,
-    input logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_opmode_i,
+    input logic [1 : 0] op2_sel_i,
+    input logic [$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_i,
+    input logic [31 : 0] ALU_x_data_i,
+    input logic [4 : 0] ALU_imm_i,
+    input logic [ALU_OPMODE - 1 : 0] ALU_opmode_i,
+    input logic alu_en_32bit_mul_i,                                                               // UPDATED
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
     input logic up_down_slide_i,
     input logic [31 : 0] slide_amount_i,
     
     // Misc signals
-    input logic [W_PORTS_NUM - 1 : 0] vector_mask_i,
-    // input logic [W_PORTS_NUM - 1 : 0] rdata_sign_i,
-    // input logic [W_PORTS_NUM - 1 : 0] imm_sign_i,
+    input logic vector_mask_i,
     
     // A group signals determining where to route read related signals
-    input logic [R_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] read_port_allocation_i,                               // 0 - RP0, 1 RP1, ... 
+    input logic [R_PORTS_NUM - 1 : 0][$clog2(W_PORTS_NUM) - 1 : 0] read_port_allocation_i,                              // UPDATED, 0 - RP0, 1 RP1, ...
+    input logic [R_PORTS_NUM - 1 : 0] primary_read_data_i,                                                              // UPDATED 
     
     // Vlane outputs
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] store_data_o,
@@ -78,8 +81,30 @@ module Vlane_with_low_lvl_ctrl
     
 );
 
+function logic orTree(input logic [W_PORTS_NUM - 1 : 0] vector);
+    
+    localparam R = $clog2(W_PORTS_NUM);                           // 2
+    localparam TREE_WIDTH = ((R ** (R + 1)) - 1) / (R - 1);     // 7
+    logic [TREE_WIDTH - 1 : 0] localVector;
+    
+    localVector = {{(TREE_WIDTH - W_PORTS_NUM){1'b0}}, vector};   // 000 & vector
+    
+    for(int i = R; i >= 1; i--) begin                           
+        for(int j = 0; j < i; j++) begin                        
+            localVector[2 ** i + j] = localVector[2 * j] | localVector[2 * j + 1];
+        end
+        localVector = localVector >> (W_PORTS_NUM >> (R - i));
+    end
+    
+    return localVector[0];
+    
+endfunction
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Connecting signals
+
+// Special load signals
+logic [W_PORTS_NUM - 1 : 0] ready_for_load;
 
 // Off lane signals for slides and reductions
 logic [VLANE_NUM - 1 : 0][31 : 0] slide_data_input, slide_data_output;
@@ -87,12 +112,12 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_output;
 logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 2 : 0][31 : 0] lane_result;
 
 // Driver - Interconnect signals
-logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_di;
+logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_di;                              // TO BE CHECKED
 logic [W_PORTS_NUM - 1 : 0] vrf_ren_di;
 logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren_di;
 logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial_di;
 logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete_di;
-logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_di;
+logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_di;
 logic [W_PORTS_NUM - 2 : 0][3 : 0] vrf_bwen_partial_di;
 logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_complete_di;
 logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_di;   
@@ -107,13 +132,12 @@ logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_di;
 logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_di;
 logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_di;
 logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_di;
+logic alu_en_32bit_mul_di;                                                                      // UPDATED
 logic up_down_slide_di;
-logic request_write_control_di;
+logic [W_PORTS_NUM - 1 : 0] request_write_control_di;                                           // UPDATED
 logic [W_PORTS_NUM - 1 : 0][1 : 0] el_extractor_di;
 logic [W_PORTS_NUM - 1 : 0] vector_mask_di;
 logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_di;
-// logic [W_PORTS_NUM - 1 : 0] rdata_sign_di;
-// logic [W_PORTS_NUM - 1 : 0] imm_sign_di;
 
 // Interconnect - Vector lane signals
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] read_data_valid_il;
@@ -124,6 +148,7 @@ logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_ra
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][3 : 0] vrf_bwen_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_il;   
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vmrf_wen_il;
+logic [VLANE_NUM - 1 : 0][31 : 0] load_data_il;                                                 // UPDATED
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] store_data_valid_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] store_load_index_valid_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_il;
@@ -134,14 +159,15 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_il;
+logic [VLANE_NUM - 1 : 0] alu_en_32bit_mul_il;                                                  // UPDATED
 logic [VLANE_NUM - 1 : 0] up_down_slide_il;
-logic [VLANE_NUM - 1 : 0] request_write_control_il;
+logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] request_write_control_il;                        // UPDATED
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] el_extractor_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vector_mask_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_il;
-// logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] rdata_sign_il;
-// logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] imm_sign_il;
 ////////////////////////////////////////////////////////////////////////////////////
+
+assign ready_for_load_o = orTree(ready_for_load);
 
 generate
     for(genvar i = 0; i < W_PORTS_NUM; i++) begin
@@ -163,16 +189,17 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_i(vsew_i),
-                .inst_type_i(inst_type_i[0]),
+                .vlmul_i(vlmul_i),
+                .inst_type_i(inst_type_i),
                 .start_i(start_i[0]),
                 .ready_o(ready_o[0]),
-                .inst_delay_i(inst_delay_i[0]),
+                .inst_delay_i(inst_delay_i),
                 .read_data_valid_o(read_data_valid_di[0]),
-                .vrf_ren_i(vrf_ren_i[0]),
-                .vrf_oreg_ren_i(vrf_oreg_ren_i[0]),
-                .vrf_starting_waddr_i(vrf_starting_waddr_i[0]),
-                .vrf_starting_raddr_i(vrf_starting_raddr_i[0]),
-                .wdata_width_i(wdata_width_i[0]),
+                .vrf_ren_i(vrf_ren_i),
+                .vrf_oreg_ren_i(vrf_oreg_ren_i),
+                .vrf_starting_waddr_i(vrf_starting_waddr_i),
+                .vrf_starting_raddr_i(vrf_starting_raddr_i),
+                .wdata_width_i(wdata_width_i),
                 .vrf_ren_o(vrf_ren_di[0]),
                 .vrf_oreg_ren_o(vrf_oreg_ren_di[0]),
                 .vrf_waddr_o(vrf_waddr_complete_di),
@@ -180,37 +207,37 @@ generate
                 .vrf_bwen_o(vrf_bwen_complete_di),
                 .vmrf_addr_o(vmrf_addr_di[0]),   
                 .vmrf_wen_o(vmrf_wen_di[0]),
-                .load_ready_i(load_ready_i[0]),
-                .store_data_mux_sel_i(store_data_mux_sel_i[0]),
-                .store_load_index_mux_sel_i(store_load_index_mux_sel_i[0]),
+                .load_valid_i(load_valid_i),
+                .load_last_i(load_last_i),
+                .ready_for_load_o(ready_for_load[0]),
+                .store_data_mux_sel_i(store_data_mux_sel_i),
+                .store_load_index_mux_sel_i(store_load_index_mux_sel_i),
                 .store_data_valid_o(store_data_valid_di[0]),
                 .store_load_index_valid_o(store_load_index_valid_di[0]),
                 .store_data_mux_sel_o(store_data_mux_sel_di[0]),
                 .store_load_index_mux_sel_o(store_load_index_mux_sel_di[0]),
                 .lane_result_i(lane_result[0]),
-                .op2_sel_i(op2_sel_i[0]),
-                .op3_sel_i(op3_sel_i[0]),
-                .ALU_x_data_i(ALU_x_data_i[0]),
-                .ALU_imm_i(ALU_imm_i[0]),
-                .ALU_opmode_i(ALU_opmode_i[0]),
+                .op2_sel_i(op2_sel_i),
+                .op3_sel_i(op3_sel_i),
+                .ALU_x_data_i(ALU_x_data_i),
+                .ALU_imm_i(ALU_imm_i),
+                .ALU_opmode_i(ALU_opmode_i),
                 .op2_sel_o(op2_sel_di[0]),
                 .op3_sel_o(op3_sel_di[0]),
                 .ALU_x_data_o(ALU_x_data_di[0]),
                 .ALU_imm_o(ALU_imm_di[0]),
                 .ALU_reduction_data_o(ALU_reduction_data_di[0]),
-                .ALU_ctrl_o(ALU_ctrl_di[0]),                               
+                .ALU_ctrl_o(ALU_ctrl_di[0]),
+                .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
+                .alu_en_32bit_mul_o(alu_en_32bit_mul_di),                               
                 .up_down_slide_i(up_down_slide_i),
                 .slide_amount_i(slide_amount_i),
                 .up_down_slide_o(up_down_slide_di),                                         // 1 for left and 0 for right
-                .request_write_control_o(request_write_control_di),
-                .vector_mask_i(vector_mask_i[0]),
-                // .rdata_sign_i(rdata_sign_i[0]),
-                // .imm_sign_i(imm_sign_i[0]),
+                .request_write_control_o(request_write_control_di[0]),
+                .vector_mask_i(vector_mask_i),
                 .el_extractor_o(el_extractor_di[0]),
                 .vector_mask_o(vector_mask_di[0]),
                 .write_data_sel_o(write_data_sel_di[0])
-                // .rdata_sign_o(rdata_sign_di[0]),
-                // .imm_sign_o(imm_sign_di[0]) 
             );
         end
         else begin
@@ -231,16 +258,17 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_i(vsew_i),
-                .inst_type_i(inst_type_i[i]),
+                .vlmul_i(vlmul_i),
+                .inst_type_i(inst_type_i),
                 .start_i(start_i[i]),
                 .ready_o(ready_o[i]),
-                .inst_delay_i(inst_delay_i[i]),
+                .inst_delay_i(inst_delay_i),
                 .read_data_valid_o(read_data_valid_di[i]),
-                .vrf_ren_i(vrf_ren_i[i]),
-                .vrf_oreg_ren_i(vrf_oreg_ren_i[i]),
-                .vrf_starting_waddr_i(vrf_starting_waddr_i[i]),
-                .vrf_starting_raddr_i(vrf_starting_raddr_i[i]),
-                .wdata_width_i(wdata_width_i[i]),
+                .vrf_ren_i(vrf_ren_i),
+                .vrf_oreg_ren_i(vrf_oreg_ren_i),
+                .vrf_starting_waddr_i(vrf_starting_waddr_i),
+                .vrf_starting_raddr_i(vrf_starting_raddr_i),
+                .wdata_width_i(wdata_width_i),
                 .vrf_ren_o(vrf_ren_di[i]),
                 .vrf_oreg_ren_o(vrf_oreg_ren_di[i]),
                 .vrf_waddr_o(vrf_waddr_partial_di[i - 1]),
@@ -248,33 +276,32 @@ generate
                 .vrf_bwen_o(vrf_bwen_partial_di[i - 1]),
                 .vmrf_addr_o(vmrf_addr_di[i]),   
                 .vmrf_wen_o(vmrf_wen_di[i]),
-                .load_ready_i(load_ready_i[i]),
-                .store_data_mux_sel_i(store_data_mux_sel_i[i]),
-                .store_load_index_mux_sel_i(store_load_index_mux_sel_i[i]),
+                .load_valid_i(load_valid_i),
+                .load_last_i(load_last_i),
+                .ready_for_load_o(ready_for_load[i]),
+                .request_write_control_o(request_write_control_di[i]),
+                .store_data_mux_sel_i(store_data_mux_sel_i),
+                .store_load_index_mux_sel_i(store_load_index_mux_sel_i),
                 .store_data_valid_o(store_data_valid_di[i]),
                 .store_load_index_valid_o(store_load_index_valid_di[i]),
                 .store_data_mux_sel_o(store_data_mux_sel_di[i]),
                 .store_load_index_mux_sel_o(store_load_index_mux_sel_di[i]),
                 .lane_result_i(lane_result[i]),
-                .op2_sel_i(op2_sel_i[i]),
-                .op3_sel_i(op3_sel_i[i]),
-                .ALU_x_data_i(ALU_x_data_i[i]),
-                .ALU_imm_i(ALU_imm_i[i]),
-                .ALU_opmode_i(ALU_opmode_i[i]),
+                .op2_sel_i(op2_sel_i),
+                .op3_sel_i(op3_sel_i),
+                .ALU_x_data_i(ALU_x_data_i),
+                .ALU_imm_i(ALU_imm_i),
+                .ALU_opmode_i(ALU_opmode_i),
                 .op2_sel_o(op2_sel_di[i]),
                 .op3_sel_o(op3_sel_di[i]),
                 .ALU_x_data_o(ALU_x_data_di[i]),
                 .ALU_imm_o(ALU_imm_di[i]),
                 .ALU_reduction_data_o(ALU_reduction_data_di[i]),
                 .ALU_ctrl_o(ALU_ctrl_di[i]),                               
-                .vector_mask_i(vector_mask_i[i]),
-                // .rdata_sign_i(rdata_sign_i[i]),
-                // .imm_sign_i(imm_sign_i[i]),
+                .vector_mask_i(vector_mask_i),
                 .el_extractor_o(el_extractor_di[i]),
                 .vector_mask_o(vector_mask_di[i]),
                 .write_data_sel_o(write_data_sel_di[i])
-                // .rdata_sign_o(rdata_sign_di[i]),
-                // .imm_sign_o(imm_sign_di[i]) 
             );        
         end
     end
@@ -311,6 +338,8 @@ Driver_vlane_interconnect_inst
     .vmrf_wen_i(vmrf_wen_di),
     .vmrf_addr_o(vmrf_addr_il),   
     .vmrf_wen_o(vmrf_wen_il),
+    .load_data_i(load_data_i),
+    .load_data_o(load_data_il),
     .store_data_valid_i(store_data_valid_di),
     .store_load_index_valid_i(store_load_index_valid_di),
     .store_data_mux_sel_i(store_data_mux_sel_di),
@@ -325,12 +354,14 @@ Driver_vlane_interconnect_inst
     .ALU_imm_i(ALU_imm_di),
     .ALU_reduction_data_i(ALU_reduction_data_di),
     .ALU_ctrl_i(ALU_ctrl_di),
+    .alu_en_32bit_mul_i(alu_en_32bit_mul_di),
     .op2_sel_o(op2_sel_il),
     .op3_sel_o(op3_sel_il),
     .ALU_x_data_o(ALU_x_data_il),
     .ALU_imm_o(ALU_imm_il),
     .ALU_reduction_data_o(ALU_reduction_data_il),
     .ALU_ctrl_o(ALU_ctrl_il),
+    .alu_en_32bit_mul_o(alu_en_32bit_mul_il),
     .up_down_slide_i(up_down_slide_di),
     .request_write_control_i(request_write_control_di),
     .up_down_slide_o(up_down_slide_il),
@@ -338,14 +369,11 @@ Driver_vlane_interconnect_inst
     .el_extractor_i(el_extractor_di),
     .vector_mask_i(vector_mask_di),
     .write_data_sel_i(write_data_sel_di),
-    // .rdata_sign_i(rdata_sign_di),
-    // .imm_sign_i(imm_sign_di),
     .el_extractor_o(el_extractor_il),
     .vector_mask_o(vector_mask_il),
     .write_data_sel_o(write_data_sel_il),
-    // .rdata_sign_o(rdata_sign_il),
-    // .imm_sign_o(imm_sign_il),
-    .read_port_allocation_i(read_port_allocation_i)
+    .read_port_allocation_i(read_port_allocation_i),
+    .primary_read_data_i(primary_read_data_i) 
     
 );
 
@@ -382,7 +410,6 @@ generate
             .el_extractor_i(el_extractor_il[i]),
             .vector_mask_i(vector_mask_il[i]),
             .write_data_sel_i(write_data_sel_il[i]),
-            // .rdata_sign_i(rdata_sign_il[i]),
             .request_control_i(request_write_control_il[i]),
             .store_data_valid_o(store_data_valid_o[i]),
             .store_data_valid_i(store_data_valid_il[i]),
@@ -396,7 +423,6 @@ generate
             .op3_sel_i(op3_sel_il[i]),
             .ALU_x_data_i(ALU_x_data_il[i]),
             .ALU_imm_i(ALU_imm_il[i]),
-            // .imm_sign_i(imm_sign_il[i]),
             .ALU_reduction_data_i(ALU_reduction_data_il[i]),
             .ALU_ctrl_i(ALU_ctrl_il[i]),
             .read_data_valid_i(read_data_valid_il[i]),

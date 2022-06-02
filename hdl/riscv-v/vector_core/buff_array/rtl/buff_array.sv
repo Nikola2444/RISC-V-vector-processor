@@ -81,8 +81,11 @@ module buff_array #(
   output wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size_o       ,
   input  wire [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_o              ,
   input  wire                                   cfg_store_data_lmul_gto_i, //TODO CONNECT
-  input  wire [1:0]                             cfg_store_data_l2_lmul_amt_i  , //TODO CONNECT
-  input  wire [1:0]                             cfg_store_data_l2_sew_amt_i     //TODO CONNECT
+  input  wire [1:0]                             cfg_store_data_l2_lmul_i  , //TODO CONNECT
+  input  wire [1:0]                             cfg_store_data_l2_sew_i ,    //TODO CONNECT
+  input  wire                                   cfg_load_data_lmul_gto_i, //TODO CONNECT
+  input  wire [1:0]                             cfg_load_data_l2_lmul_i  , //TODO CONNECT
+  input  wire [1:0]                             cfg_load_data_l2_sew_i     //TODO CONNECT
 );
   ///////////////////////////////////////////////////////////////////////////////
   // Local Parameters
@@ -128,6 +131,7 @@ module buff_array #(
   logic [BATCH_CNTR_WIDTH-1:0]              sbuff_word_batch_cnt; 
   logic [$clog2(VLMAX)-1:0]                 sbuff_word_cnt; 
   logic [$clog2(VLMAX)-1:0]                 sbuff_byte_cnt; 
+  logic [$clog2(VLMAX)-3:0]                 sbuff_32b_cnt; 
   // LOAD LOGIC INTERFACE ***************
   // Read data from AXI full -> rotate right to LSB -> rotate left to right buffer location
   logic [1:0]                               lbuff_wdata_rol_amt;
@@ -142,6 +146,7 @@ module buff_array #(
   // Registers for counting data during transactions
   logic [31:0]                              load_baseaddr_reg;
   logic [BATCH_CNTR_WIDTH-1:0]              lbuff_word_batch_cnt; 
+  logic [BATCH_CNTR_WIDTH-1:0]              lbuff_32b_batch_cnt; 
   logic [$clog2(VLMAX)-1:0]                 lbuff_word_cnt; 
   logic [$clog2(VLMAX)-1:0]                 lbuff_byte_cnt; 
   logic [$clog2(VLMAX)-1:0]                 libuff_read_cntr;
@@ -175,6 +180,7 @@ module buff_array #(
   logic [31:0]                              ldbuff_wdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_waddr;
   logic [V_LANE_NUM-1:0][3:0]               ldbuff_wen;
+  logic [V_LANE_NUM-1:0][3:0]               ldbuff_pr_wen; // Priority
   logic [31:0]                              ldbuff_wptr  [0:V_LANE_NUM-1];
   logic [31:0]                              ldbuff_rdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_raddr;
@@ -196,6 +202,7 @@ module buff_array #(
   ///////////////////////////////////////////////////////////////////////////////
   // Begin RTL
   ///////////////////////////////////////////////////////////////////////////////
+  
   
   // For indexed and strided operations, we need a counter saving current baseaddr
   always_ff @(posedge clk) begin
@@ -306,14 +313,14 @@ module buff_array #(
     end
     else if(cfg_store_update_i) begin
       if(cfg_store_data_lmul_gto_i)
-        sbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_l2_lmul_amt_i);
+        sbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_l2_lmul_i);
       else
-        sbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_store_data_l2_lmul_amt_i);
+        sbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_store_data_l2_lmul_i);
     end
   end
+  assign sbuff_word_cnt =  sbuff_byte_cnt >> cfg_store_data_l2_sew_i[1:0];
+  assign sbuff_32b_cnt  =  sbuff_byte_cnt >> 2;
   assign sbuff_word_batch_cnt = sbuff_word_cnt >> $clog2(V_LANE_NUM);
-  assign sbuff_word_cnt = (cfg_store_data_lmul_gto_i) ? sbuff_byte_cnt >> cfg_store_data_sew_i[1:0] : 
-                                                 sbuff_byte_cnt << cfg_store_data_sew_i[1:0] ;
 
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of V_LANE_NUM buffers to output 
@@ -473,7 +480,7 @@ module buff_array #(
       // Xilinx Simple Dual Port Single Clock RAM with Byte-write
       sdp_bwe_bram #(
         .NB_COL(4),                           // Specify number of columns (number of bytes)
-        .COL_WIDTH(8),                        // Specify column width (byte width, typically 8 or 9)
+        .COL_WIDTH(9),                        // Specify column width (byte width, typically 8 or 9)
         .RAM_DEPTH(BUFF_DEPTH),               // Specify RAM depth (number of entries)
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
@@ -560,7 +567,7 @@ module buff_array #(
       ldbuff_read_cntr <= 0;
     else if (ldbuff_ren_i) begin
       ldbuff_read_cntr <= ldbuff_read_cntr + 1;
-      if (ldbuff_read_cntr >= lbuff_word_batch_cnt)
+      if (ldbuff_read_cntr >= lbuff_32b_batch_cnt)
         ldbuff_read_done_o <= 1'b1;
     end
   end
@@ -591,15 +598,15 @@ module buff_array #(
        lbuff_byte_cnt <= 0;
     end
     else if(cfg_load_update_i) begin
-      if(cfg_store_data_lmul_gto_i)
-        lbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_l2_lmul_amt_i);
+      if(cfg_load_data_lmul_gto_i)
+        lbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_load_data_l2_lmul_i);
       else
-        lbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_store_data_l2_lmul_amt_i);
+        lbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_load_data_l2_lmul_i);
     end
   end
+  assign lbuff_word_cnt = lbuff_byte_cnt >> cfg_load_data_l2_sew_i[1:0];
   assign lbuff_word_batch_cnt = lbuff_word_cnt >> $clog2(V_LANE_NUM);
-  assign lbuff_word_cnt = (cfg_store_data_lmul_gto_i) ? lbuff_byte_cnt >> cfg_store_data_sew_i[1:0] : 
-                                                 lbuff_byte_cnt << cfg_store_data_sew_i[1:0] ;
+  assign lbuff_32b_batch_cnt = (lbuff_byte_cnt >> 2) >> $clog2(V_LANE_NUM);
 
   // For indexed and strided operations, we need a counter saving current baseaddr
   always_ff @(posedge clk) begin
@@ -633,7 +640,7 @@ module buff_array #(
       libuff_read_cntr <= libuff_read_cntr + 1;
     end
   end
-  assign libuff_read_done_o = (libuff_read_cntr == lbuff_word_cnt);
+  assign libuff_read_done_o = (libuff_read_cntr >= lbuff_word_cnt);
 
   // Output barrel shifter after selecting pointer
   // Narrower data needs to be barrel shifted and extended to fit the position
@@ -695,7 +702,7 @@ module buff_array #(
       end
       default: // FOR SEW = 8
       begin
-        ldbuff_raddr = ldbuff_write_cntr  >>2;
+        ldbuff_raddr = ldbuff_read_cntr  >>2;
         ldbuff_waddr = ldbuff_write_cntr  >>($clog2(V_LANE_NUM)+2);
       end
     endcase
@@ -749,6 +756,57 @@ module buff_array #(
       end
     endcase
   end
+
+  // Changing write enable signals for narrow writes [load data buffer]
+  // Narrower data is packed into 32-bit buffer
+  // Upper V_LANE_NUM 4-bit signals are just shifed
+  always_ff @(posedge clk) begin
+    if (!rstn || cfg_load_update_i) begin
+      ldbuff_wen[V_LANE_NUM-1:1] <= 0;
+    end
+    else begin
+      for(int vlane=1; vlane<(V_LANE_NUM); vlane++)
+        ldbuff_wen[vlane] <= ldbuff_wen[vlane-1];
+    end
+  end
+  // Upper lowest 4-bit signal depends on sew
+  always_ff @(posedge clk) begin
+    if (!rstn) begin
+      ldbuff_wen[0] <= 0;
+    end
+    else begin
+      case(cfg_load_data_sew_i[1:0])
+        2: begin      // FOR SEW = 32
+          ldbuff_wen <= 4'b1111;
+        end
+        1: begin      // FOR SEW = 16
+          if(cfg_load_update_i)
+            ldbuff_wen[0] <= 4'b0011;
+          else if (ldbuff_wen_i && (ldbuff_wen[V_LANE_NUM-1]!=4'b0000))
+            ldbuff_wen[0] <= ((ldbuff_wen[V_LANE_NUM-1]<<2) | (ldbuff_wen[V_LANE_NUM-1]>>2)); // rol 2
+        end
+        default: begin // FOR SEW = 8
+          if(cfg_load_update_i)
+            ldbuff_wen[0] <= 4'b0001; // byte by byte coming
+          else if (ldbuff_wen_i && (ldbuff_wen[V_LANE_NUM-1]!=4'b0000))
+            ldbuff_wen[0] <= ((ldbuff_wen[V_LANE_NUM-1]<<1) | (ldbuff_wen[V_LANE_NUM-1]>>1)); // rol1
+        end
+      endcase
+    end
+  end
+
+  // Priority write enable
+  always_comb begin
+    for(int vlane=0; vlane<(V_LANE_NUM); vlane++)begin
+      ldbuff_pr_wen[vlane] = 4'b1111;
+      for(int b=0; b<4; b++)begin
+        if(ldbuff_wen[vlane][b]==1'b0)
+          ldbuff_pr_wen[vlane][b] = 1'b0;
+        else
+          break;
+      end
+    end
+  end
   
 
   // MAIN GENERATE OVER VECTOR LANES
@@ -771,6 +829,12 @@ module buff_array #(
         endcase
       end
 
+      assign ldbuff_wdata[vlane] = {ldbuff_wen[vlane][3], rd_tdata_i[31:24], ldbuff_wen[vlane][2], rd_tdata_i[23:16],
+                                     ldbuff_wen[vlane][1], rd_tdata_i[15:8], ldbuff_wen[vlane][0],rd_tdata_i[7:0]};
+
+      assign vlane_load_data_o[vlane] = {ldbuff_rdata[vlane][34:27],ldbuff_rdata[vlane][25:18],ldbuff_rdata[vlane][16:9],ldbuff_rdata[vlane][7:0]};
+
+      assign vlane_load_valid_o[vlane] = {ldbuff_rdata[vlane][35],ldbuff_rdata[vlane][26],ldbuff_rdata[vlane][17],ldbuff_rdata[vlane][8]};
 
       // DDR Buffer -> VRF (LOAD) | Data Buffer
       // Xilinx Simple Dual Port Single Clock RAM with Byte-write
@@ -785,7 +849,7 @@ module buff_array #(
         .addra    (ldbuff_waddr),
         .addrb    (ldbuff_raddr),
         .dina     (ldbuff_wdata[vlane]),
-        .wea      ({4{ldbuff_wen_i}} & ldbuff_wen[vlane]),
+        .wea      ({4{ldbuff_wen_i}} & ldbuff_pr_wen[vlane]),
         .enb      (ldbuff_ren),
         .rstb     (ldbuff_rocl),
         .regceb   (ldbuff_roen),

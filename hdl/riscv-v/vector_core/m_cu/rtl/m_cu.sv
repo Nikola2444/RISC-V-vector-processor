@@ -18,6 +18,8 @@ module m_cu #(
   // Scheduler interface
   output logic 	                                mcu_st_rdy_o            ,
   input  logic                                  mcu_st_vld_i            ,
+  output logic 	                                mcu_ld_rdy_o            ,
+  input  logic                                  mcu_ld_vld_i            ,
   input  logic [ 2:0]                           mcu_sew_i               ,
   input  logic [ 2:0]                           mcu_lmul_i              ,
   input  logic [31:0]                           mcu_base_addr_i         ,
@@ -27,10 +29,20 @@ module m_cu #(
   input  logic                                  mcu_strided_ld_st_i     ,
   input  logic                                  mcu_unit_ld_st_i        ,
   // Send config to buff array
-  output wire [2:0]                             cfg_store_data_lmul_o         ,
-  output wire [2:0]                             cfg_store_data_sew_o          ,
-  output wire [2:0]                             cfg_store_idx_sew_o           ,
-  output wire [2:0]                             cfg_store_idx_lmul_o          ,
+  output wire [2:0]                             cfg_store_data_lmul_o   ,
+  output wire [2:0]                             cfg_store_data_sew_o    ,
+  output wire [2:0]                             cfg_store_idx_sew_o     ,
+  output wire [2:0]                             cfg_store_idx_lmul_o    ,
+  output wire                                   cfg_store_data_lmul_gto_o, //TODO CONNECT
+  output wire [1:0]                             cfg_store_data_l2_lmul  ,  //TODO CONNECT
+  output wire [1:0]                             cfg_store_data_l2_sew   ,  //TODO CONNECT
+  output wire [2:0]                             cfg_load_data_lmul_o    ,
+  output wire [2:0]                             cfg_load_data_sew_o     ,
+  output wire [2:0]                             cfg_load_idx_sew_o      ,
+  output wire [2:0]                             cfg_load_idx_lmul_o     ,
+  output wire                                   cfg_load_data_lmul_gto_o,  //TODO CONNECT
+  output wire [1:0]                             cfg_load_data_l2_lmul   ,  //TODO CONNECT
+  output wire [1:0]                             cfg_load_data_l2_sew    ,  //TODO CONNECT
   //
   output wire                                   cfg_store_update_o      ,
   output wire                                   cfg_store_cntr_rst_o    ,
@@ -48,8 +60,30 @@ module m_cu #(
   input  wire                                   sbuff_not_empty_i       ,
   input  wire                                   sbuff_write_done_i      ,
   input  wire                                   sbuff_read_done_i       ,
+  // Load Inerface
+  output wire [2:0]                             load_type_o             ,
+  output wire [31:0]                            load_stride_o           ,
+  output wire [31:0]                            load_baseaddr_o         ,
+  output wire                                   load_baseaddr_reset_o   ,
+  output wire                                   load_baseaddr_update_o  ,
+  output wire                                   libuff_read_stall_o     ,
+  output wire                                   libuff_read_flush_o     ,
+  output wire                                   libuff_wen_o            ,
+  output wire                                   libuff_ren_o            ,
+  input  wire                                   libuff_not_empty_i      ,
+  input  wire                                   libuff_write_done_i     ,
+  input  wire                                   libuff_read_done_i      ,
+  output wire                                   ldbuff_read_stall_o     ,
+  output wire                                   ldbuff_read_flush_o     ,
+  output wire                                   ldbuff_wen_o            ,
+  output wire                                   ldbuff_ren_o            ,
+  input  wire                                   ldbuff_not_empty_i      ,
+  input  wire                                   ldbuff_write_done_i     ,
+  input  wire                                   ldbuff_read_done_i      ,
   // V_LANE interface
   input  wire                                   vlane_store_valid_i     , 
+  input  wire                                   vlane_load_rdy_i        ,
+  input  wire                                   vlane_load_valid_i      ,
   // AXIM_CTRL interface
   // read channel
   output wire                                   ctrl_rstart_o           ,
@@ -112,21 +146,29 @@ module m_cu #(
   logic [6:0] emul_addr;
   logic       emul_valid;
   logic [2:0] emul;
-  logic       save_store_type;
-  logic [2:0] store_type_reg;
 
-  logic [2:0] data_lmul_reg,data_lmul_next;
-  logic [2:0] idx_lmul_reg, idx_lmul_next;
-  logic [2:0] data_sew_reg, data_sew_next;
-  logic [2:0] idx_sew_reg,  idx_sew_next;
+  logic [2:0] store_data_lmul_reg, store_data_lmul_next;
+  logic [2:0] store_idx_lmul_reg,  store_idx_lmul_next;
+  logic [2:0] store_data_sew_reg,  store_data_sew_next;
+  logic [2:0] store_idx_sew_reg,   store_idx_sew_next;
+  logic [2:0] load_data_lmul_reg,  load_data_lmul_next;
+  logic [2:0] load_idx_lmul_reg,   load_idx_lmul_next;
+  logic [2:0] load_data_sew_reg,   load_data_sew_next;
+  logic [2:0] load_idx_sew_reg,    load_idx_sew_next;
   logic       mcu_st_vld_reg;
   logic       wr_tvalid;
   logic [1:0] wr_tvalid_d;
   logic       sbuff_read_invalidate;
-
+  // Store Signals
+  logic       save_store_type;
+  logic [2:0] store_type_reg;
   typedef enum {idle, unit_store_prep, unit_tx, strided_store_prep, strided_tx_prep, strided_tx, indexed_store_prep, indexed_tx_init, indexed_tx_prep, indexed_tx} store_fsm;
   store_fsm store_state_reg, store_state_next;
-
+  // LOAD Signals
+  logic       save_load_type;
+  logic [2:0] load_type_reg;
+  typedef enum {idle, unit_load_prep, unit_tx, strided_load_prep, strided_tx_prep, strided_tx, indexed_load_prep, indexed_tx_init, indexed_tx_prep, indexed_tx} load_fsm;
+  load_fsm load_state_reg, load_state_next;
 
   ///////////////////////////////////////////////////////////////////////////////
   // Begin RTL
@@ -139,10 +181,14 @@ module m_cu #(
   // MAIN STORE FSM M_CU STATE
   always_ff @(posedge clk, negedge rstn)
   begin
-    if(!rstn)
+    if(!rstn) begin
       store_state_reg <= idle;
-    else
+      load_state_reg <= idle;
+    end
+    else begin
       store_state_reg <= store_state_next;
+      load_state_reg <= load_state_next;
+    end
   end
 
   always_ff @(posedge clk, negedge rstn)
@@ -155,12 +201,10 @@ module m_cu #(
 
   always_ff @(posedge clk, negedge rstn)
   begin
-    if(!rstn) begin
+    if(!rstn)
       wr_tvalid_d      <= 0;
-    end
-    else if (!sbuff_read_stall_o) begin
+    else if (!sbuff_read_stall_o)
       wr_tvalid_d      <= {wr_tvalid_d[0], wr_tvalid};
-    end
   end
 
   assign wr_tvalid_o = !sbuff_read_invalidate ? wr_tvalid_d[1] : 1'b0;
@@ -168,36 +212,54 @@ module m_cu #(
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn)begin
-      store_type_reg      <= 0;
-      data_sew_reg        <= 0;
-      data_lmul_reg       <= 0;
-      idx_sew_reg         <= 0;
-      idx_lmul_reg        <= 0;
+      store_type_reg            <= 0;
+      store_data_sew_reg        <= 0;
+      store_data_lmul_reg       <= 0;
+      store_idx_sew_reg         <= 0;
+      store_idx_lmul_reg        <= 0;
     end
     else if (save_store_type) begin
-      store_type_reg      <= {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
-      data_lmul_reg       <= data_lmul_next;
-      data_sew_reg        <= data_sew_next;
-      idx_lmul_reg        <= idx_lmul_next;
-      idx_sew_reg         <= idx_sew_next;
+      store_type_reg            <= {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
+      store_data_lmul_reg       <= store_data_lmul_next;
+      store_data_sew_reg        <= store_data_sew_next;
+      store_idx_lmul_reg        <= store_idx_lmul_next;
+      store_idx_sew_reg         <= store_idx_sew_next;
     end
   end
 
-  assign store_type_o     = store_type_reg;
-  assign cfg_store_data_lmul_o  = data_lmul_reg;
-  assign cfg_store_data_sew_o   = data_sew_reg;
-  assign cfg_store_idx_lmul_o   = idx_lmul_reg;
-  assign cfg_store_idx_sew_o    = idx_sew_reg;
+  always_ff @(posedge clk, negedge rstn)
+  begin
+    if(!rstn)begin
+      load_type_reg            <= 0;
+      load_data_sew_reg        <= 0;
+      load_data_lmul_reg       <= 0;
+      load_idx_sew_reg         <= 0;
+      load_idx_lmul_reg        <= 0;
+    end
+    else if (save_load_type) begin
+      load_type_reg            <= {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
+      load_data_lmul_reg       <= load_data_lmul_next;
+      load_data_sew_reg        <= load_data_sew_next;
+      load_idx_lmul_reg        <= load_idx_lmul_next;
+      load_idx_sew_reg         <= load_idx_sew_next;
+    end
+  end
+
+  assign store_type_o           = store_type_reg;
+  assign cfg_store_data_lmul_o  = store_data_lmul_reg;
+  assign cfg_store_data_sew_o   = store_data_sew_reg;
+  assign cfg_store_idx_lmul_o   = store_idx_lmul_reg;
+  assign cfg_store_idx_sew_o    = store_idx_sew_reg;
 
   // MAIN STORE FSM M_CU NEXTSTATE & CONTROL
   always_comb begin
     // default values for output signals
     store_state_next        = store_state_reg;
     mcu_st_rdy_o            = 1'b0;
-    data_lmul_next          = 0;
-    data_sew_next           = 0;
-    idx_lmul_next           = 0;
-    idx_sew_next            = 0;
+    store_data_lmul_next    = 0;
+    store_data_sew_next     = 0;
+    store_idx_lmul_next     = 0;
+    store_idx_sew_next      = 0;
     store_baseaddr_o        = mcu_base_addr_i;
     store_baseaddr_update_o = 1'b0;
     store_baseaddr_reset_o  = 1'b0;
@@ -225,26 +287,26 @@ module m_cu #(
           if(mcu_unit_ld_st_i)begin
             //unit
             store_state_next        = unit_store_prep;
-            data_sew_next           = mcu_data_width_i;
-            data_lmul_next          = emul;
-            idx_sew_next            = mcu_data_width_i;  // Not used in this context
-            idx_lmul_next           = emul;              // Not used in this context
+            store_data_sew_next     = mcu_data_width_i;
+            store_data_lmul_next    = emul;
+            store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+            store_idx_lmul_next     = emul;              // Not used in this context
           end
           else if (mcu_strided_ld_st_i)begin
             //strided
             store_state_next        = strided_store_prep;
-            data_sew_next           = mcu_data_width_i;
-            data_lmul_next          = emul;
-            idx_sew_next            = mcu_data_width_i;  // Not used in this context
-            idx_lmul_next           = emul;              // Not used in this context
+            store_data_sew_next     = mcu_data_width_i;
+            store_data_lmul_next    = emul;
+            store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+            store_idx_lmul_next     = emul;              // Not used in this context
           end
           else if (mcu_idx_ld_st_i)begin
             //indexed
             store_state_next        = indexed_store_prep;
-            data_sew_next           = mcu_sew_i;
-            data_lmul_next          = mcu_lmul_i;
-            idx_sew_next            = mcu_data_width_i;
-            idx_lmul_next           = emul;
+            store_data_sew_next     = mcu_sew_i;
+            store_data_lmul_next    = mcu_lmul_i;
+            store_idx_sew_next      = mcu_data_width_i;
+            store_idx_lmul_next     = emul;
           end
         end
       end

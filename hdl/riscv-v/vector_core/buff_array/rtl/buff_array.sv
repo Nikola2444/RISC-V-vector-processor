@@ -1,6 +1,6 @@
 // Coded by Djordje Miseljic | e-mail: djordjemiseljic@uns.ac.rs
 ////////////////////////////////////////////////////////////////////////////////
-// default_nettype of none prevents implicit wire declaration.
+// default_nettype of none prevents implicit logic declaration.
 `default_nettype none
 timeunit 1ps;
 timeprecision 1ps;
@@ -15,77 +15,78 @@ module buff_array #(
 )
 (
   // System Signals
-  input  wire                                   clk                     ,
-  input  wire                                   rstn                    ,
-  // Current vector config
-  input  wire [2:0]                             cfg_store_data_lmul_i   ,
-  input  wire [2:0]                             cfg_store_idx_lmul_i    ,
-  input  wire [2:0]                             cfg_store_data_sew_i    ,
-  input  wire [2:0]                             cfg_store_idx_sew_i     ,
-  input  wire [2:0]                             cfg_load_data_lmul_i    ,
-  input  wire [2:0]                             cfg_load_idx_lmul_i     ,
-  input  wire [2:0]                             cfg_load_data_sew_i     ,
-  input  wire [2:0]                             cfg_load_idx_sew_i      ,
-  input  wire [$clog2(VLEN)-1:0]                cfg_vlenb_i             ,
+  input  logic                                   clk                     ,
+  input  logic                                   rstn                    ,
+  // MCU => BUFF_ARRAY CONFIG IF [general]
+  input  logic [$clog2(VLEN)-1:0]                cfg_vlenb_i             ,
+  // MCU => BUFF_ARRAY CONFIG IF [stores]
+  input  logic [2:0]                             cfg_store_data_lmul_i   ,
+  input  logic [2:0]                             cfg_store_idx_lmul_i    ,
+  input  logic [2:0]                             cfg_store_data_sew_i    ,
+  input  logic [2:0]                             cfg_store_idx_sew_i     ,
+  input  logic                                   cfg_store_data_lmul_nf_i,
+  input  logic [1:0]                             cfg_store_data_l2_lmul_i,
+  input  logic [1:0]                             cfg_store_data_l2_sew_i ,
+  // MCU => BUFF_ARRAY CONFIG IF [loads]
+  input  logic [2:0]                             cfg_load_data_lmul_i    ,
+  input  logic [2:0]                             cfg_load_idx_lmul_i     ,
+  input  logic [2:0]                             cfg_load_data_sew_i     ,
+  input  logic [2:0]                             cfg_load_idx_sew_i      ,
+  input  logic                                   cfg_load_data_lmul_nf_i,
+  input  logic [1:0]                             cfg_load_data_l2_lmul_i ,
+  input  logic [1:0]                             cfg_load_data_l2_sew_i  ,
   // M_CU Interface
-  input  wire                                   cfg_store_update_i      ,
-  input  wire                                   cfg_store_cntr_rst_i    ,
-  input  wire                                   cfg_load_update_i       ,
-  input  wire                                   cfg_load_cntr_rst_i     ,
-  // M_CU IF [stores]
-  input  wire [2:0]                             store_type_i            ,
-  input  wire [31:0]                            store_stride_i          ,
-  input  wire [31:0]                            store_baseaddr_i        ,
-  input  wire                                   store_baseaddr_reset_i ,
-  input  wire                                   store_baseaddr_update_i ,
-  input  wire                                   sbuff_read_stall_i      ,
-  input  wire                                   sbuff_read_flush_i      ,
-  input  wire                                   sbuff_wen_i             ,
-  input  wire                                   sbuff_ren_i             ,
-  output wire                                   sbuff_not_empty_o       ,
-  output wire                                   sbuff_write_done_o      ,
-  output wire                                   sbuff_read_done_o       ,
-  // M_CU IF [loads]
-  input  wire [2:0]                             load_type_i             ,
-  input  wire [31:0]                            load_stride_i           ,
-  input  wire [31:0]                            load_baseaddr_i         ,
-  input  wire                                   load_baseaddr_reset_i   ,
-  input  wire                                   load_baseaddr_update_i  ,
-  input  wire                                   ldbuff_read_stall_i     ,
-  input  wire                                   ldbuff_read_flush_i     ,
-  input  wire                                   libuff_read_stall_i     ,
-  input  wire                                   libuff_read_flush_i     ,
-  input  wire                                   ldbuff_wen_i            ,
-  input  wire                                   ldbuff_ren_i            ,
-  input  wire                                   libuff_wen_i            ,
-  input  wire                                   libuff_ren_i            ,
-  output wire                                   ldbuff_not_empty_o      ,
-  output wire                                   ldbuff_write_done_o     ,
-  output wire                                   ldbuff_read_done_o      ,
-  output wire                                   libuff_not_empty_o      ,
-  output wire                                   libuff_write_done_o     ,
-  output wire                                   libuff_read_done_o      ,
-  // V_LANE interface
-  input  wire [31:0]                            vlane_store_data_i [0:V_LANE_NUM-1],
-  input  wire [31:0]                            vlane_store_ptr_i  [0:V_LANE_NUM-1],
-  output wire [31:0]                            vlane_load_data_o  [0:V_LANE_NUM-1],
-  output wire [3:0]                             vlane_load_valid_o [0:V_LANE_NUM-1],
-  input  wire [31:0]                            vlane_load_ptr_i   [0:V_LANE_NUM-1],
-  // AXIM_CTRL interface
-  // read channel
-  output wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ,
-  output wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_o       ,
-  input  wire [C_M_AXI_DATA_WIDTH-1:0]          rd_tdata_i              ,
-  // write channel
-  output wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_waddr_offset_o     ,
-  output wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size_o       ,
-  input  wire [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_o              ,
-  input  wire                                   cfg_store_data_lmul_gto_i, //TODO CONNECT
-  input  wire [1:0]                             cfg_store_data_l2_lmul_i  , //TODO CONNECT
-  input  wire [1:0]                             cfg_store_data_l2_sew_i ,    //TODO CONNECT
-  input  wire                                   cfg_load_data_lmul_gto_i, //TODO CONNECT
-  input  wire [1:0]                             cfg_load_data_l2_lmul_i  , //TODO CONNECT
-  input  wire [1:0]                             cfg_load_data_l2_sew_i     //TODO CONNECT
+  // M_CU <=> BUFF_ARR IF [stores]
+  input  logic                                   store_cfg_update_i      ,
+  input  logic                                   store_cntr_rst_i        ,
+  input  logic [2:0]                             store_type_i            ,
+  input  logic [31:0]                            store_stride_i          ,
+  input  logic [31:0]                            store_baseaddr_i        ,
+  input  logic                                   store_baseaddr_set_i ,
+  input  logic                                   store_baseaddr_update_i ,
+  input  logic                                   sbuff_read_stall_i      ,
+  input  logic                                   sbuff_read_flush_i      ,
+  input  logic                                   sbuff_wen_i             ,
+  input  logic                                   sbuff_ren_i             ,
+  output logic                                   sbuff_not_empty_o       ,
+  output logic                                   sbuff_write_done_o      ,
+  output logic                                   sbuff_read_done_o       ,
+  // M_CU <=> BUFF_ARRAY IF [loads]
+  input  logic                                   load_cfg_update_i       ,
+  input  logic                                   load_cntr_rst_i         ,
+  input  logic [2:0]                             load_type_i             ,
+  input  logic [31:0]                            load_stride_i           ,
+  input  logic [31:0]                            load_baseaddr_i         ,
+  input  logic                                   load_baseaddr_set_i   ,
+  input  logic                                   load_baseaddr_update_i  ,
+  input  logic                                   ldbuff_read_stall_i     ,
+  input  logic                                   ldbuff_read_flush_i     ,
+  input  logic                                   libuff_read_stall_i     ,
+  input  logic                                   libuff_read_flush_i     ,
+  input  logic                                   ldbuff_wen_i            ,
+  input  logic                                   ldbuff_ren_i            ,
+  input  logic                                   libuff_wen_i            ,
+  input  logic                                   libuff_ren_i            ,
+  output logic                                   ldbuff_not_empty_o      ,
+  output logic                                   ldbuff_write_done_o     ,
+  output logic                                   ldbuff_read_done_o      ,
+  output logic                                   libuff_not_empty_o      ,
+  output logic                                   libuff_write_done_o     ,
+  output logic                                   libuff_read_done_o      ,
+  // V_LANE <=> BUFF_ARRAY IF
+  input  logic [31:0]                            vlane_store_data_i [0:V_LANE_NUM-1],
+  input  logic [31:0]                            vlane_store_ptr_i  [0:V_LANE_NUM-1],
+  output logic [31:0]                            vlane_load_data_o  [0:V_LANE_NUM-1],
+  output logic [3:0]                             vlane_load_valid_o [0:V_LANE_NUM-1],
+  input  logic [31:0]                            vlane_load_ptr_i   [0:V_LANE_NUM-1],
+  // AXIM_CTRL <=> BUFF_ARRAY IF [write channel]
+  output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ,
+  output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_o       ,
+  input  logic [C_M_AXI_DATA_WIDTH-1:0]          rd_tdata_i              ,
+  // AXIM_CTRL <=> BUFF_ARRAY IF [read channel]
+  output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_waddr_offset_o     ,
+  output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size_o       ,
+  input  logic [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_o              
 );
   ///////////////////////////////////////////////////////////////////////////////
   // Local Parameters
@@ -209,7 +210,7 @@ module buff_array #(
     if (!rstn) begin
       store_baseaddr_reg <= 0;
     end
-    else if(store_baseaddr_reset_i) begin
+    else if(store_baseaddr_set_i) begin
       store_baseaddr_reg <= store_baseaddr_i;
     end
     else if(store_baseaddr_update_i)begin
@@ -229,7 +230,7 @@ module buff_array #(
 
   // Counter selects data from one store buffer to forward to axi
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_store_cntr_rst_i) begin
+    if (!rstn || store_cntr_rst_i) begin
       sbuff_read_cntr <= 0;
     end
     else if(sbuff_ren_i) begin
@@ -246,7 +247,7 @@ module buff_array #(
   // For SEW=16, every second write
   // For SEW=8,  every fourth write
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_store_cntr_rst_i)
+    if (!rstn || store_cntr_rst_i)
       sbuff_write_cntr <= 0;
     else if (sbuff_wen_i) begin
       sbuff_write_cntr <= sbuff_write_cntr + 1;
@@ -311,8 +312,8 @@ module buff_array #(
     if (!rstn) begin
        sbuff_byte_cnt <= 0;
     end
-    else if(cfg_store_update_i) begin
-      if(cfg_store_data_lmul_gto_i)
+    else if(store_cfg_update_i) begin
+      if(cfg_store_data_lmul_nf_i)
         sbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_l2_lmul_i);
       else
         sbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_store_data_l2_lmul_i);
@@ -383,14 +384,14 @@ module buff_array #(
         sdbuff_wen <= {(V_LANE_NUM*4){1'b1}};
       end
       1: begin      // FOR SEW = 16
-        if(cfg_store_update_i)
+        if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
             sdbuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
           sdbuff_wen <= ((sdbuff_wen<<(V_LANE_NUM*2)) | (sdbuff_wen>>(V_LANE_NUM*4-V_LANE_NUM*2)));
       end
       default: begin // FOR SEW = 8
-        if(cfg_store_update_i)
+        if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
             sdbuff_wen[i/4][i%4] <= (vlane<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
@@ -410,14 +411,14 @@ module buff_array #(
         sibuff_wen <= {(V_LANE_NUM*4){1'b1}};
       end
       1: begin      // FOR SEW = 16
-        if(cfg_store_update_i)
+        if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
             sibuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
           sibuff_wen <= ((sibuff_wen<<(V_LANE_NUM*2)) | (sibuff_wen>>(V_LANE_NUM*4-V_LANE_NUM*2)));
       end
       default: begin // FOR SEW = 8
-        if(cfg_store_update_i)
+        if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
             sibuff_wen[i/4][i%4] <= (vlane<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
@@ -518,13 +519,13 @@ module buff_array #(
         sbuff_strobe_reg <= 4'b1111;
       end
       1: begin      // FOR SEW = 16
-      if(cfg_store_update_i)
+      if(store_cfg_update_i)
         sbuff_strobe_reg <= 4'b0011;
       else if (sbuff_ren_i)
         sbuff_strobe_reg <= sbuff_strobe_next;
       end
       default: begin // FOR SEW = 8
-      if(cfg_store_update_i)
+      if(store_cfg_update_i)
         sbuff_strobe_reg <= 4'b0001;
       else if (sbuff_ren_i)
         sbuff_strobe_reg <= sbuff_strobe_next;
@@ -552,7 +553,7 @@ module buff_array #(
 
   // Counter for number of data written to ldbuff
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_load_cntr_rst_i)
+    if (!rstn || load_cntr_rst_i)
       ldbuff_write_cntr <= 0;
     else if (ldbuff_wen_i) begin
       ldbuff_write_cntr <= ldbuff_write_cntr + 1;
@@ -563,7 +564,7 @@ module buff_array #(
 
   // Counter for number of data read from ldbuff
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_load_cntr_rst_i)
+    if (!rstn || load_cntr_rst_i)
       ldbuff_read_cntr <= 0;
     else if (ldbuff_ren_i) begin
       ldbuff_read_cntr <= ldbuff_read_cntr + 1;
@@ -597,8 +598,8 @@ module buff_array #(
     if (!rstn) begin
        lbuff_byte_cnt <= 0;
     end
-    else if(cfg_load_update_i) begin
-      if(cfg_load_data_lmul_gto_i)
+    else if(load_cfg_update_i) begin
+      if(cfg_load_data_lmul_nf_i)
         lbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_load_data_l2_lmul_i);
       else
         lbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_load_data_l2_lmul_i);
@@ -613,7 +614,7 @@ module buff_array #(
     if (!rstn) begin
       load_baseaddr_reg <= 0;
     end
-    else if(load_baseaddr_reset_i) begin
+    else if(load_baseaddr_set_i) begin
       load_baseaddr_reg <= load_baseaddr_i;
     end
     else if(load_baseaddr_update_i)begin
@@ -633,7 +634,7 @@ module buff_array #(
 
   // Counter selects data from one load buffer to forward to axi
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_load_cntr_rst_i) begin
+    if (!rstn || load_cntr_rst_i) begin
       libuff_read_cntr <= 0;
     end
     else if(libuff_ren_i) begin
@@ -676,7 +677,7 @@ module buff_array #(
   // For SEW=16, every second write
   // For SEW=8,  every fourth write
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_load_cntr_rst_i)
+    if (!rstn || load_cntr_rst_i)
       libuff_write_cntr <= 0;
     else if (libuff_wen_i) begin
       libuff_write_cntr <= libuff_write_cntr + 1;
@@ -741,14 +742,14 @@ module buff_array #(
         libuff_wen <= {(V_LANE_NUM*4){1'b1}};
       end
       1: begin      // FOR SEW = 16
-        if(cfg_load_update_i)
+        if(load_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
             libuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (libuff_wen_i)
           libuff_wen <= ((libuff_wen<<(V_LANE_NUM*2)) | (libuff_wen>>(V_LANE_NUM*4-V_LANE_NUM*2)));
       end
       default: begin // FOR SEW = 8
-        if(cfg_load_update_i)
+        if(load_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
             libuff_wen[i/4][i%4] <= (vlane<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (libuff_wen_i)
@@ -761,7 +762,7 @@ module buff_array #(
   // Narrower data is packed into 32-bit buffer
   // Upper V_LANE_NUM 4-bit signals are just shifed
   always_ff @(posedge clk) begin
-    if (!rstn || cfg_load_update_i) begin
+    if (!rstn || load_cfg_update_i) begin
       ldbuff_wen[V_LANE_NUM-1:1] <= 0;
     end
     else begin
@@ -780,13 +781,13 @@ module buff_array #(
           ldbuff_wen <= 4'b1111;
         end
         1: begin      // FOR SEW = 16
-          if(cfg_load_update_i)
+          if(load_cfg_update_i)
             ldbuff_wen[0] <= 4'b0011;
           else if (ldbuff_wen_i && (ldbuff_wen[V_LANE_NUM-1]!=4'b0000))
             ldbuff_wen[0] <= ((ldbuff_wen[V_LANE_NUM-1]<<2) | (ldbuff_wen[V_LANE_NUM-1]>>2)); // rol 2
         end
         default: begin // FOR SEW = 8
-          if(cfg_load_update_i)
+          if(load_cfg_update_i)
             ldbuff_wen[0] <= 4'b0001; // byte by byte coming
           else if (ldbuff_wen_i && (ldbuff_wen[V_LANE_NUM-1]!=4'b0000))
             ldbuff_wen[0] <= ((ldbuff_wen[V_LANE_NUM-1]<<1) | (ldbuff_wen[V_LANE_NUM-1]>>1)); // rol1

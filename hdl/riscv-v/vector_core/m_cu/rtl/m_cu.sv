@@ -1,4 +1,6 @@
-// Coded by Djordje Miseljic | e-mail: djordjemiseljic@uns.ac.rs //////////////////////////////////////////////////////////////////////////////// // default_nettype of none prevents implicit wire declaration.
+// Coded by Djordje Miseljic | e-mail: djordjemiseljic@uns.ac.rs //////////////////////////////////////////////////////////////////////////////// // default_nettype of none prevents implicit logic declaration.
+////////////////////////////////////////////////////////////////////////////////
+// default_nettype of none prevents implicit logic declaration.
 `default_nettype none
 timeunit 1ps;
 timeprecision 1ps;
@@ -13,90 +15,94 @@ module m_cu #(
 )
 (
   // System Signals
-  input  wire                                   clk                     ,
-  input  wire                                   rstn                    ,
-  // Scheduler interface
-  output logic 	                                mcu_st_rdy_o            ,
-  input  logic                                  mcu_st_vld_i            ,
-  output logic 	                                mcu_ld_rdy_o            ,
-  input  logic                                  mcu_ld_vld_i            ,
-  input  logic [ 2:0]                           mcu_sew_i               ,
-  input  logic [ 2:0]                           mcu_lmul_i              ,
-  input  logic [31:0]                           mcu_base_addr_i         ,
-  input  logic [31:0]                           mcu_stride_i            ,
-  input  logic [ 2:0]                           mcu_data_width_i        ,
-  input  logic                                  mcu_idx_ld_st_i         ,
-  input  logic                                  mcu_strided_ld_st_i     ,
-  input  logic                                  mcu_unit_ld_st_i        ,
-  // Send config to buff array
-  output wire [2:0]                             cfg_store_data_lmul_o   ,
-  output wire [2:0]                             cfg_store_data_sew_o    ,
-  output wire [2:0]                             cfg_store_idx_sew_o     ,
-  output wire [2:0]                             cfg_store_idx_lmul_o    ,
-  output wire                                   cfg_store_data_lmul_gto_o, //TODO CONNECT
-  output wire [1:0]                             cfg_store_data_l2_lmul  ,  //TODO CONNECT
-  output wire [1:0]                             cfg_store_data_l2_sew   ,  //TODO CONNECT
-  output wire [2:0]                             cfg_load_data_lmul_o    ,
-  output wire [2:0]                             cfg_load_data_sew_o     ,
-  output wire [2:0]                             cfg_load_idx_sew_o      ,
-  output wire [2:0]                             cfg_load_idx_lmul_o     ,
-  output wire                                   cfg_load_data_lmul_gto_o,  //TODO CONNECT
-  output wire [1:0]                             cfg_load_data_l2_lmul   ,  //TODO CONNECT
-  output wire [1:0]                             cfg_load_data_l2_sew    ,  //TODO CONNECT
-  //
-  output wire                                   cfg_store_update_o      ,
-  output wire                                   cfg_store_cntr_rst_o    ,
-  output wire                                   cfg_load_cntr_rst_o     ,
-  output wire                                   sbuff_read_en_o         ,
-  output wire [2:0]                             store_type_o            ,
-  output wire [31:0]                            store_stride_o          ,
-  output wire [31:0]                            store_baseaddr_o        ,
-  output wire                                   store_baseaddr_update_o ,
-  output wire                                   store_baseaddr_reset_o  ,
-  output wire                                   sbuff_read_stall_o      ,
-  output wire                                   sbuff_read_flush_o      ,
-  output wire                                   sbuff_wen_o             ,
-  output wire                                   sbuff_ren_o             ,
-  input  wire                                   sbuff_not_empty_i       ,
-  input  wire                                   sbuff_write_done_i      ,
-  input  wire                                   sbuff_read_done_i       ,
-  // Load Inerface
-  output wire [2:0]                             load_type_o             ,
-  output wire [31:0]                            load_stride_o           ,
-  output wire [31:0]                            load_baseaddr_o         ,
-  output wire                                   load_baseaddr_reset_o   ,
-  output wire                                   load_baseaddr_update_o  ,
-  output wire                                   libuff_read_stall_o     ,
-  output wire                                   libuff_read_flush_o     ,
-  output wire                                   libuff_wen_o            ,
-  output wire                                   libuff_ren_o            ,
-  input  wire                                   libuff_not_empty_i      ,
-  input  wire                                   libuff_write_done_i     ,
-  input  wire                                   libuff_read_done_i      ,
-  output wire                                   ldbuff_read_stall_o     ,
-  output wire                                   ldbuff_read_flush_o     ,
-  output wire                                   ldbuff_wen_o            ,
-  output wire                                   ldbuff_ren_o            ,
-  input  wire                                   ldbuff_not_empty_i      ,
-  input  wire                                   ldbuff_write_done_i     ,
-  input  wire                                   ldbuff_read_done_i      ,
-  // V_LANE interface
-  input  wire                                   vlane_store_valid_i     , 
-  input  wire                                   vlane_load_rdy_i        ,
-  input  wire                                   vlane_load_valid_i      ,
-  // AXIM_CTRL interface
-  // read channel
-  output wire                                   ctrl_rstart_o           ,
-  input  wire                                   ctrl_rdone_i            ,
-  output wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_o       ,
-  input  wire                                   rd_tvalid_i             ,
-  output wire                                   rd_tready_o             ,
-  input  wire                                   rd_tlast_i              ,
-  // write channel
-  output wire                                   ctrl_wstart_o           ,
-  input  wire                                   ctrl_wdone_i            ,
-  output wire                                   wr_tvalid_o             ,
-  input  wire                                   wr_tready_i             
+  input  logic                                   clk                     ,
+  input  logic                                   rstn                    ,
+  // SHEDULER <=> M_CU CONFIG [general]
+  input  logic [ 2:0]                            mcu_sew_i               ,
+  input  logic [ 2:0]                            mcu_lmul_i              ,
+  input  logic [31:0]                            mcu_base_addr_i         ,
+  input  logic [31:0]                            mcu_stride_i            ,
+  input  logic [ 2:0]                            mcu_data_width_i        ,
+  input  logic                                   mcu_idx_ld_st_i         ,
+  input  logic                                   mcu_strided_ld_st_i     ,
+  input  logic                                   mcu_unit_ld_st_i        ,
+  // SHEDULER <=> M_CU CONFIG IF [stores]
+  output logic 	                                 mcu_st_rdy_o            ,
+  input  logic                                   mcu_st_vld_i            ,
+  // SHEDULER <=> M_CU CONFIG IF [loads]
+  output logic 	                                 mcu_ld_rdy_o            ,
+  input  logic                                   mcu_ld_vld_i            ,
+  // MCU => BUFF_ARRAY CONFIG IF [general]
+  input  logic [$clog2(VLEN)-1:0]                cfg_vlenb_i             ,
+  // MCU => BUFF_ARRAY CONFIG IF [stores]
+  output logic [2:0]                             cfg_store_data_lmul_o   ,
+  output logic [2:0]                             cfg_store_data_sew_o    ,
+  output logic [2:0]                             cfg_store_idx_sew_o     ,
+  output logic [2:0]                             cfg_store_idx_lmul_o    ,
+  output logic                                   cfg_store_data_lmul_nf_o,  //TODO CONNECT
+  output logic [1:0]                             cfg_store_data_l2_lmul  ,  //TODO CONNECT
+  output logic [1:0]                             cfg_store_data_l2_sew   ,  //TODO CONNECT
+  // MCU => BUFF_ARRAY CONFIG IF [loads]
+  output logic [2:0]                             cfg_load_data_lmul_o    ,
+  output logic [2:0]                             cfg_load_data_sew_o     ,
+  output logic [2:0]                             cfg_load_idx_sew_o      ,
+  output logic [2:0]                             cfg_load_idx_lmul_o     ,
+  output logic                                   cfg_load_data_lmul_nf_o,   //TODO CONNECT
+  output logic [1:0]                             cfg_load_data_l2_lmul   ,  //TODO CONNECT
+  output logic [1:0]                             cfg_load_data_l2_sew    ,  //TODO CONNECT
+  // MCU <=> BUFF_ARRAY CONTROL IF [stores]
+  output logic                                   store_cfg_update_o      ,
+  output logic                                   store_cntr_rst_o        ,
+  output logic [2:0]                             store_type_o            ,
+  output logic [31:0]                            store_stride_o          ,
+  output logic [31:0]                            store_baseaddr_o        ,
+  output logic                                   store_baseaddr_update_o ,
+  output logic                                   store_baseaddr_set_o  ,
+  output logic                                   sbuff_read_stall_o      ,
+  output logic                                   sbuff_read_flush_o      ,
+  output logic                                   sbuff_wen_o             ,
+  output logic                                   sbuff_ren_o             ,
+  input  logic                                   sbuff_not_empty_i       ,
+  input  logic                                   sbuff_write_done_i      ,
+  input  logic                                   sbuff_read_done_i       ,
+  // MCU <=> BUFF_ARRAY CONTROL IF [loads]
+  output logic                                   load_cfg_update_o       ,
+  output logic                                   load_cntr_rst_o         ,
+  output logic [2:0]                             load_type_o             ,
+  output logic [31:0]                            load_stride_o           ,
+  output logic [31:0]                            load_baseaddr_o         ,
+  output logic                                   load_baseaddr_set_o   ,
+  output logic                                   load_baseaddr_update_o  ,
+  output logic                                   libuff_read_stall_o     ,
+  output logic                                   libuff_read_flush_o     ,
+  output logic                                   libuff_wen_o            ,
+  output logic                                   libuff_ren_o            ,
+  input  logic                                   libuff_not_empty_i      ,
+  input  logic                                   libuff_write_done_i     ,
+  input  logic                                   libuff_read_done_i      ,
+  output logic                                   ldbuff_read_stall_o     ,
+  output logic                                   ldbuff_read_flush_o     ,
+  output logic                                   ldbuff_wen_o            ,
+  output logic                                   ldbuff_ren_o            ,
+  input  logic                                   ldbuff_not_empty_i      ,
+  input  logic                                   ldbuff_write_done_i     ,
+  input  logic                                   ldbuff_read_done_i      ,
+  // MCU <=> V_LANE IF
+  input  logic                                   vlane_store_valid_i     , 
+  input  logic                                   vlane_load_rdy_i        ,
+  input  logic                                   vlane_load_valid_i      ,
+  output logic                                   vlane_load_last_o       ,
+  // MCU <=> AXIM CONTROL IF [read channel]
+  output logic                                   ctrl_rstart_o           ,
+  input  logic                                   ctrl_rdone_i            ,
+  input  logic                                   rd_tvalid_i             ,
+  output logic                                   rd_tready_o             ,
+  input  logic                                   rd_tlast_i              ,
+  // MCU <=> AXIM CONTROL IF [write channel]
+  output logic                                   ctrl_wstart_o           ,
+  input  logic                                   ctrl_wdone_i            ,
+  output logic                                   wr_tvalid_o             ,
+  input  logic                                   wr_tready_i             
 );
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -156,19 +162,20 @@ module m_cu #(
   logic [2:0] load_data_sew_reg,   load_data_sew_next;
   logic [2:0] load_idx_sew_reg,    load_idx_sew_next;
   logic       mcu_st_vld_reg;
+  logic       mcu_ld_vld_reg;
   logic       wr_tvalid;
   logic [1:0] wr_tvalid_d;
   logic       sbuff_read_invalidate;
   // Store Signals
   logic       save_store_type;
-  logic [2:0] store_type_reg;
-  typedef enum {idle, unit_store_prep, unit_tx, strided_store_prep, strided_tx_prep, strided_tx, indexed_store_prep, indexed_tx_init, indexed_tx_prep, indexed_tx} store_fsm;
+  logic [2:0] store_type_reg,store_type_next;
+  typedef enum {store_idle, unit_store_prep, unit_store_tx, strided_store_prep, strided_store_tx_prep, strided_store_tx, indexed_store_prep, indexed_store_tx_init, indexed_store_tx_prep, indexed_store_tx} store_fsm;
   store_fsm store_state_reg, store_state_next;
   // LOAD Signals
-  logic       save_load_type;
-  logic [2:0] load_type_reg;
-  typedef enum {idle, unit_load_prep, unit_tx, strided_load_prep, strided_tx_prep, strided_tx, indexed_load_prep, indexed_tx_init, indexed_tx_prep, indexed_tx} load_fsm;
+  typedef enum {load_idle, unit_load_prep, unit_load_tx, strided_load_prep, strided_load_tx_prep, strided_load_tx, indexed_load_prep, indexed_load_tx_init, indexed_load_tx_prep, indexed_load_tx} load_fsm;
   load_fsm load_state_reg, load_state_next;
+  logic       save_load_type;
+  logic [2:0] load_type_reg,load_type_next;
 
   ///////////////////////////////////////////////////////////////////////////////
   // Begin RTL
@@ -178,25 +185,29 @@ module m_cu #(
   assign emul = emul_calc[emul_addr][2:0];
   assign emul_valid = emul_calc[emul_addr][3];
 
-  // MAIN STORE FSM M_CU STATE
+  // STORE FSM M_CU STATE
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn) begin
-      store_state_reg <= idle;
-      load_state_reg <= idle;
+      store_state_reg <= store_idle;
+      load_state_reg  <= load_idle;
     end
     else begin
       store_state_reg <= store_state_next;
-      load_state_reg <= load_state_next;
+      load_state_reg  <= load_state_next;
     end
   end
 
   always_ff @(posedge clk, negedge rstn)
   begin
-    if(!rstn)
+    if(!rstn)begin
       mcu_st_vld_reg      <= 0;
-    else
+      mcu_ld_vld_reg      <= 0;
+    end
+    else begin
       mcu_st_vld_reg      <= mcu_st_vld_i;
+      mcu_ld_vld_reg      <= mcu_ld_vld_i;
+    end
   end
 
   always_ff @(posedge clk, negedge rstn)
@@ -209,6 +220,7 @@ module m_cu #(
 
   assign wr_tvalid_o = !sbuff_read_invalidate ? wr_tvalid_d[1] : 1'b0;
 
+  // save store configuration
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn)begin
@@ -226,7 +238,9 @@ module m_cu #(
       store_idx_sew_reg         <= store_idx_sew_next;
     end
   end
+  assign store_type_next = {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
 
+  // save load configuration
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn)begin
@@ -237,52 +251,53 @@ module m_cu #(
       load_idx_lmul_reg        <= 0;
     end
     else if (save_load_type) begin
-      load_type_reg            <= {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
+      load_type_reg            <= load_type_next;
       load_data_lmul_reg       <= load_data_lmul_next;
       load_data_sew_reg        <= load_data_sew_next;
       load_idx_lmul_reg        <= load_idx_lmul_next;
       load_idx_sew_reg         <= load_idx_sew_next;
     end
   end
+  assign load_type_next = {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
 
-  assign store_type_o           = store_type_reg;
-  assign cfg_store_data_lmul_o  = store_data_lmul_reg;
-  assign cfg_store_data_sew_o   = store_data_sew_reg;
-  assign cfg_store_idx_lmul_o   = store_idx_lmul_reg;
-  assign cfg_store_idx_sew_o    = store_idx_sew_reg;
+  assign store_type_o           = store_type_next;
+  assign cfg_store_data_lmul_o  = store_data_lmul_next;
+  assign cfg_store_data_sew_o   = store_data_sew_next;
+  assign cfg_store_idx_lmul_o   = store_idx_lmul_next;
+  assign cfg_store_idx_sew_o    = store_idx_sew_next;
 
   // MAIN STORE FSM M_CU NEXTSTATE & CONTROL
   always_comb begin
     // default values for output signals
     store_state_next        = store_state_reg;
-    mcu_st_rdy_o            = 1'b0;
-    store_data_lmul_next    = 0;
-    store_data_sew_next     = 0;
-    store_idx_lmul_next     = 0;
-    store_idx_sew_next      = 0;
+    store_data_lmul_next    = store_data_lmul_reg;
+    store_data_sew_next     = store_data_sew_reg;
+    store_idx_lmul_next     = store_idx_lmul_reg;
+    store_idx_sew_next      = store_idx_sew_reg;
     store_baseaddr_o        = mcu_base_addr_i;
+    mcu_st_rdy_o            = 1'b0;
     store_baseaddr_update_o = 1'b0;
-    store_baseaddr_reset_o  = 1'b0;
-    save_store_type         = 0;
+    store_baseaddr_set_o    = 1'b0;
+    save_store_type         = 1'b0;
     sbuff_read_stall_o      = 1'b0;
     sbuff_read_invalidate   = 1'b0;
     sbuff_read_flush_o      = 1'b0;
     sbuff_wen_o             = 1'b0;
     sbuff_ren_o             = 1'b0;
-    cfg_cntr_rst_o          = 1'b0;
+    store_cntr_rst_o        = 1'b0;
     ctrl_wstart_o           = 1'b0;
     wr_tvalid               = 1'b0;
 
     case (store_state_reg)
       // IDLE
-      idle: begin
+      store_idle: begin
         mcu_st_rdy_o = 1'b1;
         if(mcu_st_vld_reg)
         begin
           save_store_type = 1'b1;
-          cfg_store_update_o    = 1'b1;
-          cfg_cntr_rst_o  = 1'b1;
-          store_baseaddr_reset_o = 1'b1;
+          store_cfg_update_o    = 1'b1;
+          store_cntr_rst_o  = 1'b1;
+          store_baseaddr_set_o = 1'b1;
           wr_tvalid              = 1'b1;
           if(mcu_unit_ld_st_i)begin
             //unit
@@ -316,7 +331,7 @@ module m_cu #(
       unit_store_prep: begin
         sbuff_wen_o = vlane_store_valid_i;
         if(sbuff_write_done_i) begin
-          store_state_next = unit_tx;
+          store_state_next = unit_store_tx;
           sbuff_wen_o           = 1'b0;
           ctrl_wstart_o         = 1'b1;
           wr_tvalid             = 1'b1;
@@ -324,11 +339,11 @@ module m_cu #(
         end
       end
       // UNIT_STORE
-      unit_tx: begin
+      unit_store_tx: begin
         if(sbuff_read_done_i) begin
           sbuff_ren_o           = 1'b0;
           if(ctrl_wdone_i)
-            store_state_next = idle;
+            store_state_next = store_idle;
         end
         if(wr_tready_i) begin
           wr_tvalid             = 1'b1;
@@ -347,15 +362,15 @@ module m_cu #(
       strided_store_prep: begin
         sbuff_wen_o = vlane_store_valid_i;
         if(sbuff_write_done_i) begin
-          store_state_next      = strided_tx_prep;
+          store_state_next      = strided_store_tx_prep;
           sbuff_wen_o           = 1'b0;
-          store_baseaddr_reset_o= 1'b1;
+          store_baseaddr_set_o= 1'b1;
           sbuff_ren_o           = 1'b1;
           wr_tvalid             = 1'b1;
         end
       end
       // STRIDED_TX_PREP
-      strided_tx_prep: begin
+      strided_store_tx_prep: begin
         if (sbuff_read_done_i)begin
           sbuff_ren_o      = 1'b0;
           wr_tvalid        = 1'b0;
@@ -366,10 +381,10 @@ module m_cu #(
         end
         ctrl_wstart_o      = 1'b1;
         sbuff_read_invalidate = 1'b1;
-        store_state_next = strided_tx;
+        store_state_next = strided_store_tx;
       end
       // STRIDED_TX
-      strided_tx: begin
+      strided_store_tx: begin
         sbuff_read_stall_o      = 1'b1;
         sbuff_ren_o             = 1'b0;
         if (!wr_tready_i)
@@ -377,9 +392,9 @@ module m_cu #(
         if (ctrl_wdone_i) begin
           store_baseaddr_update_o = 1'b1;
           if(sbuff_read_done_i && (wr_tvalid_d[1:0]==0))
-            store_state_next = idle;
+            store_state_next = store_idle;
           else
-            store_state_next = strided_tx_prep;
+            store_state_next = strided_store_tx_prep;
         end
       end
 
@@ -389,27 +404,27 @@ module m_cu #(
         sbuff_wen_o = vlane_store_valid_i;
         if(sbuff_write_done_i) begin
           sbuff_wen_o             = 1'b0;
-          store_baseaddr_reset_o  = 1'b1;
+          store_baseaddr_set_o  = 1'b1;
           store_baseaddr_update_o = 1'b0;
           sbuff_ren_o             = 1'b1;
           wr_tvalid               = 1'b1;
           if(wr_tvalid_d[1]==1'b1) begin // index is @ output register
-            store_state_next        = indexed_tx_prep;
-            store_baseaddr_reset_o  = 1'b0;
+            store_state_next        = indexed_store_tx_prep;
+            store_baseaddr_set_o  = 1'b0;
             store_baseaddr_update_o = 1'b1;
           end
         end
       end
       // INDEXED_TX_INIT
-      indexed_tx_init: begin
+      indexed_store_tx_init: begin
         sbuff_read_stall_o      = 1'b1;
         sbuff_ren_o             = 1'b0;
         ctrl_wstart_o           = 1'b1;
         sbuff_read_invalidate   = 1'b1;
-        store_state_next        = indexed_tx;
+        store_state_next        = indexed_store_tx;
       end
       // INDEXED_TX_PREP
-      indexed_tx_prep: begin
+      indexed_store_tx_prep: begin
         if (sbuff_read_done_i)begin
           sbuff_ren_o           = 1'b0;
           wr_tvalid             = 1'b0;
@@ -420,10 +435,10 @@ module m_cu #(
         end
         ctrl_wstart_o           = 1'b1;
         sbuff_read_invalidate   = 1'b1;
-        store_state_next        = indexed_tx;
+        store_state_next        = indexed_store_tx;
       end
       // INDEXED_TX
-      indexed_tx: begin
+      indexed_store_tx: begin
         sbuff_read_stall_o      = 1'b1;
         sbuff_ren_o             = 1'b0;
         if (!wr_tready_i)
@@ -431,9 +446,9 @@ module m_cu #(
         if (ctrl_wdone_i) begin
           store_baseaddr_update_o = 1'b1;
           if(sbuff_read_done_i && (wr_tvalid_d[1:0]==0))
-            store_state_next = idle;
+            store_state_next = store_idle;
           else
-            store_state_next = indexed_tx_prep;
+            store_state_next = indexed_store_tx_prep;
         end
       end
       // DEFAULT
@@ -443,6 +458,206 @@ module m_cu #(
     endcase
   end
   
+  assign load_type_o           = load_type_next;
+  assign cfg_load_data_lmul_o  = load_data_lmul_next;
+  assign cfg_load_data_sew_o   = load_data_sew_next;
+  assign cfg_load_idx_lmul_o   = load_idx_lmul_next;
+  assign cfg_load_idx_sew_o    = load_idx_sew_next;
+  // TODO THIS IS A COPY OF A PREVIOUS FSM
+  // TODO CONVERTING TO LOAD FSM IN PROGRESS
+  // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL
+  always_comb begin
+    // default values for output signals
+    load_state_next         = load_state_reg;
+    load_data_lmul_next     = load_data_lmul_reg;
+    load_data_sew_next      = load_data_sew_reg;
+    load_idx_lmul_next      = load_idx_lmul_reg;
+    load_idx_sew_next       = load_idx_sew_reg;
+    load_baseaddr_o         = mcu_base_addr_i;
+    mcu_ld_rdy_o            = 1'b0;
+    load_baseaddr_update_o  = 1'b0;
+    load_baseaddr_set_o     = 1'b0;
+    load_cntr_rst_o         = 1'b0;
+    save_load_type          = 0;
+    libuff_read_stall_o     = 1'b0;
+    libuff_read_flush_o     = 1'b0;
+    libuff_wen_o            = 1'b0;
+    libuff_ren_o            = 1'b0;
+    ldbuff_read_stall_o     = 1'b0;
+    ldbuff_read_flush_o     = 1'b0;
+    ldbuff_wen_o            = 1'b0;
+    ldbuff_ren_o            = 1'b0;
+    ctrl_rstart_o           = 1'b0;
+    rd_tready_o              = 1'b0;
+
+    case (load_state_reg)
+      // IDLE
+      load_idle: begin
+        mcu_ld_rdy_o = 1'b1;
+        if(mcu_ld_vld_reg)
+        begin
+          save_load_type        = 1'b1;
+          load_cfg_update_o     = 1'b1;
+          load_cntr_rst_o       = 1'b1;
+          load_baseaddr_set_o   = 1'b1;
+          if(mcu_unit_ld_st_i)begin
+            //unit
+            load_state_next         = unit_store_prep;
+            load_data_sew_next      = mcu_data_width_i;
+            load_data_lmul_next     = emul;
+            load_idx_sew_next       = mcu_data_width_i;  // Not used in this context
+            load_idx_lmul_next      = emul;              // Not used in this context
+          end
+          else if (mcu_strided_ld_st_i)begin
+            //strided
+            load_state_next         = strided_store_prep;
+            load_data_sew_next      = mcu_data_width_i;
+            load_data_lmul_next     = emul;
+            load_idx_sew_next       = mcu_data_width_i;  // Not used in this context
+            load_idx_lmul_next      = emul;              // Not used in this context
+          end
+          else if (mcu_idx_ld_st_i)begin
+            //indexed
+            load_state_next        = indexed_store_prep;
+            load_data_sew_next     = mcu_sew_i;
+            load_data_lmul_next    = mcu_lmul_i;
+            load_idx_sew_next      = mcu_data_width_i;
+            load_idx_lmul_next     = emul;
+          end
+        end
+      end
+
+// ****************************** CONVERSION LINE *********************************
+      // UNIT LOAD STATES
+      // UNIT_LOAD_PREP
+      unit_load_prep: begin
+        ctrl_rstart_o = 1'b1;
+        rd_tready_o   = 1'b1;
+        ldbuff_wen_o   = rd_tvalid_i;
+        if(rd_tlast_i) begin
+          store_state_next = unit_load_tx;
+          ctrl_rstart_o = 1'b0;
+        end
+      end
+      // UNIT_LOAD
+      unit_store_tx: begin
+        if(sbuff_read_done_i) begin
+          sbuff_ren_o           = 1'b0;
+          if(ctrl_wdone_i)
+            store_state_next = store_idle;
+        end
+        if(wr_tready_i) begin
+          wr_tvalid             = 1'b1;
+          sbuff_ren_o           = 1'b1;
+        end
+        else begin
+          sbuff_read_stall_o    = 1'b1;
+          sbuff_read_invalidate = 1'b1;
+          wr_tvalid             = 1'b0;
+          sbuff_ren_o           = 1'b0;
+        end
+      end
+
+      // STRIDED STORE STATES
+      // STRIDED_STORE_PREP
+      strided_store_prep: begin
+        sbuff_wen_o = vlane_store_valid_i;
+        if(sbuff_write_done_i) begin
+          store_state_next      = strided_store_tx_prep;
+          sbuff_wen_o           = 1'b0;
+          store_baseaddr_set_o  = 1'b1;
+          sbuff_ren_o           = 1'b1;
+          wr_tvalid             = 1'b1;
+        end
+      end
+      // STRIDED_TX_PREP
+      strided_store_tx_prep: begin
+        if (sbuff_read_done_i)begin
+          sbuff_ren_o      = 1'b0;
+          wr_tvalid        = 1'b0;
+        end
+        else begin
+          sbuff_ren_o      = 1'b1;
+          wr_tvalid        = 1'b1;
+        end
+        ctrl_wstart_o      = 1'b1;
+        sbuff_read_invalidate = 1'b1;
+        store_state_next = strided_store_tx;
+      end
+      // STRIDED_TX
+      strided_store_tx: begin
+        sbuff_read_stall_o      = 1'b1;
+        sbuff_ren_o             = 1'b0;
+        if (!wr_tready_i)
+          sbuff_read_invalidate = 1'b1;
+        if (ctrl_wdone_i) begin
+          store_baseaddr_update_o = 1'b1;
+          if(sbuff_read_done_i && (wr_tvalid_d[1:0]==0))
+            store_state_next = store_idle;
+          else
+            store_state_next = strided_store_tx_prep;
+        end
+      end
+
+      // INDEXED STORE STATES
+      // INDEXED_STORE_PREP
+      indexed_store_prep: begin
+        sbuff_wen_o = vlane_store_valid_i;
+        if(sbuff_write_done_i) begin
+          sbuff_wen_o             = 1'b0;
+          store_baseaddr_set_o  = 1'b1;
+          store_baseaddr_update_o = 1'b0;
+          sbuff_ren_o             = 1'b1;
+          wr_tvalid               = 1'b1;
+          if(wr_tvalid_d[1]==1'b1) begin // index is @ output register
+            store_state_next        = indexed_store_tx_prep;
+            store_baseaddr_set_o  = 1'b0;
+            store_baseaddr_update_o = 1'b1;
+          end
+        end
+      end
+      // INDEXED_TX_INIT
+      indexed_store_tx_init: begin
+        sbuff_read_stall_o      = 1'b1;
+        sbuff_ren_o             = 1'b0;
+        ctrl_wstart_o           = 1'b1;
+        sbuff_read_invalidate   = 1'b1;
+        store_state_next        = indexed_store_tx;
+      end
+      // INDEXED_TX_PREP
+      indexed_store_tx_prep: begin
+        if (sbuff_read_done_i)begin
+          sbuff_ren_o           = 1'b0;
+          wr_tvalid             = 1'b0;
+        end
+        else begin
+          sbuff_ren_o           = 1'b1;
+          wr_tvalid             = 1'b1;
+        end
+        ctrl_wstart_o           = 1'b1;
+        sbuff_read_invalidate   = 1'b1;
+        store_state_next        = indexed_store_tx;
+      end
+      // INDEXED_TX
+      indexed_store_tx: begin
+        sbuff_read_stall_o      = 1'b1;
+        sbuff_ren_o             = 1'b0;
+        if (!wr_tready_i)
+          sbuff_read_invalidate = 1'b1;
+        if (ctrl_wdone_i) begin
+          store_baseaddr_update_o = 1'b1;
+          if(sbuff_read_done_i && (wr_tvalid_d[1:0]==0))
+            store_state_next = store_idle;
+          else
+            store_state_next = indexed_store_tx_prep;
+        end
+      end
+      // DEFAULT
+      default begin
+      // SEE TOP OF CASE STATEMENT
+      end
+    endcase
+  end
 
  endmodule : m_cu
 `default_nettype wire

@@ -28,9 +28,9 @@ module Vector_Lane
         input logic [W_PORTS_NUM - 1 : 0][3 : 0] vrf_bwen_i,
         
         // Options for write data and slide-related signals
-        input logic [W_PORTS_NUM - 1 : 0][31 : 0] load_data_i,
-        input logic [W_PORTS_NUM - 1 : 0][31 : 0] slide_data_i,
-        output logic [31 : 0] slide_data_o,                                                                        // NEW SIGNAL
+        input logic [31 : 0] load_data_i,                                                                           // UPDATED
+        input logic [31 : 0] slide_data_i,                                                                          // UPDATED
+        output logic [31 : 0] slide_data_o,
         
         // Vector mask register file
         input logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_i,
@@ -279,7 +279,6 @@ always_comb begin
     op2_sel = ALU_signals_reg[VRF_DELAY - 1].op2_sel;
     op3_sel = ALU_signals_reg[VRF_DELAY - 1].op3_sel;
     ALU_x_data = ALU_signals_reg[VRF_DELAY - 1].ALU_x_data;
-    // imm_sign = ALU_signals_reg[VRF_DELAY - 1].imm_sign;
     ALU_reduction_data = ALU_signals_reg[VRF_DELAY - 1].ALU_reduction_data;
     store_data_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_data_mux_sel;
     store_load_index_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_load_index_mux_sel;
@@ -311,7 +310,7 @@ generate
             // Mux for choosing the right halfword
             read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen] << 4 +: 16];
             // Mux for choosing the right data
-            read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen] << 4 +: 32] : 0;
+            read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen] << 5 +: 32] : 0;
              
         end
         
@@ -356,19 +355,14 @@ generate
             
             case(write_data_mux_sel[j_gen])
                 0: vrf_wdata_mux[j_gen] = ALU_data_o[j_gen];
-                1: vrf_wdata_mux[j_gen] = load_data_i[j_gen];
-                2: vrf_wdata_mux[j_gen] = slide_data_i[j_gen];
-                3:  vrf_wdata_mux[j_gen] = 0; // Should insert an assert
+                1: vrf_wdata_mux[j_gen] = load_data_i;
+                2: vrf_wdata_mux[j_gen] = slide_data_i;
+                3: vrf_wdata_mux[j_gen] = 0; // Should insert an assert
                 default: vrf_wdata_mux[j_gen] = 0;
             endcase
             
             // Extender for immediate
             ALU_imm[j_gen] = {{27{1'b0}}, ALU_signals_reg[VRF_DELAY - 1].ALU_imm[j_gen]};
-//            case(imm_sign[j_gen])
-//                0: ALU_imm[j_gen] = {{27{1'b0}}, ALU_signals_reg[VRF_DELAY - 1].ALU_imm[j_gen]};
-//                1: ALU_imm[j_gen] = {{27{ALU_signals_reg[VRF_DELAY - 1].ALU_imm[j_gen][4]}}, ALU_signals_reg[VRF_DELAY - 1].ALU_imm[j_gen]};
-//                default: ALU_imm[j_gen] = 0; 
-//            endcase
             
             // Muxes for ALU operands
             op1[j_gen] = read_data_mux[j_gen << 1];
@@ -417,10 +411,11 @@ generate
         
         // Generate VRF read assignments
         assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[j_gen] | request_control_i[j_gen])}};
-        assign vrf_write_next[j_gen] = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]}; 
+        assign vrf_write_next[j_gen] = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]};
+        assign vrf_waddr[j_gen] = vrf_write_reg[j_gen][4 + 32 +: 32]; 
         assign vrf_wdata[j_gen] = vrf_write_reg[j_gen][32 + 4 - 1 : 4];
         assign vmrf_write_next[j_gen] = {vmrf_wen_i[j_gen], ALU_vector_mask_o[j_gen], vmrf_addr_i[j_gen]};
-        assign vmrf_wen[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & alu_output_valid_reg[j_gen];
+        assign vmrf_wen[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & (alu_output_valid_reg[j_gen] | request_control_i[j_gen]);
         assign vmrf_wdata[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE)];
         assign vmrf_waddr[j_gen] = vmrf_write_reg[j_gen][$clog2(MAX_VL_PER_LANE) - 1 : 0];
         assign vm_next[j_gen] = vector_mask_i[j_gen];

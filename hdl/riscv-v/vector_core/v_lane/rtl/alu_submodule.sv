@@ -230,13 +230,13 @@ module alu_submodule(/*AUTOARG*/
       comp_out_next = 1'b0;
       case (alu_opmode_reg[0][8:0])
 	 slt_op: comp_out_next = signed'(op1_reg) < signed'(op2_reg);
-	 sgt_op: comp_out_next = signed'(op1_reg) > signed'(op2_reg);
-	 seq_op: comp_out_next = signed'(op1_reg) == signed'(op2_reg);
-	 sle_op: comp_out_next = signed'(op1_reg) <= signed'(op2_reg);
+	 sgt_op: comp_out_next = ~(signed'(op1_reg) < signed'(op2_reg));
+	 seq_op: comp_out_next = (op1_reg) == (op2_reg);
+	 sle_op: comp_out_next = (signed'(op1_reg) < signed'(op2_reg) || (op1_reg) == (op2_reg));
 	 sltu_op: comp_out_next = op1_reg < op2_reg;
-	 sgtu_op: comp_out_next = op1_reg > op2_reg;
-	 sleu_op: comp_out_next = op1_reg <= op2_reg;
-	 sneq_op: comp_out_next = op1_reg != op2_reg;
+	 sgtu_op: comp_out_next = ~(op1_reg < op2_reg);
+	 sleu_op: comp_out_next = ((op1_reg < op2_reg) || (op1_reg == op2_reg));
+	 sneq_op: comp_out_next = ~(op1_reg == op2_reg);
       endcase
    end
  

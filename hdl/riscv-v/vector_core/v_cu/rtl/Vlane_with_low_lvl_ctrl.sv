@@ -180,8 +180,8 @@ generate
                 .R_PORTS_NUM(R_PORTS_NUM),
                 .INST_TYPE_NUM(INST_TYPE_NUM),
                 .VLANE_NUM(VLANE_NUM),
-                .ALU_OPMODE(ALU_OPMODE),
-                .STRIDE_ENABLE("YES")
+                .ALU_OPMODE(ALU_OPMODE)
+                //.STRIDE_ENABLE("YES")
             )
             Complete_sublane_driver_inst
             (
@@ -249,8 +249,8 @@ generate
                 .R_PORTS_NUM(R_PORTS_NUM),
                 .INST_TYPE_NUM(INST_TYPE_NUM),
                 .VLANE_NUM(VLANE_NUM),
-                .ALU_OPMODE(ALU_OPMODE),
-                .STRIDE_ENABLE("NO")
+                .ALU_OPMODE(ALU_OPMODE)
+                //.STRIDE_ENABLE("NO")
             )
             Partial_sublane_driver_inst
             (
@@ -258,7 +258,7 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_i(vsew_i),
-                .vlmul_i(vlmul_i),
+                //.vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
                 .start_i(start_i[i]),
                 .ready_o(ready_o[i]),

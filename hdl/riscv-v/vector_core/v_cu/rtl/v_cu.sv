@@ -101,16 +101,13 @@ module v_cu #
    logic 								  vrf_ren;
    logic 								  vrf_oreg_ren;
 
-   logic [1:0] 								  st_data_mux_sel;
-   logic [1:0] 								  st_ld_index_mux_sel;   
    logic 								  rdata_sign;
    logic 								  imm_sign_i;
 
    // singnals needed by comb logic
-   logic [6:0] 								  v_instr_opcode;
    logic [2:0] 								  v_instr_funct6_upper;
    logic [2:0] 								  v_instr_funct6;
-   logic [2:0] 								  v_instr_funct3;
+   //logic [2:0] 								  v_instr_funct3;
    logic [4:0] 								  v_instr_imm;
    logic [1:0] 								  v_instr_mop;
    logic [4:0] 								  v_instr_rs1;
@@ -124,7 +121,6 @@ module v_cu #
    // Configuration registers
    logic [31:0] 							  vtype_reg, vtype_next;
    logic [31:0] 							  vl_reg, vl_next;
-   logic [2:0] 								  lmul;
    logic [2:0] 								  sew_o;
    logic [$clog2(VLEN)-1:0] 						  vlmax;
    typedef logic [2:0][1:0][$clog2(VLEN)-1:0] 				  vlmax_array_type;
@@ -169,7 +165,7 @@ module v_cu #
 	 instr_vld_reg 	  <= 'h0;
 	 scalar_rs1_reg   <= 'h0;
 	 vtype_reg 	  <= 'h0;
-	 vl_reg 	  <= 'h0;
+	 vl_reg 	  <= 'hf;
       end
       else
       begin
@@ -207,7 +203,7 @@ module v_cu #
 
 
    // Calculating vector length
-   assign vlmax=vlmax_array[lmul][sew_o];
+   assign vlmax=vlmax_array[lmul_o][sew_o];
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
 		    v_instr_vd != 0 ? vlmax : vl_reg;
    
@@ -267,7 +263,7 @@ module v_cu #
    assign alu_x_data_o = scalar_rs1_reg;
    assign alu_imm_o = vector_instr_reg[19:15];
 
-   assign up_down_slide_o = v_instr_funct6 == 6'b001110;
+   assign up_down_slide_o = !(v_instr_funct6 == 6'b001111);
    assign slide_amount_o = instr_vld_reg[9]  ? {{27{1'b0}}, v_instr_imm} :
 			   instr_vld_reg[10] ? scalar_rs1_reg : 32'b1;
    assign vector_mask_o   = vector_instr_reg[25];
@@ -445,7 +441,8 @@ module v_cu #
 
 
    /***************OUTPUTS*************/
-   assign lmul_o = vtype_reg[2:0];
+   assign lmul_o = 
+vtype_reg[2:0];
    assign sew_o = vtype_reg[5:3];
    assign vl_o = vl_reg;
    assign vrf_ren_o = 1'b1; // TODO drive this
@@ -454,4 +451,7 @@ module v_cu #
    assign vrf_starting_waddr_o = vrf_starting_waddr_i;
    assign vrf_starting_raddr_vs1_o = vrf_starting_raddr0_i;
    assign vrf_starting_raddr_vs2_o = vrf_starting_raddr1_i;
+
+   assign store_data_mux_sel_o=start_o;
+   assign store_load_index_mux_sel_o=start_o;
 endmodule

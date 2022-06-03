@@ -2,43 +2,44 @@ module resource_allocate_unit#
   (parameter R_PORTS_NUM = 8,
    parameter W_PORTS_NUM = 4)
    (
-    input logic 		   clk,
-    input logic 		   rstn,
+    input logic 			   clk,
+    input logic 			   rstn,
 
-    output logic [11:0] 	   instr_rdy_o,
-    input logic [11:0] 		   instr_vld_i,
-    output logic [R_PORTS_NUM-1:0] r_port_en_o,
-    output logic [W_PORTS_NUM-1:0] w_port_en_o,
+    output logic [11:0] 		   instr_rdy_o,
+    input logic [11:0] 			   instr_vld_i,
+    output logic [R_PORTS_NUM-1:0] 	   r_port_en_o,
+    output logic [W_PORTS_NUM-1:0] 	   w_port_en_o,
+    output logic [$clog2(R_PORTS_NUM)-1:0] op3_port_sel_o,
 
 
-    output 			   alloc_resources_vld_o,
-    input 			   alloc_resources_rdy_i,
-    input [R_PORTS_NUM-1:0] 	   free_r_port_i,
-    input [W_PORTS_NUM-1:0] 	   free_w_port_i
+    output 				   alloc_resources_vld_o,
+    input 				   alloc_resources_rdy_i,
+    input [R_PORTS_NUM-1:0] 		   free_r_port_i,
+    input [W_PORTS_NUM-1:0] 		   free_w_port_i
     );
 
-   logic [W_PORTS_NUM-1:0] 	   port_group_to_allocate_reg, port_group_to_allocate_next;
-   logic [R_PORTS_NUM/2-1:0] 	   r1_port_group_reg, r1_port_group_next;
-   logic [R_PORTS_NUM/2-1:0] 	   r2_port_group_reg, r2_port_group_next;
-   logic [R_PORTS_NUM-1:0] 	   r12_port_group_reg;
-   logic [R_PORTS_NUM/2-1:0] 	   r1_group_port_sel;
-   logic [R_PORTS_NUM/2-1:0] 	   r2_group_port_sel;
-   logic [R_PORTS_NUM-1:0] 	   r3_port_sel;
-   logic [W_PORTS_NUM-1:0] 	   w_port_group_reg, w_port_group_next;
+   logic [W_PORTS_NUM-1:0] 		   port_group_to_allocate_reg, port_group_to_allocate_next;
+   logic [R_PORTS_NUM/2-1:0] 		   r1_port_group_reg, r1_port_group_next;
+   logic [R_PORTS_NUM/2-1:0] 		   r2_port_group_reg, r2_port_group_next;
+   logic [R_PORTS_NUM-1:0] 		   r12_port_group_reg;
+   logic [R_PORTS_NUM/2-1:0] 		   r1_group_port_sel;
+   logic [R_PORTS_NUM/2-1:0] 		   r2_group_port_sel;
+   logic [R_PORTS_NUM-1:0] 		   r3_port_sel;
+   logic [W_PORTS_NUM-1:0] 		   w_port_group_reg, w_port_group_next;
 
-   logic [R_PORTS_NUM/2-1:0] 	   group_r_port_status;
-   logic [W_PORTS_NUM-1:0] 	   vv_group_rdy;
-   logic [W_PORTS_NUM-1:0] 	   vi_vx_group_rdy;
-   logic [W_PORTS_NUM-1:0] 	   st_idx_ld_group_rdy;
-   logic [W_PORTS_NUM-1:0] 	   idx_st_group_rdy;
-   logic [W_PORTS_NUM-1:0] 	   ld_group_rdy;
-   logic 			   no_resources_in_group;
-   logic 			   vv_instr_check;
-   logic 			   vi_vx_instr_check;
-   logic 			   ld_instr_check;
-   logic 			   st_instr_check;
-   logic 			   idx_ld_instr_check;
-   logic 			   idx_st_instr_check;
+   logic [R_PORTS_NUM/2-1:0] 		   group_r_port_status;
+   logic [W_PORTS_NUM-1:0] 		   vv_group_rdy;
+   logic [W_PORTS_NUM-1:0] 		   vi_vx_group_rdy;
+   logic [W_PORTS_NUM-1:0] 		   st_idx_ld_group_rdy;
+   logic [W_PORTS_NUM-1:0] 		   idx_st_group_rdy;
+   logic [W_PORTS_NUM-1:0] 		   ld_group_rdy;
+   logic 				   no_resources_in_group;
+   logic 				   vv_instr_check;
+   logic 				   vi_vx_instr_check;
+   logic 				   ld_instr_check;
+   logic 				   st_instr_check;
+   logic 				   idx_ld_instr_check;
+   logic 				   idx_st_instr_check;
 
 
    // Sequential logic that updatas register that tells which port group we are using.
@@ -125,12 +126,13 @@ module resource_allocate_unit#
       for (int i=0; i<R_PORTS_NUM; i++)
       begin
 	 if (i/2 != port_group_to_allocate_reg)
-	   if (!r12_port_group_reg[i])
+	   if ( !r12_port_group_reg[i])
 	   begin
-	      r3_port_sel[i+1] = 1'b1; // port 2
+	      r3_port_sel[i] = 1'b1;
+	      op3_port_sel_o = i;
 	      break;
-	   end	   
-      end     
+	   end   
+      end
    end
    
 

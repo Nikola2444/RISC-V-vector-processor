@@ -362,7 +362,7 @@ generate
         
         always_comb begin
         
-            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[j_gen][3 : 0] : (vrf_write_reg[j_gen][3 : 0] & {4{vmrf_rdata}}); 
+            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] : (vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] & {4{vmrf_rdata}}); 
        
             
             case(write_data_mux_sel[j_gen])
@@ -431,7 +431,7 @@ generate
             for(int i = 0; i < VMRF_DELAY - 1; i++) begin
                 vrf_write_next[i + 1][j_gen] = vrf_write_reg[i][j_gen];
                 vmrf_write_next[i + 1][j_gen] <= vmrf_write_reg[i][j_gen];
-                vm_next[i + 1][j_gen] <= vm_reg[i][j_gen];
+               vm_next[i + 1][j_gen] <= vm_reg[i][j_gen];
                 alu_output_valid_next[i + 1][j_gen] <= alu_output_valid_reg[i][j_gen];
                 request_control_next[i + 1][j_gen] <= request_control_reg[i][j_gen];
             end

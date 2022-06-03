@@ -266,7 +266,7 @@ module v_cu #
    assign up_down_slide_o = !(v_instr_funct6 == 6'b001111);
    assign slide_amount_o = instr_vld_reg[9]  ? {{27{1'b0}}, v_instr_imm} :
 			   instr_vld_reg[10] ? scalar_rs1_reg : 32'b1;
-   assign vector_mask_o   = vector_instr_reg[25];
+   assign vector_mask_o   = ~vector_instr_reg[25];
    
    
 

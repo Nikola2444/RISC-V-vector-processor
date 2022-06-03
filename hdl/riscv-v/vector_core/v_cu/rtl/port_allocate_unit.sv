@@ -30,7 +30,7 @@ module port_allocate_unit#
       end
       else
       begin
-	 if (alloc_port_vld_o && port_rdy_i[port_group_to_allocate_reg])
+	 if (start_o[port_group_to_allocate_reg] && port_rdy_i[port_group_to_allocate_reg])
 	   port_group_to_allocate_reg <= port_group_to_allocate_next; 
       end	
    end
@@ -41,10 +41,10 @@ module port_allocate_unit#
    begin
       for (int i=0;i<W_PORTS_NUM;i++)
       begin
-	 start_o[i] = r_port_status[port_group_to_allocate_reg] && i==port_group_to_allocate_reg;
+	 start_o[i] = r_port_status[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld_o;
       end
    end
-   assign alloc_port_vld_o = start_o[port_group_to_allocate_reg]&&((instr_rdy_o && instr_vld_i) != 0 && vrf_starting_addr_vld_i) ;
+   assign alloc_port_vld_o = (instr_rdy_o && instr_vld_i) != 0 && vrf_starting_addr_vld_i ;
 
    generate
       for (genvar i=0; i<R_PORTS_NUM/2; i++)
@@ -58,7 +58,7 @@ module port_allocate_unit#
 	    else
 	    begin
 	       if ((start_o[i] && alloc_port_vld_o) || (mvv_101xxx_instr_check && op3_port_sel_o==i))
-		 r_port_status[i] = 1'b0;
+		 r_port_status[i] <= 1'b0;
 	    end	
 	 end
       end	 
@@ -66,12 +66,12 @@ module port_allocate_unit#
 
    always_comb
    begin      
-      op3_port_sel_o = 'h0;
+      op3_port_sel_o <= 'h0;
       for (int i=0; i<R_PORTS_NUM; i++)
       begin
 	   if (r_port_status[i] && i != port_group_to_allocate_reg)
 	   begin	      
-	      op3_port_sel_o = i;
+	      op3_port_sel_o <= i;
 	      break;
 	   end   
       end

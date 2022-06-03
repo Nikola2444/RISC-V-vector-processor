@@ -56,7 +56,7 @@ module v_cu #
    input logic [W_PORTS_NUM - 1 : 0] port_group_ready_i;
    
    // Inst timing signals
-   output logic [W_PORTS_NUM - 1 : 0][$clog2(LP_MAX_VL_PER_LANE) - 1 : 0] inst_delay_o;
+   output logic [$clog2(LP_MAX_VL_PER_LANE) - 1 : 0] inst_delay_o;
    
    // VRF signals
    output logic 							  vrf_ren_o; // TODO drive this
@@ -164,8 +164,8 @@ module v_cu #
 	 vector_instr_reg <= 'h0;
 	 instr_vld_reg 	  <= 'h0;
 	 scalar_rs1_reg   <= 'h0;
-	 vtype_reg 	  <= 'h0;
-	 vl_reg 	  <= 'hf;
+	 vtype_reg 	  <= {26'h0, 3'b010, 3'b000};
+	 vl_reg 	  <= 4096/32;
       end
       else
       begin
@@ -237,7 +237,7 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = 3'h2;
+   assign inst_delay_o = 3'h4;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;

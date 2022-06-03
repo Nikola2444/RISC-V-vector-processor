@@ -44,7 +44,7 @@ module port_allocate_unit#
 	 start_o[i] = port_rdy_i[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld_o;
       end
    end
-   assign alloc_port_vld_o = (instr_rdy_o && instr_vld_i) != 0 && vrf_starting_addr_vld_i ;
+   assign alloc_port_vld_o = (instr_rdy_o[10:0] && instr_vld_i[10:0]) != 0 && vrf_starting_addr_vld_i ;
 
    generate
       for (genvar i=0; i<R_PORTS_NUM/2; i++)
@@ -66,6 +66,8 @@ module port_allocate_unit#
       end	 
    endgenerate
 
+
+   
    always_comb
    begin      
       op3_port_sel_o <= 'h0;
@@ -80,6 +82,8 @@ module port_allocate_unit#
    end
 
    // Outputs
-   assign instr_rdy_o = {12{r_port_status != 0}}; 
+   assign instr_rdy_o[10:0] = {11{port_rdy_i != 0}};
+   //Config instruction ready
+   assign instr_rdy_o[11] = port_rdy_i == 4'hf; 
    
 endmodule

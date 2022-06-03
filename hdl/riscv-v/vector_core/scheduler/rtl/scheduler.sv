@@ -14,7 +14,7 @@ module scheduler
    input logic [ 1:0]  sew_i,
    output logic        vector_stall_o,
    //*** Scheduler-V_CU interface****
-   input logic [10:0]  instr_rdy_i,
+   input logic [11:0]  instr_rdy_i,
    output logic [11:0] instr_vld_o,
    output logic [31:0] vector_instr_o,
    output logic [31:0] scalar_rs1_o,

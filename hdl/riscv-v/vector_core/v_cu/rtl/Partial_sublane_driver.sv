@@ -387,7 +387,15 @@ always_ff@(posedge clk_i) begin
     end
 end
 
-
+always_ff@(posedge clk_i)
+begin
+   if (!rst_i)
+     ready_o <= 1'b1;
+   else if (start_i && ready_o)
+     ready_o <= 1'b0;
+   else if (next_state == IDLE && !ready_o)
+     ready_o <= 1'b1;    
+end
 
 always_comb begin
     // main counter control signals
@@ -403,7 +411,7 @@ always_comb begin
     raddr_cnt_rst = 0;
     raddr_cnt_en = 0;
     // handshaking signals
-    ready_o = 0;
+   //ready_o = 0;
     // read data validation
     shift_data_validation = 0;
     load_data_validation = 0; 
@@ -440,7 +448,7 @@ always_comb begin
     case(current_state)
         IDLE : begin
             next_state = IDLE;
-            ready_o = 1;
+            //ready_o = 1;
             
             rst_main_cnt = 1;
             rst_vmrf_cnt = 1;
@@ -474,7 +482,7 @@ always_comb begin
             dp0_next.ALU_opmode = ALU_opmode_i;
             dp0_next.vmrf_wen = 0;
             
-            if(start_i) begin
+            if(dp0_reg.start) begin
                 dp0_next.start = 0;
                 case(inst_type_comp[5 : 0])
                     6'b000001 : begin                                            // NORMAL

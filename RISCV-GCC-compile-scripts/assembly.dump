@@ -9,6 +9,6 @@ Disassembly of section .text:
    4:	0a218257          	vsub.vv	v4,v2,v3
    8:	022182d7          	vadd.vv	v5,v2,v3
    c:	02520357          	vadd.vv	v6,v5,v4
-  10:	00807057          	vsetvli	zero,zero,e32,m1,tu,mu,d1
+  10:	00407057          	vsetvli	zero,zero,e16,m1,tu,mu,d1
   14:	2a518157          	vor.vv	v2,v5,v3
   18:	262182d7          	vand.vv	v5,v2,v3

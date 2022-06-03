@@ -172,7 +172,7 @@ module v_cu #
 	 vector_instr_reg <= vector_instr_i;
 	 instr_vld_reg 	  <= instr_vld_i;
 	 scalar_rs1_reg   <= scalar_rs1_i;
-	 if(instr_vld_reg[11]) // config instruction received
+	 if(instr_vld_i[11] && instr_rdy_o[11]) // config instruction received
 	 begin
 	    vtype_reg <= vtype_next;	 
 	    vl_reg    <= vl_next;
@@ -441,8 +441,7 @@ module v_cu #
 
 
    /***************OUTPUTS*************/
-   assign lmul_o = 
-vtype_reg[2:0];
+   assign lmul_o = vtype_reg[2:0];
    assign sew_o = vtype_reg[5:3];
    assign vl_o = vl_reg;
    assign vrf_ren_o = 1'b1; // TODO drive this

@@ -119,7 +119,7 @@ module vector_core #
       .rs1_i				(rs1_i[31:0]),
       .rs2_i				(rs2_i[31:0]),
       .sew_i				(sew[1:0]),
-      .instr_rdy_i			(instr_rdy[10:0]),
+      .instr_rdy_i			(instr_rdy),
       .mcu_ld_rdy_i			(mcu_ld_rdy),
       .mcu_ld_buffered_i		(mcu_ld_buffered),
       .mcu_st_rdy_i			(mcu_st_rdy));
@@ -154,7 +154,7 @@ module vector_core #
 	  .W_PORTS_NUM			(W_PORTS_NUM))
    v_cu_inst(/*AUTO_INST*/
 	     // Outputs
-	     .instr_rdy_o		(instr_rdy[11:0]),
+	     .instr_rdy_o		(instr_rdy),
 	     .sew_o			(sew[2:0]),
 	     .lmul_o			(lmul[2:0]),
 	     .vl_o			(vl[31:0]),

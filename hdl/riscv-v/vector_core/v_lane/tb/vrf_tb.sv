@@ -5,8 +5,9 @@ module vrf_tb ();
    localparam W_PORTS_NUM = 4;
    localparam MULTIPUMP_WRITE = 2;
    localparam MULTIPUMP_READ = 2;
-   localparam MEM_DEPTH = 512;
-   localparam MEM_WIDTH = 32;
+   localparam MEM_DEPTH = 32;
+   localparam MEM_WIDTH = 1;
+   localparam NUM_OF_BYTES = MEM_WIDTH < 8 ? 1 : MEM_WIDTH/8;
    logic 					   clk=1;
    logic 					   clk2=1;
    logic 					   rstn;
@@ -20,7 +21,7 @@ module vrf_tb ();
    
    // write IF
    logic [W_PORTS_NUM-1:0][$clog2(MEM_DEPTH)-1:0]  waddr_i='{default:'0};;
-   logic [W_PORTS_NUM-1:0][MEM_WIDTH/8-1:0] 	   bwe_i='{default:'0};
+   logic [W_PORTS_NUM-1:0][NUM_OF_BYTES-1:0] 	   bwe_i='{default:'0};
    logic [W_PORTS_NUM-1:0] 			   wen_i='{default:'0};
    logic [W_PORTS_NUM-1:0] [MEM_WIDTH-1:0] 	   din_i='{default:'0};;
 
@@ -103,7 +104,7 @@ module vrf_tb ();
 	 @(posedge clk);	 
 	 waddr_i[0] <= i;
 	 bwe_i[0]   <= '{default:'1};
-	 din_i[0]   <= (i+1)*10;
+	 din_i[0]   <= i[0];
       end
       @(posedge clk);
       bwe_i[0]   <= '{default:'0};

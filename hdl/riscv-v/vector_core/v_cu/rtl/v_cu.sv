@@ -56,7 +56,7 @@ module v_cu #
    input logic [W_PORTS_NUM - 1 : 0] port_group_ready_i;
    
    // Inst timing signals
-   output logic [W_PORTS_NUM - 1 : 0][$clog2(LP_MAX_VL_PER_LANE) - 1 : 0] inst_delay_o;
+   output logic [$clog2(LP_MAX_VL_PER_LANE) - 1 : 0] inst_delay_o;
    
    // VRF signals
    output logic 							  vrf_ren_o; // TODO drive this
@@ -101,16 +101,13 @@ module v_cu #
    logic 								  vrf_ren;
    logic 								  vrf_oreg_ren;
 
-   logic [1:0] 								  st_data_mux_sel;
-   logic [1:0] 								  st_ld_index_mux_sel;   
    logic 								  rdata_sign;
    logic 								  imm_sign_i;
 
    // singnals needed by comb logic
-   logic [6:0] 								  v_instr_opcode;
    logic [2:0] 								  v_instr_funct6_upper;
    logic [2:0] 								  v_instr_funct6;
-   logic [2:0] 								  v_instr_funct3;
+   //logic [2:0] 								  v_instr_funct3;
    logic [4:0] 								  v_instr_imm;
    logic [1:0] 								  v_instr_mop;
    logic [4:0] 								  v_instr_rs1;
@@ -124,7 +121,6 @@ module v_cu #
    // Configuration registers
    logic [31:0] 							  vtype_reg, vtype_next;
    logic [31:0] 							  vl_reg, vl_next;
-   logic [2:0] 								  lmul;
    logic [2:0] 								  sew_o;
    logic [$clog2(VLEN)-1:0] 						  vlmax;
    typedef logic [2:0][1:0][$clog2(VLEN)-1:0] 				  vlmax_array_type;
@@ -168,15 +164,15 @@ module v_cu #
 	 vector_instr_reg <= 'h0;
 	 instr_vld_reg 	  <= 'h0;
 	 scalar_rs1_reg   <= 'h0;
-	 vtype_reg 	  <= 'h0;
-	 vl_reg 	  <= 'h0;
+	 vtype_reg 	  <= {26'h0, 3'b010, 3'b000};
+	 vl_reg 	  <= 4096/32;
       end
       else
       begin
 	 vector_instr_reg <= vector_instr_i;
 	 instr_vld_reg 	  <= instr_vld_i;
 	 scalar_rs1_reg   <= scalar_rs1_i;
-	 if(instr_vld_reg[11]) // config instruction received
+	 if(instr_vld_i[11] && instr_rdy_o[11]) // config instruction received
 	 begin
 	    vtype_reg <= vtype_next;	 
 	    vl_reg    <= vl_next;
@@ -207,7 +203,7 @@ module v_cu #
 
 
    // Calculating vector length
-   assign vlmax=vlmax_array[lmul][sew_o];
+   assign vlmax=vlmax_array[lmul_o][sew_o];
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
 		    v_instr_vd != 0 ? vlmax : vl_reg;
    
@@ -241,13 +237,13 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = 3'h2;
+   assign inst_delay_o = 3'h4;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    assign vrf_oreg_ren = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
-   assign wdata_width_o  = widening_instr_check ? sew_o << 2 : sew_o; // NOTE: check this. We should check if widening instructions is in play
+   assign wdata_width_o  = widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
 
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic
@@ -267,10 +263,10 @@ module v_cu #
    assign alu_x_data_o = scalar_rs1_reg;
    assign alu_imm_o = vector_instr_reg[19:15];
 
-   assign up_down_slide_o = v_instr_funct6 == 6'b001110;
+   assign up_down_slide_o = !(v_instr_funct6 == 6'b001111);
    assign slide_amount_o = instr_vld_reg[9]  ? {{27{1'b0}}, v_instr_imm} :
 			   instr_vld_reg[10] ? scalar_rs1_reg : 32'b1;
-   assign vector_mask_o   = vector_instr_reg[25];
+   assign vector_mask_o   = ~vector_instr_reg[25];
    
    
 
@@ -454,4 +450,7 @@ module v_cu #
    assign vrf_starting_waddr_o = vrf_starting_waddr_i;
    assign vrf_starting_raddr_vs1_o = vrf_starting_raddr0_i;
    assign vrf_starting_raddr_vs2_o = vrf_starting_raddr1_i;
+
+   assign store_data_mux_sel_o=start_o;
+   assign store_load_index_mux_sel_o=start_o;
 endmodule

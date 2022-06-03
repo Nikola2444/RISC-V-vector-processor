@@ -79,8 +79,11 @@ module riscv_v #
       .data_mem_we_o           ( data_mem_we_o),
       .data_mem_re_o           ( data_mem_re_o));
 
-   vector_core vector_core_inst
-     (/*AUTOINST*/
+   vector_core # 
+     (.VLEN			(VLEN),
+      .VLANE_NUM		(V_LANES))
+     vector_core_inst
+     (/*AUTO_INST*/
       // Outputs
       .vector_stall_o			(vector_stall),
       // Inputs

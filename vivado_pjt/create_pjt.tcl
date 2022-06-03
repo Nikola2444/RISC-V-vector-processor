@@ -27,13 +27,26 @@ add_files -norecurse ..\/hdl\/common\/sdp_bram.sv
 add_files -norecurse ..\/hdl\/common\/sdp_bwe_bram.sv
 add_files -norecurse ..\/hdl\/common\/tdp_bram.sv
 add_files -norecurse ..\/hdl\/common\/tdp_bwe_bram.sv
+add_files -norecurse ..\/hdl\/common\/sdp_distram.sv
 
 #vector lane
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/vrf.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/alu.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/alu_submodule.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/Vector_Lane.sv
 #scheduler
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/scheduler\/rtl\/scheduler.sv
+#v_cu
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/v_cu.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Address_counter.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Column_offset_register.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Complete_sublane_driver.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Data_validation.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Driver_vlane_interconnect.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Partial_sublane_driver.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/port_allocate_unit.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/renaming_unit.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Vlane_with_low_lvl_ctrl.sv
 #vector core
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/rtl\/vector_core.sv
 #scalar core

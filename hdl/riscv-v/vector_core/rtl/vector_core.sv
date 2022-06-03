@@ -8,11 +8,11 @@ module vector_core #
    parameter MEM_WIDTH =32
    )
    (/*AUTOARG*/
-   // Outputs
-   vector_stall_o,
-   // Inputs
-   clk, clk2, rstn, rs1_i, rs2_i, vector_instr_i
-   );
+    // Outputs
+    vector_stall_o,
+    // Inputs
+    clk, clk2, rstn, rs1_i, rs2_i, vector_instr_i
+    );
    localparam LP_VECTOR_REGISTER_NUM=32;
    localparam LP_MAX_LMUL=8;
    localparam MEM_DEPTH=VLEN/VLANE_NUM;
@@ -20,6 +20,7 @@ module vector_core #
    // Number of bytes in VRF
    localparam LP_LANE_VRF_EL_NUM=VLEN*LP_VECTOR_REGISTER_NUM/8/VLANE_NUM;
    localparam LP_MAX_VL_PER_LANE=VLEN/8/VLANE_NUM*LP_MAX_LMUL;
+   localparam VREG_LOC_PER_LANE = VLEN/VLANE_NUM/32; 
 
    input 	 clk;
    input         clk2;
@@ -30,7 +31,7 @@ module vector_core #
    input [31:0]  rs2_i;
    input [31:0]  vector_instr_i;
    output 	 vector_stall_o;
-    //data interface    
+   //data interface    
 
 
    // Scheduler-M_CU interconnections
@@ -64,33 +65,33 @@ module vector_core #
    
 
    // V_CU-Vector_lanes interconnections
-   logic [2:0] 	 inst_type;
-   logic [W_PORTS_NUM-1:0] start;
-   logic [W_PORTS_NUM-1:0] [4:0] alu_imm;	// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] [ALU_OPMODE_WIDTH-1:0] alu_opmode;// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] [31:0] 		  alu_x_data;	// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] [$clog2(LP_MAX_VL_PER_LANE)-1:0] inst_delay;// From v_cu_inst of v_cu.v
-   logic [31:0] 					    vl;
-   logic [W_PORTS_NUM-1:0] [1:0] 			    op2_sel;	// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] [$clog2(R_PORTS_NUM)-1:0] 	    op3_sel;// From v_cu_inst of v_cu.v
-   logic [31:0] 					    rs1_o;			// From scheduler_inst of scheduler.v
-   logic [2:0] 						    sew_o;			// From v_cu_inst of v_cu.v
-   logic [31:0] 					    slide_amount;		// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] 				    start_o;		// From v_cu_inst of v_cu.v
-   logic [$clog2(R_PORTS_NUM)-1:0] 			    store_data_mux_sel_i;// From v_cu_inst of v_cu.v
-   logic [$clog2(R_PORTS_NUM)-1:0] 			    store_load_index_mux_sel_i;// From v_cu_inst of v_cu.v
-   logic 						    up_down_slide;	// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] 				    vector_mask;	// From v_cu_inst of v_cu.v
-   logic [31:0] 					    vl_o;			// From v_cu_inst of v_cu.v
-   logic 						    vrf_oreg_ren;		// From v_cu_inst of v_cu.v
-   logic 						    vrf_ren;		// From v_cu_inst of v_cu.v
-   logic [8*$clog2(MEM_DEPTH)-1:0] 			    vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
-   logic [8*$clog2(MEM_DEPTH)-1:0] 			    vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
-   logic [8*$clog2(MEM_DEPTH)-1:0] 			    vrf_starting_waddr;// From v_cu_inst of v_cu.v
-   logic [1:0] 						    wdata_width;		// From v_cu_inst of v_cu.v
-   logic [W_PORTS_NUM-1:0] 				    port_group_ready=4'hf;
-   logic [$clog2(R_PORTS_NUM)-1:0] 			    store_data_mux_sel;
-   logic [$clog2(R_PORTS_NUM)-1:0] 			    store_load_idx_mux_sel;
+   logic [2:0] 			   inst_type;
+   logic [W_PORTS_NUM-1:0] 	   start;
+   logic [4:0] 			   alu_imm;	// From v_cu_inst of v_cu.v
+   logic [ALU_OPMODE_WIDTH-1:0]    alu_opmode;// From v_cu_inst of v_cu.v
+   logic [31:0] 		   alu_x_data;	// From v_cu_inst of v_cu.v
+   logic [$clog2(LP_MAX_VL_PER_LANE)-1:0] inst_delay;// From v_cu_inst of v_cu.v
+   logic [31:0] 			  vl;
+   logic [1:0] 				  op2_sel;	// From v_cu_inst of v_cu.v
+   logic [$clog2(R_PORTS_NUM)-1:0] 	  op3_sel;// From v_cu_inst of v_cu.v
+   logic [31:0] 			  rs1_o;			// From scheduler_inst of scheduler.v
+   logic [2:0] 				  sew_o;			// From v_cu_inst of v_cu.v
+   logic [31:0] 			  slide_amount;		// From v_cu_inst of v_cu.v
+
+   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel_i;// From v_cu_inst of v_cu.v
+   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_index_mux_sel_i;// From v_cu_inst of v_cu.v
+   logic 				  up_down_slide;	// From v_cu_inst of v_cu.v
+   logic 				  vector_mask;	// From v_cu_inst of v_cu.v
+   logic [31:0] 			  vl_o;			// From v_cu_inst of v_cu.v
+   logic 				  vrf_oreg_ren;		// From v_cu_inst of v_cu.v
+   logic 				  vrf_ren;		// From v_cu_inst of v_cu.v
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
+   logic [1:0] 				  wdata_width;		// From v_cu_inst of v_cu.v
+   logic [W_PORTS_NUM-1:0] 		  port_group_ready;
+   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel;
+   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_idx_mux_sel;
    
    // End of automatics
    /*INSTANTIATE SCHEDULER*/
@@ -118,7 +119,7 @@ module vector_core #
       .rs1_i				(rs1_i[31:0]),
       .rs2_i				(rs2_i[31:0]),
       .sew_i				(sew[1:0]),
-      .instr_rdy_i			(instr_rdy[10:0]),
+      .instr_rdy_i			(instr_rdy),
       .mcu_ld_rdy_i			(mcu_ld_rdy),
       .mcu_ld_buffered_i		(mcu_ld_buffered),
       .mcu_st_rdy_i			(mcu_st_rdy));
@@ -128,7 +129,7 @@ module vector_core #
    renaming_unit #
      (/*AUTO_INSTPARAM*/
       // Parameters
-      .VLEN		(VLEN),
+      .VLEN     		(VLEN),
       .VLANE_NUM		(VLANE_NUM),
       .R_PORTS_NUM		(R_PORTS_NUM),
       .W_PORTS_NUM		(W_PORTS_NUM))
@@ -153,7 +154,7 @@ module vector_core #
 	  .W_PORTS_NUM			(W_PORTS_NUM))
    v_cu_inst(/*AUTO_INST*/
 	     // Outputs
-	     .instr_rdy_o		(instr_rdy[11:0]),
+	     .instr_rdy_o		(instr_rdy),
 	     .sew_o			(sew[2:0]),
 	     .lmul_o			(lmul[2:0]),
 	     .vl_o			(vl[31:0]),
@@ -175,7 +176,7 @@ module vector_core #
 	     .alu_opmode_o		(alu_opmode/*[W_PORTS_NUM-1:0][ALU_OPMODE_WIDTH-1:0]*/),
 	     .up_down_slide_o		(up_down_slide),
 	     .slide_amount_o		(slide_amount[31:0]),
-	     .vector_mask_o		(vector_mask[W_PORTS_NUM-1:0]),
+	     .vector_mask_o		(vector_mask),
 	     // Inputs
 	     .clk			(clk),
 	     .rstn			(rstn),
@@ -196,7 +197,7 @@ module vector_core #
       // Parameters
       .MEM_DEPTH			(MEM_DEPTH),
       .MAX_VL_PER_LANE 		        (LP_MAX_VL_PER_LANE),
-      .VREG_LOC_PER_LANE		(8),
+      .VREG_LOC_PER_LANE		(VREG_LOC_PER_LANE),
       .W_PORTS_NUM			(W_PORTS_NUM),
       .R_PORTS_NUM			(R_PORTS_NUM),
       .INST_TYPE_NUM			(8),

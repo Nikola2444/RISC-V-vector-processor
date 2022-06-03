@@ -192,6 +192,7 @@ vrf
     .W_PORTS_NUM(W_PORTS_NUM),
     .MEM_DEPTH(MEM_DEPTH),
     .MEM_WIDTH(MEM_WIDTH),
+    .RAM_TYPE ("BRAM"),
     .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
     .MULTIPUMP_READ(MULTIPUMP_READ),
     .RAM_PERFORMANCE(RAM_PERFORMANCE)
@@ -245,8 +246,7 @@ alu
 #
 (
     .OP_WIDTH(32),
-    .PARALLEL_IF_NUM(W_PORTS_NUM),
-    .CTRL_WIDTH(ALU_CTRL_WIDTH)
+    .PARALLEL_IF_NUM(W_PORTS_NUM)    
 )
 ALU_inst
 (
@@ -362,7 +362,7 @@ generate
         
         always_comb begin
         
-            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[j_gen][3 : 0] : (vrf_write_reg[j_gen][3 : 0] & {4{vmrf_rdata}}); 
+            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] : (vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] & {4{vmrf_rdata}}); 
        
             
             case(write_data_mux_sel[j_gen])
@@ -431,7 +431,7 @@ generate
             for(int i = 0; i < VMRF_DELAY - 1; i++) begin
                 vrf_write_next[i + 1][j_gen] = vrf_write_reg[i][j_gen];
                 vmrf_write_next[i + 1][j_gen] <= vmrf_write_reg[i][j_gen];
-                vm_next[i + 1][j_gen] <= vm_reg[i][j_gen];
+               vm_next[i + 1][j_gen] <= vm_reg[i][j_gen];
                 alu_output_valid_next[i + 1][j_gen] <= alu_output_valid_reg[i][j_gen];
                 request_control_next[i + 1][j_gen] <= request_control_reg[i][j_gen];
             end
@@ -443,7 +443,7 @@ generate
         
         // Generate VRF read assignments
         assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_next[VMRF_DELAY - 1][j_gen])}};
-        assign vrf_waddr[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][4 + 32 +: 32]; 
+        assign vrf_waddr[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][4 + 32 +: $clog2(MEM_DEPTH)]; 
         assign vrf_wdata[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][32 + 4 - 1 : 4];
         assign vmrf_wen[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & 
                                  (alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_next[VMRF_DELAY - 1][j_gen]);

@@ -243,7 +243,7 @@ module v_cu #
    assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    assign vrf_oreg_ren = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
-   assign wdata_width_o  = widening_instr_check ? sew_o << 2 : sew_o; // NOTE: check this. We should check if widening instructions is in play
+   assign wdata_width_o  = widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
 
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic

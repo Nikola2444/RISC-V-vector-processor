@@ -387,6 +387,8 @@ always_ff@(posedge clk_i) begin
     end
 end
 
+
+
 always_comb begin
     // main counter control signals
     rst_main_cnt = 0;
@@ -472,7 +474,7 @@ always_comb begin
             dp0_next.ALU_opmode = ALU_opmode_i;
             dp0_next.vmrf_wen = 0;
             
-            if(dp0_reg.start) begin
+            if(start_i) begin
                 dp0_next.start = 0;
                 case(inst_type_comp[5 : 0])
                     6'b000001 : begin                                            // NORMAL

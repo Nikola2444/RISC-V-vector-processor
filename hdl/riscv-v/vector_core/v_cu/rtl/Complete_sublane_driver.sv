@@ -282,7 +282,7 @@ assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;;
 // 32-bit multiply //
 assign alu_en_32bit_mul_o = dp0_reg.alu_en_32bit_mul;
 // Write address generation //
-assign element_width_write = ((current_state == LOAD_MODE) | (current_state == SLIDE_OFFLANE_MOVE)) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
+assign element_width_write = ((current_state == LOAD_MODE) | (current_state == SLIDE_OFFLANE_MOVE)) ? 2'b10 : 2'(dp0_reg.wdata_width - 1); // Why -1
 /////////////////////////////////////////////////////////////////////////////////
 // Per lane lenght in words //
 always_comb begin
@@ -648,7 +648,7 @@ always_comb begin
             dp0_next.start_decrementor = 0;
              
             
-            if(dp0_reg.start) begin
+            if(start_i) begin
                 dp0_next.start = 0;
                 case(inst_type_comp[6 : 0])
                     7'b0000001 : begin                                            // NORMAL

@@ -133,6 +133,8 @@ module buff_array #(
   logic [$clog2(VLMAX)-1:0]                 sbuff_word_cnt; 
   logic [$clog2(VLMAX)-1:0]                 sbuff_byte_cnt; 
   logic [$clog2(VLMAX)-3:0]                 sbuff_32b_cnt; 
+  logic [31:0]                              store_stride_reg;
+  logic [31:0]                              load_stride_reg;
   // LOAD LOGIC INTERFACE ***************
   // Read data from AXI full -> rotate right to LSB -> rotate left to right buffer location
   logic [1:0]                               lbuff_wdata_rol_amt;
@@ -209,16 +211,18 @@ module buff_array #(
   always_ff @(posedge clk) begin
     if (!rstn) begin
       store_baseaddr_reg <= 0;
+      store_stride_reg   <= 0;
     end
     else if(store_baseaddr_set_i) begin
       store_baseaddr_reg <= store_baseaddr_i;
+      store_stride_reg   <= store_stride_i;
     end
     else if(store_baseaddr_update_i)begin
       case(store_type_i[1:0])
       1:      // indexed
         store_baseaddr_reg <= store_baseaddr_reg + sbuff_rptr_ext - (1<<cfg_store_data_sew_i[0]); // TODO double-check this
       2:      // strided
-        store_baseaddr_reg <= store_baseaddr_reg + store_stride_i - (1<<cfg_store_data_sew_i[0]); // TODO double-check this
+        store_baseaddr_reg <= store_baseaddr_reg + store_stride_reg - (1<<cfg_store_data_sew_i[0]); // TODO double-check this
       default:// unit_stride
         store_baseaddr_reg <= store_baseaddr_i;
       endcase
@@ -226,7 +230,7 @@ module buff_array #(
   end
 
   assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit
-  assign ctrl_wxfer_size_o   = store_type_i[1:0]==0 ? (sbuff_word_cnt<<2) : 4; // maybe sbuff_byte_cnt
+  assign ctrl_wxfer_size_o   = store_type_i[1:0]==0 ? (sbuff_byte_cnt) : 4; // maybe sbuff_byte_cnt
 
   // Counter selects data from one store buffer to forward to axi
   always_ff @(posedge clk) begin
@@ -613,16 +617,18 @@ module buff_array #(
   always_ff @(posedge clk) begin
     if (!rstn) begin
       load_baseaddr_reg <= 0;
+      load_stride_reg   <= 0;
     end
     else if(load_baseaddr_set_i) begin
       load_baseaddr_reg <= load_baseaddr_i;
+      load_stride_reg   <= load_stride_i;
     end
     else if(load_baseaddr_update_i)begin
       case(load_type_i[1:0])
       1:      // indexed
         load_baseaddr_reg <= load_baseaddr_reg + lbuff_rptr_ext - (1<<cfg_store_data_sew_i[0]); // TODO double-check this (-1)
       2:      // strided
-        load_baseaddr_reg <= load_baseaddr_reg + load_stride_i - (1<<cfg_store_data_sew_i[0]); // TODO double-check this (-2)
+        load_baseaddr_reg <= load_baseaddr_reg + load_stride_reg - (1<<cfg_store_data_sew_i[0]); // TODO double-check this (-2)
       default:// unit_stride
         load_baseaddr_reg <= load_baseaddr_i;
       endcase
@@ -630,7 +636,7 @@ module buff_array #(
   end
 
   assign ctrl_raddr_offset_o = {load_baseaddr_reg[31:2],2'b00}; // align per 32-bit address space
-  assign ctrl_rxfer_size_o   = load_type_i[1:0]==0 ? (lbuff_word_cnt<<2) : 4; // maybe lbuff_byte_cnt
+  assign ctrl_rxfer_size_o   = (load_type_i[1:0]==0) ? (lbuff_byte_cnt) : 4; // maybe lbuff_byte_cnt
 
   // Counter selects data from one load buffer to forward to axi
   always_ff @(posedge clk) begin

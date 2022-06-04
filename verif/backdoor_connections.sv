@@ -28,7 +28,77 @@ assign backdoor_sc_data_vif.data_mem_address_o=DUT.data_mem_address;
 assign DUT.data_mem_read = backdoor_sc_data_vif.data_mem_read_i;
 assign backdoor_sc_data_vif.data_mem_write_o=DUT.data_mem_write;
 assign backdoor_sc_data_vif.data_mem_we_o=DUT.data_mem_we;
-assign backdoor_sc_data_vif.data_mem_re_o=DUT.data_mem_re; 
+assign backdoor_sc_data_vif.data_mem_re_o=DUT.data_mem_re;
+
+// Vector core VRF backdoor interface
+
+
+//LANE0 VRF_INIT
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[0][0];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[0][1];
+
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][0][0];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][0][1];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][0][2];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][0][3];
+
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][1][0];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][1][1];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][1][2];
+assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[0][1][3];
+
+generate
+   if (V_LANES > 1)
+   begin
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[1][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[1][1];
+
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][0][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][0][1];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][0][2];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][0][3];
+
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][1][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][1][1];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][1][2];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[1].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[1][1][3];      
+   end
+
+   if (V_LANES > 2)
+   begin
+            assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[2][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[2][1];
+
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][0][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][0][1];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][0][2];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][0][3];
+
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][1][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][1][1];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][1][2];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[2].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[2][1][3];
+
+
+            assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[3][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[3][1];
+
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][0][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][0][1];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][0][2];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][0][3];
+
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[0].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][1][0];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[1].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][1][1];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[2].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][1][2];
+      assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[3].Vector_Lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[3][1][3];   
+   end
+endgenerate
+
+
+//assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[0].gen_BRAM.READ_BRAMs.BRAM = vrf_lvt;
+//assign DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt;
+
 
 
 

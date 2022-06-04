@@ -378,7 +378,7 @@ Driver_vlane_interconnect_inst
 );
 
 generate
-    for(genvar i = 0; i < VLANE_NUM; i++) begin
+    for(genvar i = 0; i < VLANE_NUM; i++) begin: VL_instances
         Vector_Lane
         #(
             .R_PORTS_NUM(R_PORTS_NUM),

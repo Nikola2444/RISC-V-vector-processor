@@ -24,7 +24,7 @@ module sdp_bram #(
    (* cascade_height = CASCADE_HEIGHT *)(* ram_style = "block" *) reg [WIDTH-1:0] ram[DEPTH];
 
    reg [WIDTH-1:0] 		ram_data_b = {WIDTH{1'b0}};
-
+   //int 				i=0;
    
    // The following code either initializes the ram values to a specified file or to all zeros to match hardware
    generate
@@ -33,9 +33,11 @@ module sdp_bram #(
            $readmemh(INIT_FILE, ram, 0, DEPTH-1);
       end else begin: init_memory_to_zero
 	 integer ram_index;
-	 initial
+	 initial	   
            for (ram_index = 0; ram_index < DEPTH; ram_index = ram_index + 1)
-             ram[ram_index] = {WIDTH{1'b0}};
+	     begin
+		ram[ram_index] = {WIDTH{1'b1}};
+	     end
       end
    endgenerate
    // PORT A

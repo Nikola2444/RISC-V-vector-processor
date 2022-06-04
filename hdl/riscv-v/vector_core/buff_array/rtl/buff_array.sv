@@ -24,17 +24,11 @@ module buff_array #(
   input  logic [2:0]                             cfg_store_idx_lmul_i    ,
   input  logic [2:0]                             cfg_store_data_sew_i    ,
   input  logic [2:0]                             cfg_store_idx_sew_i     ,
-  input  logic                                   cfg_store_data_lmul_nf_i,
-  input  logic [1:0]                             cfg_store_data_l2_lmul_i,
-  input  logic [1:0]                             cfg_store_data_l2_sew_i ,
   // MCU => BUFF_ARRAY CONFIG IF [loads]
   input  logic [2:0]                             cfg_load_data_lmul_i    ,
   input  logic [2:0]                             cfg_load_idx_lmul_i     ,
   input  logic [2:0]                             cfg_load_data_sew_i     ,
   input  logic [2:0]                             cfg_load_idx_sew_i      ,
-  input  logic                                   cfg_load_data_lmul_nf_i,
-  input  logic [1:0]                             cfg_load_data_l2_lmul_i ,
-  input  logic [1:0]                             cfg_load_data_l2_sew_i  ,
   // M_CU Interface
   // M_CU <=> BUFF_ARR IF [stores]
   input  logic                                   store_cfg_update_i      ,
@@ -302,11 +296,11 @@ module buff_array #(
       end
       1: // FOR SEW = 16
       begin
-        sbuff_rptr_ext = {16'b0, sbuff_rptr_rol[15:0]};
+        sbuff_rptr_ext = {{16{sbuff_rptr_rol[15]}}, sbuff_rptr_rol[15:0]};
       end
       default: // FOR SEW = 8
       begin
-        sbuff_rptr_ext = {24'b0, sbuff_rptr_rol[7:0]};
+        sbuff_rptr_ext = {{24{sbuff_rptr_rol[15]}}, sbuff_rptr_rol[7:0]};
       end
     endcase
   end
@@ -317,13 +311,13 @@ module buff_array #(
        sbuff_byte_cnt <= 0;
     end
     else if(store_cfg_update_i) begin
-      if(cfg_store_data_lmul_nf_i)
-        sbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_l2_lmul_i);
+      if(cfg_store_data_lmul_i[2])
+        sbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_lmul_i[1:0]);
       else
-        sbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_store_data_l2_lmul_i);
+        sbuff_byte_cnt <= ((cfg_vlenb_i)>>(-$signed(cfg_store_data_lmul_i[1:0])));
     end
   end
-  assign sbuff_word_cnt =  sbuff_byte_cnt >> cfg_store_data_l2_sew_i[1:0];
+  assign sbuff_word_cnt =  sbuff_byte_cnt >> cfg_store_data_sew_i[1:0];
   assign sbuff_32b_cnt  =  sbuff_byte_cnt >> 2;
   assign sbuff_word_batch_cnt = sbuff_word_cnt >> $clog2(V_LANE_NUM);
 
@@ -351,6 +345,10 @@ module buff_array #(
       end
     endcase
   end
+  // Alternatively: (this way option cfg_store_data_sew=2'b11 not ignored)
+  //assign sdbuff_waddr    = sbuff_write_cntr  >>(2-cfg_store_data_sew_i[1:0]);
+  //assign sdbuff_raddr    = sbuff_read_cntr   >>$clog2(V_LANE_NUM)>>(2-cfg_store_data_sew_i[1:0]);
+  //assign sbuff_rdata_mux = sdbuff_rdata[sbuff_read_cntr[(2-cfg_store_data_sew_i[1:0])+:$clog2(V_LANE_NUM)]];
 
   // Selecting current addresses for sibuff
   // Multiplex selecting index from one of V_LANE_NUM buffers to output 
@@ -376,6 +374,10 @@ module buff_array #(
       end
     endcase
   end
+  // Alternatively: (this way option cfg_store_data_sew=2'b11 not ignored)
+  //assign sibuff_waddr    = siuff_write_cntr  >>(2-cfg_store_idx_sew_i[1:0]);
+  //assign sibuff_raddr    = siuff_read_cntr   >>$clog2(V_LANE_NUM)>>(2-cfg_store_idx_sew_i[1:0]);
+  //assign siuff_rdata_mux = sibuff_rdata[siuff_read_cntr[(2-cfg_store_idx_sew_i[1:0])+:$clog2(V_LANE_NUM)]];
 
   // Changing write enable signals for narrow writes [store data buffer]
   // Narrower data is packed into 32-bit buffer
@@ -603,13 +605,13 @@ module buff_array #(
        lbuff_byte_cnt <= 0;
     end
     else if(load_cfg_update_i) begin
-      if(cfg_load_data_lmul_nf_i)
-        lbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_load_data_l2_lmul_i);
+      if(cfg_load_data_lmul_i[2])
+        lbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_load_data_lmul_i[1:0]);
       else
-        lbuff_byte_cnt <= ((cfg_vlenb_i)>>cfg_load_data_l2_lmul_i);
+        lbuff_byte_cnt <= ((cfg_vlenb_i)>>(-$signed(cfg_load_data_lmul_i[1:0])));
     end
   end
-  assign lbuff_word_cnt = lbuff_byte_cnt >> cfg_load_data_l2_sew_i[1:0];
+  assign lbuff_word_cnt = lbuff_byte_cnt >> cfg_load_data_l2_i[1:0];
   assign lbuff_word_batch_cnt = lbuff_word_cnt >> $clog2(V_LANE_NUM);
   assign lbuff_32b_batch_cnt = (lbuff_byte_cnt >> 2) >> $clog2(V_LANE_NUM);
 
@@ -670,9 +672,9 @@ module buff_array #(
       2: // FOR SEW = 32
         lbuff_rptr_ext = lbuff_rptr_rol;
       1: // FOR SEW = 16
-        lbuff_rptr_ext = {16'b0, lbuff_rptr_rol[15:0]};
+        lbuff_rptr_ext = {{16{lbuff_rptr_rol[15]}}, lbuff_rptr_rol[15:0]};
       default: // FOR SEW = 8
-        lbuff_rptr_ext = {24'b0, lbuff_rptr_rol[7:0]};
+        lbuff_rptr_ext = {{24{lbuff_rptr_rol[15]}}, lbuff_rptr_rol[7:0]};
     endcase
   end
 
@@ -710,7 +712,7 @@ module buff_array #(
       default: // FOR SEW = 8
       begin
         ldbuff_raddr = ldbuff_read_cntr  >>2;
-        ldbuff_waddr = ldbuff_write_cntr  >>($clog2(V_LANE_NUM)+2);
+        ldbuff_waddr = ldbuff_write_cntr >>($clog2(V_LANE_NUM)+2);
       end
     endcase
   end
@@ -784,7 +786,7 @@ module buff_array #(
     else begin
       case(cfg_load_data_sew_i[1:0])
         2: begin      // FOR SEW = 32
-          ldbuff_wen <= 4'b1111;
+          ldbuff_wen[0] <= 4'b1111;
         end
         1: begin      // FOR SEW = 16
           if(load_cfg_update_i)

@@ -39,17 +39,11 @@ module m_cu #(
   output logic [2:0]                             cfg_store_data_sew_o    ,
   output logic [2:0]                             cfg_store_idx_sew_o     ,
   output logic [2:0]                             cfg_store_idx_lmul_o    ,
-  output logic                                   cfg_store_data_lmul_nf_o,  //TODO CONNECT
-  output logic [1:0]                             cfg_store_data_l2_lmul  ,  //TODO CONNECT
-  output logic [1:0]                             cfg_store_data_l2_sew   ,  //TODO CONNECT
   // MCU => BUFF_ARRAY CONFIG IF [loads]
   output logic [2:0]                             cfg_load_data_lmul_o    ,
   output logic [2:0]                             cfg_load_data_sew_o     ,
   output logic [2:0]                             cfg_load_idx_sew_o      ,
   output logic [2:0]                             cfg_load_idx_lmul_o     ,
-  output logic                                   cfg_load_data_lmul_nf_o,   //TODO CONNECT
-  output logic [1:0]                             cfg_load_data_l2_lmul   ,  //TODO CONNECT
-  output logic [1:0]                             cfg_load_data_l2_sew    ,  //TODO CONNECT
   // MCU <=> BUFF_ARRAY CONTROL IF [stores]
   output logic                                   store_cfg_update_o      ,
   output logic                                   store_cntr_rst_o        ,
@@ -221,12 +215,20 @@ module m_cu #(
     else if (!sbuff_read_stall_o)
       wr_tvalid_d      <= {wr_tvalid_d[0], wr_tvalid};
   end
+
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn)
       ldbuff_rvalid_d      <= 0;
     else if (!ldbuff_read_stall_o)
       ldbuff_rvalid_d      <= {ldbuff_rvalid_d[0], ldbuff_rvalid};
+  end
+  always_ff @(posedge clk, negedge rstn)
+  begin
+    if(!rstn)
+      libuff_rvalid_d      <= 0;
+    else if (!libuff_read_stall_o)
+      libuff_rvalid_d      <= {libuff_rvalid_d[0], libuff_rvalid};
   end
 
   assign wr_tvalid_o = !sbuff_read_invalidate ? wr_tvalid_d[1] : 1'b0;

@@ -1,10 +1,3 @@
-/*
-    Šta sve treba da se zakasni?
-    - VMRF write signali
-    - VRF write signali
-    - ALU izlaz
-    - Vector mask
-*/
 `timescale 1ns / 1ps
 
 module Vector_Lane
@@ -362,7 +355,7 @@ generate
         
         always_comb begin
         
-            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] : (vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] & {4{vmrf_rdata}}); 
+            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] : (vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] & {4{vmrf_rdata[j_gen]}}); 
        
             
             case(write_data_mux_sel[j_gen])
@@ -442,11 +435,11 @@ generate
         end
         
         // Generate VRF read assignments
-        assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_next[VMRF_DELAY - 1][j_gen])}};
+        assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_reg[VMRF_DELAY - 1][j_gen])}};
         assign vrf_waddr[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][4 + 32 +: $clog2(MEM_DEPTH)]; 
         assign vrf_wdata[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][32 + 4 - 1 : 4];
         assign vmrf_wen[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & 
-                                 (alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_next[VMRF_DELAY - 1][j_gen]);
+                                 (alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_reg[VMRF_DELAY - 1][j_gen]);
         assign vmrf_wdata[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE)];
         assign vmrf_waddr[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE) - 1 : 0];
         assign bwen_mux_sel[j_gen] = vm_reg[VMRF_DELAY - 1][j_gen];

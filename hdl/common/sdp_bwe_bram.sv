@@ -27,6 +27,8 @@ module sdp_bwe_bram #(
   reg [(NB_COL*COL_WIDTH)-1:0] in_data_reg = {(NB_COL*COL_WIDTH){1'b0}};
 
   // The following code either initializes the memory values to a specified file or to all zeros to match hardware
+
+/* -----\/----- EXCLUDED -----\/-----
   generate
     if (INIT_FILE != "") begin: use_init_file
       initial
@@ -35,9 +37,12 @@ module sdp_bwe_bram #(
       integer ram_index;
       initial
         for (ram_index = 0; ram_index < RAM_DEPTH; ram_index = ram_index + 1)
+	  //BRAM[ram_index] = ram_index%16;	
           BRAM[ram_index] = {(NB_COL*COL_WIDTH){1'b0}};
     end
   endgenerate
+ -----/\----- EXCLUDED -----/\----- */
+
 
 
   always @(posedge clkb)

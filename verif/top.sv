@@ -5,19 +5,35 @@ module riscv_v_verif_top;
 
    import riscv_v_test_pkg::*;
 
+   localparam V_LANES = 4;
+   localparam VLEN = 4096;
+   localparam VRF_DEPTH=VLEN/V_LANES;
+   logic [31:0] vrf_lvt [V_LANES][2][VRF_DEPTH-1:0] = '{default:'1};
+   logic [31:0] vrf_read_ram [V_LANES][2][4][VRF_DEPTH-1:0] = '{default:'1};
    logic clk;
    logic clk2;
    logic rstn;
 
+   
    // interface
    axi4_if axi4_vif(clk, rstn);
    backdoor_instr_if backdoor_instr_vif(clk, rstn);
    backdoor_register_bank_if backdoor_register_bank_vif (clk, rstn);
    backdoor_sc_data_if backdoor_sc_data_vif (clk, rstn);
+
+   
    
    
    // DUT
-   riscv_v_w_mem_subsystem DUT
+   riscv_v_w_mem_subsystem #
+     (/*AUTOINST_PARAM*/
+      // Parameters
+      .C_M_AXI_ADDR_WIDTH		(32),
+      .C_M_AXI_DATA_WIDTH		(32),
+      .C_XFER_SIZE_WIDTH		(32),
+      .VLEN				(VLEN),
+      .V_LANES				(V_LANES))
+   DUT
      (
       /*AUTO_INST*/
       // Outputs
@@ -58,17 +74,49 @@ module riscv_v_verif_top;
 
    // clock and reset init.
    initial begin
+      //vrf_lvt <= '{default:'1};
       clk <= 0;
-      clk2 <= 0;
+      clk2 <= 1;
       rstn <= 0;
       #950 rstn <= 1;
+      
+   end
+
+   //Initialize VRF
+   initial
+   begin
+      //init lvt_rams
+      for (int i=0;i<V_LANES;i++)
+      begin
+	 vrf_lvt[i][0]='{default:'0};
+	 for (int j=0; j<VRF_DEPTH; j++)
+	 begin
+	    vrf_lvt[i][1][j]= j ^ 0;
+	 end
+      end
+      //init read_rams
+      for (int i=0;i<V_LANES;i++)
+      begin
+	 vrf_read_ram[i][0][0]='{default:'0};
+	 vrf_read_ram[i][0][1]='{default:'0};
+	 vrf_read_ram[i][0][2]='{default:'0};
+	 vrf_read_ram[i][0][3]='{default:'0};
+	 
+	 for (int j=0; j<VRF_DEPTH; j++)
+	 begin
+	    vrf_read_ram[i][1][0][j]=j^0;
+	    vrf_read_ram[i][1][1][j]=j^0;
+	    vrf_read_ram[i][1][2][j]=j^0;
+	    vrf_read_ram[i][1][3][j]=j^0;
+	 end
+      end
    end
 
    // clock generation
-   always #50 clk = ~clk;
-   always #100 clk2 = ~clk2;
+   always #100 clk = ~clk;
+   always #50 clk2 = ~clk2;
 
-endmodule : riscv_v_verif_top
+endmodule : riscv_v_verif_top	// 
 // Local Variables:
 // verilog-library-extensions:(".v" ".sv" "_stub.v" "_bb.v")
 // verilog-library-directories:("." "../hdl/riscv-v/rtl/")

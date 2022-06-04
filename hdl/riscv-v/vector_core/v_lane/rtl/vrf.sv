@@ -149,11 +149,11 @@ module vrf #
    //generating LVT brams per bank
    generate
       for (genvar i=0; i<LP_BANK_NUM;i++ )
-      begin: gen_banks
+      begin: gen_lvt_banks
 	 for (genvar j=0; j<LP_LVT_BRAM_PER_BANK;j++)
-	 begin: gen_BRAMs
+	 begin: gen_RAMs
 	    if (RAM_TYPE=="BRAM")
-	    begin
+	    begin: gen_BRAM
 	       sdp_bwe_bram #(/*AUTO_INSTPARAM*/
 			      // Parameters
 			      .NB_COL		(NUM_OF_BYTES),
@@ -176,7 +176,7 @@ module vrf #
 			.regceb		(1'b1));
 	    end
 	    else
-	    begin
+	    begin: gen_LUTRAM
 	       sdp_distram #(/*AUTOINST_PARAM*/
 			     // Parameters
 			     .WIDTH		(MEM_WIDTH),
@@ -280,9 +280,9 @@ module vrf #
       for (genvar i=0; i<LP_BANK_NUM;i++ )
       begin: gen_read_banks
 	 for (genvar j=0; j<LP_READ_BRAM_PER_BANK;j++)
-	 begin: gen_BRAMs
+	 begin: gen_RAMs
 	    if (RAM_TYPE=="BRAM")
-	    begin
+	    begin: gen_BRAM
 	       sdp_bwe_bram #(/*AUTO_INSTPARAM*/
 			      // Parameters
 			      .NB_COL		(NUM_OF_BYTES),
@@ -290,7 +290,7 @@ module vrf #
 			      .RAM_DEPTH		(MEM_DEPTH),
 			      .RAM_PERFORMANCE	(RAM_PERFORMANCE),
 			      .INIT_FILE		(""))
-	       READ_BRAMs(/*AUTO_INST*/
+	       READ_RAMs(/*AUTO_INST*/
 			  // Outputs
 			  .doutb		(read_ram_dout[i][j]),
 			  // Inputs
@@ -313,7 +313,7 @@ module vrf #
 			     .WIDTH		(MEM_WIDTH),
 			     .DEPTH		(MEM_DEPTH),
 			     .OUT_PIPE_STAGES	(2))
-	       READ_BRAMs(/*AUTO_INST*/
+	       READ_RAMs(/*AUTO_INST*/
 			  // Outputs
 			  .doutb	(read_ram_dout[i][j]),
 			  // Inputs

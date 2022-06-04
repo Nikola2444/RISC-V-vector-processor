@@ -282,7 +282,7 @@ assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;;
 // 32-bit multiply //
 assign alu_en_32bit_mul_o = dp0_reg.alu_en_32bit_mul;
 // Write address generation //
-assign element_width_write = ((current_state == LOAD_MODE) | (current_state == SLIDE_OFFLANE_MOVE)) ? 2'b10 : 2'(dp0_reg.wdata_width - 1); // Why -1
+assign element_width_write = ((current_state == LOAD_MODE) | (current_state == SLIDE_OFFLANE_MOVE)) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
 /////////////////////////////////////////////////////////////////////////////////
 // Per lane lenght in words //
 always_comb begin
@@ -533,16 +533,6 @@ always_ff@(posedge clk_i) begin
     end
 end
 
-always_ff@(posedge clk_i)
-begin
-   if (!rst_i)
-     ready_o <= 1'b1;
-   else if (start_i && ready_o)
-     ready_o <= 1'b0;
-   else if (next_state == IDLE && !ready_o)
-     ready_o <= 1'b1;    
-end
-
 always_comb begin
     // main counter control signals
     rst_main_cnt = 0;
@@ -558,7 +548,7 @@ always_comb begin
     raddr_cnt_rst = 0;
     raddr_cnt_en = 0;
     // handshaking signals
-    //ready_o = 0;
+    ready_o = 0;
     // read data validation
     shift_data_validation = 0;
     load_data_validation = 0; 
@@ -610,7 +600,7 @@ always_comb begin
     case(current_state)
         IDLE : begin
             next_state = IDLE;
-            //ready_o = 1;
+            ready_o = 1;
             
             rst_main_cnt = 1;
             rst_vmrf_cnt = 1;

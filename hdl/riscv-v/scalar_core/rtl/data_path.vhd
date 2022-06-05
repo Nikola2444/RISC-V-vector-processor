@@ -183,7 +183,7 @@ begin
       if (reset = '0')then
         instr_mem_ex_s <= (others => '0');
       elsif (not(vector_stall_i) = '1' and ce = '1') then
-        instr_mem_ex_s <= instr_mem_read_i;
+        instr_mem_ex_s <= instr_mem_id_s;
       end if;
     end if;
   end process;

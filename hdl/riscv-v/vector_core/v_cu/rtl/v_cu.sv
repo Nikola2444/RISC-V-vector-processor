@@ -145,11 +145,16 @@ module v_cu #
    //renaming unit
    logic [31:0] 			  vector_instr_reg;
    logic [11:0] 			  instr_vld_reg;
+   logic [11:0] 			  instr_rdy_reg;
    logic [31:0] 			  scalar_rs1_reg;
    logic [4:0] 				  v_instr_vs1;
    logic [4:0] 				  v_instr_vs2;
    logic [4:0] 				  v_instr_vd;
    logic                                  renaming_unit_rdy;
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_waddr_reg;
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_raddr0_reg;
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_raddr1_reg;
+   logic                                  vrf_starting_addr_vld_reg;
    //resource alocate unit
    // Port alocation unit signals
    //logic [W_PORTS_NUM-1:0] 		  port_group_ready_i;
@@ -161,18 +166,27 @@ module v_cu #
    begin
       if (!rstn)
       begin
-	 vector_instr_reg <= 'h0;
-	 instr_vld_reg 	  <= 'h0;
-	 scalar_rs1_reg   <= 'h0;
-	 vtype_reg 	  <= {26'h0, 3'b010, 3'b000};
-	 vl_reg 	  <= 4096/32;
+	 vector_instr_reg 	   <= 'h0;
+	 instr_vld_reg 		   <= 'h0;
+	 scalar_rs1_reg 	   <= 'h0;
+	 vtype_reg 		   <= {26'h0, 3'b010, 3'b000};
+	 vl_reg 		   <= 4096/32;
+	 vrf_starting_waddr_reg    <= 0;
+	 vrf_starting_raddr0_reg   <= 0;
+	 vrf_starting_raddr1_reg   <= 0;
+	 vrf_starting_addr_vld_reg <= 0;
       end
       else
       begin
-	 vector_instr_reg <= vector_instr_i;
-	 instr_vld_reg 	  <= instr_vld_i;
-	 scalar_rs1_reg   <= scalar_rs1_i;
-	 if(instr_vld_i[11] && instr_rdy_o[11]) // config instruction received
+	 vector_instr_reg 	   <= vector_instr_i;
+	 instr_vld_reg 		   <= instr_vld_i;
+	 scalar_rs1_reg 	   <= scalar_rs1_i;
+	 instr_rdy_reg 		   <= instr_rdy_o;
+	 vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
+	 vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;
+	 vrf_starting_raddr1_reg   <= vrf_starting_raddr1_i;
+	 vrf_starting_addr_vld_reg <= vrf_starting_addr_vld_i;
+	 if(instr_vld_reg[11] && instr_rdy_reg[11]) // config instruction received
 	 begin
 	    vtype_reg <= vtype_next;	 
 	    vl_reg    <= vl_next;
@@ -237,7 +251,7 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = 3'h4;
+   assign inst_delay_o = 3'h7;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
@@ -434,7 +448,7 @@ module v_cu #
       .clk		(clk),
       .rstn		(rstn),
       .port_rdy_i	(port_group_ready_i),
-      .vrf_starting_addr_vld_i(vrf_starting_addr_vld_i),
+      .vrf_starting_addr_vld_i(vrf_starting_addr_vld_reg),
       .instr_vld_i	(instr_vld_reg[11:0]));
    // Here we need to insert component which uses generated control signals to
    // Control the lanes.
@@ -447,9 +461,9 @@ module v_cu #
    assign vrf_ren_o = 1'b1; // TODO drive this
    assign vrf_oreg_ren_o = 1'b1; // TODO drive thisa	
 
-   assign vrf_starting_waddr_o = vrf_starting_waddr_i;
-   assign vrf_starting_raddr_vs1_o = vrf_starting_raddr0_i;
-   assign vrf_starting_raddr_vs2_o = vrf_starting_raddr1_i;
+   assign vrf_starting_waddr_o = vrf_starting_waddr_reg;
+   assign vrf_starting_raddr_vs1_o = vrf_starting_raddr0_reg;
+   assign vrf_starting_raddr_vs2_o = vrf_starting_raddr1_reg;
 
    assign store_data_mux_sel_o=start_o;
    assign store_load_index_mux_sel_o=start_o;

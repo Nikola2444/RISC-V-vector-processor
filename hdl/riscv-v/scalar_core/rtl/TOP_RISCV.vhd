@@ -117,7 +117,7 @@ begin
   --flush current instruction
   instr_mem_flush_o <=  '1' when (if_id_flush_s = '1' or instr_ready_i ='0') else '0';
   -- stall currnet instruction
-  instr_mem_en_o <= '0' when (if_id_en_s = '0' or data_ready_i = '0') else '1';
+  instr_mem_en_o <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
   
 
 

@@ -187,7 +187,7 @@ logic [5 : 0] inst_type_comp;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
-assign vmrf_wen_o = dp0_reg.vmrf_wen;
+assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
 assign vrf_bwen_o = ((current_state == LOAD_MODE) & (dp0_reg.waddr_cnt_en == 1)) ? load_bwen_i : bwen;
 assign vrf_ren_o = dp0_reg.vrf_ren;
 assign vrf_oreg_ren_o = dp0_reg.vrf_oreg_ren;

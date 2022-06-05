@@ -295,7 +295,6 @@ always_comb begin
     ALU_signals_next[0].op3_sel = op3_sel_i;
     ALU_signals_next[0].ALU_x_data = ALU_x_data_i;
     ALU_signals_next[0].ALU_imm = ALU_imm_i;
-    // ALU_signals_next[0].imm_sign = imm_sign_i;
     ALU_signals_next[0].ALU_reduction_data = ALU_reduction_data_i;
     ALU_signals_next[0].store_data_mux_sel = store_data_mux_sel_i;
     ALU_signals_next[0].store_load_index_mux_sel = store_load_index_mux_sel_i;

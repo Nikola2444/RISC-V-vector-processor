@@ -244,7 +244,7 @@ assign vrf_waddr_o = (current_state == SLIDE_INTRALANE_SHIFT) ? slide_waddr :
                                                                 normal_waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
-assign vmrf_wen_o = dp0_reg.vmrf_wen;
+assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
 assign vrf_bwen_o = (current_state == SLIDE_INTRALANE_SHIFT) ? slide_bwen :
                                                                normal_bwen;
 assign vrf_ren_o = dp0_reg.vrf_ren;

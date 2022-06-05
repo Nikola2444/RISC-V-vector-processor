@@ -22,6 +22,7 @@ module Complete_sublane_driver
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
     input logic [2 : 0] vsew_i,
+    output logic [1 : 0] vsew_o,
     input logic [2 : 0] vlmul_i,                                                // NEW SIGNAL
     
     // Control Flow signals
@@ -57,6 +58,7 @@ module Complete_sublane_driver
     input logic load_valid_i,                                                   // NEW SIGNAL
     input logic load_last_i,                                                    // NEW SIGNAL
     output logic ready_for_load_o,                                              // NEW SIGNAL
+    input logic [VLANE_NUM - 1 : 0][3 : 0] load_bwen_i,    
          
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
@@ -80,7 +82,7 @@ module Complete_sublane_driver
     output logic [4 : 0] ALU_imm_o,
     output logic [31 : 0] ALU_reduction_data_o,
     output logic [ALU_OPMODE - 1 : 0] ALU_ctrl_o,
-    output logic alu_en_32bit_mul_i,                                            // NEW SIGNAL
+    input logic alu_en_32bit_mul_i,                                            // NEW SIGNAL
     output logic alu_en_32bit_mul_o,                               
     
     // Slides
@@ -167,6 +169,7 @@ typedef struct packed
     
     // 32-bit multiply
     logic alu_en_32bit_mul;
+    logic [1 : 0] sew;
     
 } dataPacket0;
 
@@ -203,8 +206,6 @@ logic [VLANE_NUM - 1 : 0] valid_data;
 logic [VLANE_NUM - 1 : 0] slide_write_data_pattern;
 logic enable_write_slide;
 logic [$clog2(MAX_VL_PER_LANE) : 0] per_lane_words;
-// Signals for load //
-logic [3 : 0] load_bwen;
 typedef struct packed
 {
     logic [$clog2(MEM_DEPTH) - 1 : 0] waddr;
@@ -217,6 +218,7 @@ dataPacket1 [VRF_DELAY - 1 : 0] dp1_reg, dp1_next;
 /////////////////////////////////////////////////////////////////////////////////
 // Additional signals - declaration //
 // bwen //
+logic [VLANE_NUM - 1 : 0][3 : 0] bwen;
 logic [3 : 0] bwen_mux;
 logic [VLANE_NUM - 1 : 0][3 : 0] slide_bwen, normal_bwen;
 logic secondary_bwen_en;
@@ -283,6 +285,7 @@ assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;;
 assign alu_en_32bit_mul_o = dp0_reg.alu_en_32bit_mul;
 // Write address generation //
 assign element_width_write = ((current_state == LOAD_MODE) | (current_state == SLIDE_OFFLANE_MOVE)) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
+assign vsew_o = dp0_reg.sew;
 /////////////////////////////////////////////////////////////////////////////////
 // Per lane lenght in words //
 always_comb begin
@@ -299,6 +302,22 @@ always_comb begin
 end
 
 /////////////////////////////////////////////////////////////////////////////////
+always_comb begin
+    if(current_state == REDUCTION_WRITE_MODE) begin
+        for(int i = 0; i < VLANE_NUM; i++) begin
+            bwen[i] = 0;
+        end
+        bwen[0] = bwen_mux;
+    end
+    else begin
+        for(int i = 0; i < VLANE_NUM; i++) begin
+            bwen[i] = bwen_mux;
+        end
+    end
+end
+/////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
 // slide_bwen assigment //
 generate
     for(genvar i = 0; i < VLANE_NUM; i++) begin
@@ -306,11 +325,10 @@ generate
         assign slide_waddr[i] = (slide_write_data_pattern[i] == 0) ? dp0_reg.waddr_ff : waddr;
         
         assign normal_waddr[i] = (dp0_reg.delay_addr == 1) ? dp1_reg[0].waddr : waddr; 
-        assign normal_bwen[i] = (dp0_reg.delay_addr == 1) ? dp1_reg[0].vrf_bwen : 
-                                ((current_state == LOAD_MODE) ? load_bwen : bwen_mux);
+        assign normal_bwen[i] = ((current_state == LOAD_MODE) & (dp0_reg.waddr_cnt_en == 1)) ? load_bwen_i[i] : 
+                                ((dp0_reg.delay_addr == 1) ? dp1_reg[0].vrf_bwen : bwen[i]);
     end
 endgenerate;
-
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -599,9 +617,9 @@ always_comb begin
     dp0_next.delay_addr = dp0_reg.delay_addr;
     dp0_next.reverse_bwen = dp0_reg.reverse_bwen;
     dp0_next.start_decrementor = dp0_reg.start_decrementor;
+    dp0_next.sew = dp0_reg.sew;
     // Loads
     ready_for_load_o = 0;
-    load_bwen = {4{1'b0}};
     // Buffering for slides
     dp0_next.slide_enable_buffering = dp0_reg.slide_enable_buffering;
     // 32-bit multiply
@@ -644,6 +662,7 @@ always_comb begin
             dp0_next.ALU_opmode = ALU_opmode_i;
             dp0_next.vmrf_wen = 0;
             dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
+            dp0_next.sew = vsew_i[1 : 0];
             // slides
             dp0_next.up_down_slide = up_down_slide_i;
             dp0_next.slide_amount = slide_amount_i;
@@ -783,7 +802,6 @@ always_comb begin
                 dp0_next.waddr_cnt_en = 1;
             end
             ready_for_load_o = dp0_reg.waddr_cnt_en;
-            load_bwen = {4{dp0_reg.waddr_cnt_en}};
             
             if(load_last_i) begin
                 next_state = IDLE;

@@ -13,6 +13,10 @@ module Driver_vlane_interconnect
     input clk_i,
     input rst_i,
     
+    // Config signals
+    output logic [1 : 0] vsew_i,
+    output logic [VLANE_NUM - 1 : 0][1 : 0] vsew_o,
+    
     // Read data valid for ALU
     input logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_i,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] read_data_valid_o,
@@ -23,7 +27,7 @@ module Driver_vlane_interconnect
     input logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial_i,                                   // Write address for the N - 1 out of N instructions  
     input logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete_i,                                    // Just for the complete sublane driver
     input logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_i,                                    // READ RELATED SIGNAL, UPDATED
-    input logic [W_PORTS_NUM - 2 : 0][3 : 0] vrf_bwen_partial_i,                                                        // Byte write enable for the N - 1 out of N instructions
+    input logic [W_PORTS_NUM - 2 : 0][VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_partial_i,                                     // Byte write enable for the N - 1 out of N instructions
     input logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_complete_i,                                                         // Just for the complete sublane driver
     output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_ren_o,                                                    // HAS TO BE DONE
     output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_oreg_ren_o,                                               // HAS TO BE DONE
@@ -39,7 +43,7 @@ module Driver_vlane_interconnect
     
     // Load and Store
     input logic [VLANE_NUM - 1 : 0][31 : 0] load_data_i,                                                                // UPDATED
-    output logic [VLANE_NUM - 1 : 0][31 : 0] load_data_o,                                                                       // UPDATED
+    output logic [VLANE_NUM - 1 : 0][31 : 0] load_data_o,                                                               // UPDATED
     
     input logic [W_PORTS_NUM - 1 : 0] store_data_valid_i,
     input logic [W_PORTS_NUM - 1 : 0] store_load_index_valid_i,
@@ -99,6 +103,9 @@ logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] secondary_el_extractor;
 // Registers for inputs
 typedef struct packed
 {
+    // Config signals
+    logic [1 : 0] vsew;
+
     // Read data valid for ALU
     logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid;
 
@@ -108,7 +115,7 @@ typedef struct packed
     logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial;
     logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete;
     logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr;
-    logic [W_PORTS_NUM - 2 : 0][3 : 0] vrf_bwen_partial;
+    logic [W_PORTS_NUM - 2 : 0][VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_partial;
     logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_complete;
     
     // VMRF
@@ -138,7 +145,7 @@ typedef struct packed
     // Misc signals
     logic [W_PORTS_NUM - 1 : 0][1 : 0] el_extractor;
     logic [W_PORTS_NUM - 1 : 0] vector_mask;
-    logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel;     
+    logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel;
     
 }input_layer;
 
@@ -146,6 +153,9 @@ input_layer input_reg, input_next;
 
 /////////////////////////////////////////////////////////////
 // Assigments
+
+// Config signals
+assign input_next.vsew = vsew_i;
 
 // Read data valid for ALU
 assign input_next.read_data_valid = read_data_valid_i;
@@ -196,6 +206,7 @@ generate
         assign request_write_control_o[i] = input_reg.request_write_control;
         assign alu_en_32bit_mul_o[i] = input_reg.alu_en_32bit_mul;
         assign load_data_o[i] = input_reg.load_data[i];
+        assign vsew_o[i] = input_reg.vsew;
     
         for(genvar j = 0; j < W_PORTS_NUM; j++) begin
             assign read_data_valid_o[i][j] = input_reg.read_data_valid[j][i];
@@ -221,7 +232,7 @@ generate
             end
             else begin
                 assign vrf_waddr_o[i][j] = input_reg.vrf_waddr_partial[j - 1];
-                assign vrf_bwen_o[i][j] = input_reg.vrf_bwen_partial[j - 1];
+                assign vrf_bwen_o[i][j] = input_reg.vrf_bwen_partial[j - 1][i];
             end
             
             assign primary_vrf_raddr[i][2 * j] = input_reg.vrf_raddr[j][0];

@@ -639,42 +639,44 @@ always_comb begin
             raddr_cnt_rst = 1;
             
             load_data_validation = 1;
-            
-            dp0_next.inst_delay = inst_delay_i;
-            dp0_next.wdata_width = wdata_width_i;
-            dp0_next.inst_type = inst_type_i;
-            dp0_next.en_write = 0;
-            dp0_next.waddr_cnt_en = 0;
-            dp0_next.vmrf_cnt_en = 0;
-            dp0_next.bwen_en = 0;
-            dp0_next.op2_sel = op2_sel_i;
-            dp0_next.op3_sel = op3_sel_i;
-            dp0_next.ALU_x_data = ALU_x_data_i;
-            dp0_next.ALU_imm = ALU_imm_i;
-            dp0_next.start = start_i;
-            dp0_next.store_load_index_mux_sel = store_load_index_mux_sel_i;
-            dp0_next.store_data_mux_sel = store_data_mux_sel_i;
-            dp0_next.read_limit = read_limit_add;
-            dp0_next.write_data_sel = 0;
-            dp0_next.vector_mask = vector_mask_i;
-            dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
-            dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
-            dp0_next.ALU_opmode = ALU_opmode_i;
-            dp0_next.vmrf_wen = 0;
-            dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
-            dp0_next.sew = vsew_i[1 : 0];
-            // slides
-            dp0_next.up_down_slide = up_down_slide_i;
-            dp0_next.slide_amount = slide_amount_i;
-            dp0_next.slide_amount_complete_lane = (slide_complete_lane_adder > SA_complete_lane) ? SA_complete_lane : slide_complete_lane_adder;
-            dp0_next.slide_complete_lane_up = (slide_complete_lane_adder > SA_complete_lane) ? up_down_slide_i : !up_down_slide_i;
-            dp0_next.adder_input_sel = (up_down_slide_i == 1) ? 2'b01 : 2'b00;
-            dp0_next.en_comp = 0;
-            dp0_next.delay_addr = 0;
-            dp0_next.input_sel = 2'b11;
-            dp0_next.reverse_bwen = 0;
-            dp0_next.slide_enable_buffering = 0;
-            dp0_next.start_decrementor = 0;
+           if (start_i)
+	   begin
+              dp0_next.inst_delay = inst_delay_i;
+              dp0_next.wdata_width = wdata_width_i;
+              dp0_next.inst_type = inst_type_i;
+              dp0_next.en_write = 0;
+              dp0_next.waddr_cnt_en = 0;
+              dp0_next.vmrf_cnt_en = 0;
+              dp0_next.bwen_en = 0;
+              dp0_next.op2_sel = op2_sel_i;
+              dp0_next.op3_sel = op3_sel_i;
+              dp0_next.ALU_x_data = ALU_x_data_i;
+              dp0_next.ALU_imm = ALU_imm_i;
+              dp0_next.start = start_i;
+              dp0_next.store_load_index_mux_sel = store_load_index_mux_sel_i;
+              dp0_next.store_data_mux_sel = store_data_mux_sel_i;
+              dp0_next.read_limit = read_limit_add;
+              dp0_next.write_data_sel = 0;
+              dp0_next.vector_mask = vector_mask_i;
+              dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
+              dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
+              dp0_next.ALU_opmode = ALU_opmode_i;
+              dp0_next.vmrf_wen = 0;
+              dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
+              dp0_next.sew = vsew_i[1 : 0];
+              // slides
+              dp0_next.up_down_slide = up_down_slide_i;
+              dp0_next.slide_amount = slide_amount_i;
+              dp0_next.slide_amount_complete_lane = (slide_complete_lane_adder > SA_complete_lane) ? SA_complete_lane : slide_complete_lane_adder;
+              dp0_next.slide_complete_lane_up = (slide_complete_lane_adder > SA_complete_lane) ? up_down_slide_i : !up_down_slide_i;
+              dp0_next.adder_input_sel = (up_down_slide_i == 1) ? 2'b01 : 2'b00;
+              dp0_next.en_comp = 0;
+              dp0_next.delay_addr = 0;
+              dp0_next.input_sel = 2'b11;
+              dp0_next.reverse_bwen = 0;
+              dp0_next.slide_enable_buffering = 0;
+              dp0_next.start_decrementor = 0;
+	   end
              
             
             if(dp0_reg.start) begin

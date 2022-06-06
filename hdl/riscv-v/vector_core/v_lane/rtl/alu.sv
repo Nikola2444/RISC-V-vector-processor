@@ -12,11 +12,11 @@ module alu #
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0]  alu_a_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0]  alu_b_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0]  alu_c_i,
-    input [2:0] 			       sew_i,
+    input [1:0] 			       sew_i,
     output [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
     input [PARALLEL_IF_NUM-1:0] 	       alu_vld_i,
     output [PARALLEL_IF_NUM-1:0] 	       alu_vld_o,
-    output [PARALLEL_IF_NUM-1:0] 	       alu_mask_vector_o,
+    output logic[PARALLEL_IF_NUM-1:0] 	       alu_mask_vector_o,
 
     // Enables 32 bit multiply, but takes a bit longer to
     // execute.
@@ -77,6 +77,12 @@ module alu #
 				     .op2_i		(alu_b_i[3]),
 				     .op3_i		(alu_c_i[3]),
 				     .alu_vld_i		(alu_vld_i[3]));
+
+   always_comb
+   begin
+      for (int i=0; i<4; i++)
+	alu_mask_vector_o[i] = alu_o[i][0];
+   end
 
    endmodule
 

@@ -106,7 +106,7 @@ module v_cu #
 
    // singnals needed by comb logic
    logic [2:0] 								  v_instr_funct6_upper;
-   logic [2:0] 								  v_instr_funct6;
+   logic [5:0] 								  v_instr_funct6;
    //logic [2:0] 								  v_instr_funct3;
    logic [4:0] 								  v_instr_imm;
    logic [1:0] 								  v_instr_mop;
@@ -251,7 +251,7 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = 3'h7;
+   assign inst_delay_o = 3'h6;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;

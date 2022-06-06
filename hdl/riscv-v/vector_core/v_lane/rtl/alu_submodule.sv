@@ -24,7 +24,7 @@ module alu_submodule(/*AUTOARG*/
 
    input clk;
    input rstn;
-   input [2:0] sew_i;
+   input [1:0] sew_i;
    input [ 8:0] alu_opmode_i;
    input [31:0] op1_i;
    input [31:0] op2_i;
@@ -76,7 +76,7 @@ module alu_submodule(/*AUTOARG*/
    logic [31:0] 		  op2_reg_sign_ext;
    logic [31:0] 		  op2_reg;
    logic [1:0][31:0] 		  op3_reg;
-   logic [2:0]			  sew_reg;
+   logic [1:0]			  sew_reg;
    logic [2:0][8:0] 			  alu_opmode_reg;
    logic [15:0] 		  dsp_A_upper_bits;
    logic [1:0] 			  dsp_B_upper_bits_reg;
@@ -99,7 +99,7 @@ module alu_submodule(/*AUTOARG*/
 	 op3_reg <= '{default:'0};
 	 alu_opmode_reg <='{default:'0};
 	 comp_out_reg <= 'h0;
-	 sew_reg <= 3'b0;
+	 sew_reg <= 2'b0;
       end
       else
       begin
@@ -124,18 +124,18 @@ module alu_submodule(/*AUTOARG*/
       op1_reg_sign_ext = op1_reg;
       if (alu_opmode_reg[0][7])
       begin
-	 if (sew_reg==3'b000)
+	 if (sew_reg==2'b00)
 	   op1_reg_sign_ext = {{24{op1_reg[7]}}, op1_reg[7:0]};
-	 if (sew_reg==3'b001)
+	 if (sew_reg==2'b01)
 	   op1_reg_sign_ext = {{16{op1_reg[15]}}, op1_reg[15:0]};
       end
       
       op2_reg_sign_ext = op2_reg;
       if (alu_opmode_reg[0][7])
       begin
-	 if (sew_reg==3'b000)
+	 if (sew_reg==2'b00)
 	   op2_reg_sign_ext = {{24{op2_reg[7]}}, op2_reg[7:0]};
-	 if (sew_reg==3'b001)
+	 if (sew_reg==2'b01)
 	   op2_reg_sign_ext = {{16{op2_reg[15]}}, op2_reg[15:0]};
       end
       
@@ -179,7 +179,7 @@ module alu_submodule(/*AUTOARG*/
    always @(posedge clk)
    begin
       result_reg = alu_opmode_reg[2][6:5]==2'b01 ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
-      if (sew_reg == 3'b000)
+      if (sew_reg == 2'b00)
       begin
 	 for (int i=8; i<32;i++)
 	   result_reg[i] = 1'b0;	 
@@ -189,7 +189,7 @@ module alu_submodule(/*AUTOARG*/
 	      result_reg[7:0] = dsp_P[15:8];
 	 end	 
       end
-      if (sew_reg == 3'b001)
+      if (sew_reg == 2'b01)
       begin
 	 for (int i=16; i<32;i++)
 	   result_reg[i] = 1'b0;

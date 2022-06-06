@@ -474,30 +474,31 @@ always_comb begin
             waddr_cnt_rst = 1;
             raddr_cnt_rst = 1;
             
-            load_data_validation = 1;
-            
-            dp0_next.inst_delay = inst_delay_i;;
-            dp0_next.wdata_width = wdata_width_i;
-            dp0_next.inst_type = inst_type_i;
-            dp0_next.en_write = 0;
-            dp0_next.waddr_cnt_en = 0;
-            dp0_next.vmrf_cnt_en = 0;
-            dp0_next.bwen_en = 0;
-            dp0_next.op2_sel = op2_sel_i;
-            dp0_next.op3_sel = op3_sel_i;
-            dp0_next.ALU_x_data = ALU_x_data_i;
-            dp0_next.ALU_imm = ALU_imm_i;
-            dp0_next.start = start_i;
-            dp0_next.store_load_index_mux_sel = store_load_index_mux_sel_i;
-            dp0_next.store_data_mux_sel = store_data_mux_sel_i;
-            dp0_next.read_limit = read_limit_add;
-            dp0_next.write_data_sel = 0;
-            dp0_next.vector_mask = vector_mask_i;
-            dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
-            dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
-            dp0_next.ALU_opmode = ALU_opmode_i;
-            dp0_next.vmrf_wen = 0;
-            
+           load_data_validation = 1;
+           if (start_i)
+	   begin
+              dp0_next.inst_delay = inst_delay_i;;
+              dp0_next.wdata_width = wdata_width_i;
+              dp0_next.inst_type = inst_type_i;
+              dp0_next.en_write = 0;
+              dp0_next.waddr_cnt_en = 0;
+              dp0_next.vmrf_cnt_en = 0;
+              dp0_next.bwen_en = 0;
+              dp0_next.op2_sel = op2_sel_i;
+              dp0_next.op3_sel = op3_sel_i;
+              dp0_next.ALU_x_data = ALU_x_data_i;
+              dp0_next.ALU_imm = ALU_imm_i;
+              dp0_next.start = start_i;
+              dp0_next.store_load_index_mux_sel = store_load_index_mux_sel_i;
+              dp0_next.store_data_mux_sel = store_data_mux_sel_i;
+              dp0_next.read_limit = read_limit_add;
+              dp0_next.write_data_sel = 0;
+              dp0_next.vector_mask = vector_mask_i;
+              dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
+              dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
+              dp0_next.ALU_opmode = ALU_opmode_i;
+              dp0_next.vmrf_wen = 0;
+           end
             if(dp0_reg.start) begin
                 dp0_next.start = 0;
                 case(inst_type_comp[5 : 0])

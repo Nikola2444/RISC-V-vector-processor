@@ -71,7 +71,7 @@ module port_allocate_unit#
    always_comb
    begin      
       op3_port_sel_o <= 'h0;
-      for (int i=0; i<R_PORTS_NUM; i++)
+      for (int i=0; i<W_PORTS_NUM; i++)
       begin
 	   if (port_rdy_i[i] && i != port_group_to_allocate_reg)
 	   begin	      

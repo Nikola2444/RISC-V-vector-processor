@@ -209,12 +209,17 @@ module vector_core #
    Vlane_with_low_lvl_ctrl_inst
      (/*AUTO_INST*/
       // Outputs
-      .ready_o				(port_group_ready[W_PORTS_NUM-1:0]),
+
+
       .ready_for_load_o			(),
       .store_data_o			(),
       .store_load_index_o		(),
       .store_data_valid_o		(),
       .store_load_index_valid_o		(),
+
+      .load_valid_i			(1'b0),
+      .load_last_i			(1'b0),
+      .load_data_i			('h0),
       // Inputs
       .clk_i				(clk),
       .clk2_i				(clk2),
@@ -230,9 +235,8 @@ module vector_core #
       .vrf_starting_waddr_i		(vrf_starting_waddr),
       .vrf_starting_raddr_i		({vrf_starting_waddr, vrf_starting_raddr_vs2, vrf_starting_raddr_vs1}), //TODO: how to orded them ?
       .wdata_width_i			(wdata_width[1:0]),
-      .load_valid_i			(1'b0),
-      .load_last_i			(1'b0),
-      .load_data_i			('h0),
+      .ready_o				(port_group_ready[W_PORTS_NUM-1:0]),
+
       .store_data_mux_sel_i		(store_data_mux_sel),
       .store_load_index_mux_sel_i	(store_load_idx_mux_sel),
       .op2_sel_i			(op2_sel[1:0]),
@@ -247,7 +251,10 @@ module vector_core #
       .read_port_allocation_i		(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this
       .primary_read_data_i		(8'hff));//TODO: what is this
 
-   
+
+   // Instantiate M_CU
+
+   //
 endmodule
 
 // Local Variables:

@@ -123,21 +123,21 @@ module v_cu #
    logic [31:0] 							  vl_reg, vl_next;
    logic [2:0] 								  sew_o;
    logic [$clog2(VLEN)-1:0] 						  vlmax;
-   typedef logic [2:0][1:0][$clog2(VLEN)-1:0] 				  vlmax_array_type;
+   typedef logic [7:0][2:0][$clog2(VLEN):0] 				  vlmax_array_type;
    
    localparam vlmax_array_type vlmax_array=init_vlmax();
 
    function vlmax_array_type init_vlmax();
       automatic vlmax_array_type vlmax_values = '{default:'0};
       for (int lmul=0; lmul<4; lmul++)	 
-	for (int sew=0; sew<4; sew++)
+	for (int sew=0; sew<3; sew++)
 	begin
-	   vlmax_values[lmul][sew] = ((VLEN/8)>>sew)*(lmul**2);
+	   vlmax_values[lmul][sew] = ((VLEN/8)/(2**sew))*(2**lmul);
 	end
       for (int lmul=1; lmul<4; lmul++)	 
-	for (int sew=0; sew<4; sew++)
+	for (int sew=0; sew<3; sew++)
 	begin
-	   vlmax_values[8-lmul][sew] =((VLEN/8)>>sew)/(lmul**2);
+	   vlmax_values[8-lmul][sew] =((VLEN/8)/(2**sew))/(2**lmul);
 	end
       return vlmax_values;
    endfunction // init_base_addr
@@ -217,7 +217,7 @@ module v_cu #
 
 
    // Calculating vector length
-   assign vlmax=vlmax_array[lmul_o][sew_o];
+   assign vlmax=vlmax_array[vtype_next[2:0]][vtype_next[5:3]];
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
 		    v_instr_vd != 0 ? vlmax : vl_reg;
    
@@ -342,7 +342,7 @@ module v_cu #
 	   6'b101110: alu_opmode_o = srl_op; // Vnclipu
 	   6'b101111: alu_opmode_o = srl_op; // Vnclip
 	   
-	   6'b110000: alu_opmode_o = add_op; // Vector widening reduction add
+	   //6'b110000: alu_opmode_o = add_op; // Vector widening reduction add
 	   6'b110000: alu_opmode_o = add_op; // Vector widening reduction addu
 	   6'b110001: alu_opmode_o = add_op; // Vector widening reduction addu
 	   

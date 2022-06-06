@@ -312,11 +312,14 @@ generate
         
         always_comb begin
             // Mux for choosing the right byte
-            read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen] << 3 +: 8];
+           //read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen] << 3 +: 8];
+	   read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen]*8 +: 8];
             // Mux for choosing the right halfword
-            read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen] << 4 +: 16];
+            //read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen] << 4 +: 16];
+	    read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen]*16 +: 16];
             // Mux for choosing the right data
-            read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen] << 5 +: 32] : 0;
+           //read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen] << 5 +: 32] : 0;
+	   read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen]*32 +: 32] : 0;
              
         end
         
@@ -329,7 +332,7 @@ generate
                 end
             end
             else begin
-                read_data_prep_reg[i_gen] <= read_data_prep_next[i_gen];
+               read_data_prep_reg[i_gen] <= read_data_prep_next[i_gen];
                 
                 for(int i = 0; i < VRF_DELAY - 1; i++) begin
                     el_extractor_reg[i_gen][i] <= el_extractor_next[i_gen][i];                  
@@ -423,7 +426,7 @@ generate
         
         always_comb begin
             for(int i = 0; i < VMRF_DELAY - 1; i++) begin
-                vrf_write_next[i + 1][j_gen] = vrf_write_reg[i][j_gen];
+               vrf_write_next[i + 1][j_gen] = vrf_write_reg[i][j_gen];
                 vmrf_write_next[i + 1][j_gen] <= vmrf_write_reg[i][j_gen];
                vm_next[i + 1][j_gen] <= vm_reg[i][j_gen];
                 alu_output_valid_next[i + 1][j_gen] <= alu_output_valid_reg[i][j_gen];

@@ -9,4 +9,5 @@
     vor.vv  v2, v5, v3
     vand.vv v5, v2, v3
     vor.vv  v2, v5, v3
-    vand.vv v5, v2, v3	
+    vand.vv v5, v2, v3
+	

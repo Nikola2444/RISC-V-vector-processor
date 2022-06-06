@@ -13,7 +13,7 @@ module alu #
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0]  alu_b_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0]  alu_c_i,
     input [1:0] 			       sew_i,
-    output [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
+    output logic [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
     input [PARALLEL_IF_NUM-1:0] 	       alu_vld_i,
     output [PARALLEL_IF_NUM-1:0] 	       alu_vld_o,
     output logic[PARALLEL_IF_NUM-1:0] 	       alu_mask_vector_o,
@@ -25,14 +25,16 @@ module alu #
     input 				       alu_stall_i
     );
 
+   logic [3:0][31:0] 			       alu_out;
+
    alu_submodule alu_submodule_inst0(/*AUTOINST*/
 				     // Outputs
 				     .alu_vld_o		(alu_vld_o[0]),
-				     .result_o		(alu_o[0]),
+				     .result_o		(alu_out[0]),
 				     // Inputs
 				     .clk		(clk),
 				     .rstn		(rstn),
-				     .sew_i		(sew_i[2:0]),
+				     .sew_i		(sew_i),
 				     .alu_opmode_i	(alu_opmode_i[0][8:0]),
 				     .op1_i		(alu_a_i[0]),
 				     .op2_i		(alu_b_i[0]),
@@ -41,11 +43,11 @@ module alu #
    alu_submodule alu_submodule_inst1(/*AUTOINST*/
 				     // Outputs
 				     .alu_vld_o		(alu_vld_o[1]),
-				     .result_o		(alu_o[1]),
+				     .result_o		(alu_out[1]),
 				     // Inputs
 				     .clk		(clk),
 				     .rstn		(rstn),
-				     .sew_i		(sew_i[2:0]),
+				     .sew_i		(sew_i),
 				     .alu_opmode_i	(alu_opmode_i[1][8:0]),
 				     .op1_i		(alu_a_i[1]),
 				     .op2_i		(alu_b_i[1]),
@@ -54,11 +56,11 @@ module alu #
    alu_submodule alu_submodule_inst2(/*AUTOINST*/
 				     // Outputs
 				     .alu_vld_o		(alu_vld_o[2]),
-				     .result_o		(alu_o[2]),
+				     .result_o		(alu_out[2]),
 				     // Inputs
 				     .clk		(clk),
 				     .rstn		(rstn),
-				     .sew_i		(sew_i[2:0]),
+				     .sew_i		(sew_i),
 				     .alu_opmode_i	(alu_opmode_i[2][8:0]),
 				     .op1_i		(alu_a_i[2]),
 				     .op2_i		(alu_b_i[2]),
@@ -67,11 +69,11 @@ module alu #
    alu_submodule alu_submodule_inst3(/*AUTOINST*/
 				     // Outputs
 				     .alu_vld_o		(alu_vld_o[3]),
-				     .result_o		(alu_o[3]),
+				     .result_o		(alu_out[3]),
 				     // Inputs
 				     .clk		(clk),
 				     .rstn		(rstn),
-				     .sew_i		(sew_i[2:0]),
+				     .sew_i		(sew_i),
 				     .alu_opmode_i	(alu_opmode_i[3][8:0]),
 				     .op1_i		(alu_a_i[3]),
 				     .op2_i		(alu_b_i[3]),
@@ -81,8 +83,31 @@ module alu #
    always_comb
    begin
       for (int i=0; i<4; i++)
-	alu_mask_vector_o[i] = alu_o[i][0];
+	alu_mask_vector_o[i] = alu_out[i][0];
    end
 
+   always_comb
+   begin
+      for (int i=0; i<4;i++)
+      begin
+	 if (sew_i==2'b00)
+	   for (int j=0; j<4; j++)
+	   begin
+	      alu_o[i][j*8 +: 8] = alu_out[i][7:0];
+	   end	
+	 else if (sew_i==2'b01)
+	 begin
+	    for (int j=0; j<2; j++)
+	    begin
+	       alu_o[i][j*16 +: 16] = alu_out[i][15:0];
+	    end	
+	 end
+	 else
+	 begin
+	    alu_o[i]=alu_out[i];
+	 end
+      end
+   end
+   
    endmodule
 

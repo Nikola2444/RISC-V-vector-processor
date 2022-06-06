@@ -181,8 +181,6 @@ module alu_submodule(/*AUTOARG*/
       result_reg = alu_opmode_reg[2][6:5]==2'b01 ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
       if (sew_reg == 2'b00)
       begin
-	 for (int i=8; i<32;i++)
-	   result_reg[i] = 1'b0;	 
 	 if (alu_opmode_reg[2][6:5]==2'b10) // take the value from dsp
 	 begin
 	    if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
@@ -190,9 +188,7 @@ module alu_submodule(/*AUTOARG*/
 	 end	 
       end
       if (sew_reg == 2'b01)
-      begin
-	 for (int i=16; i<32;i++)
-	   result_reg[i] = 1'b0;
+      begin	 
 	 if (alu_opmode_reg[2][6:5]==2'b10)
 	 begin
 	    if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)

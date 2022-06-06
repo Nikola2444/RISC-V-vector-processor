@@ -42,7 +42,7 @@ module Partial_sublane_driver
     output logic vrf_oreg_ren_o,
     output logic [$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_o,
     output logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_o,                // UPDATED, 0 - vs1, 1 - vs2, 2 - vs3(only for three operands)
-    output logic [3 : 0] vrf_bwen_o,                                            // Very important
+    output logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_o,                                            // Very important
     
     // VMRF
     output logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_o,   
@@ -53,6 +53,7 @@ module Partial_sublane_driver
     input logic load_last_i,                                                    // NEW SIGNAL
     output logic ready_for_load_o,                                              // NEW SIGNAL
     output logic request_write_control_o,                                       // NEW SIGNAL, 0 - ALU generates valid signal, 1 - only bwen is important
+    input logic [VLANE_NUM - 1 : 0][3 : 0] load_bwen_i,
     
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
@@ -136,6 +137,7 @@ typedef struct packed
 
 dataPacket0 dp0_reg, dp0_next;
 // bwen //
+logic [VLANE_NUM - 1 : 0][3 : 0] bwen;
 logic [3 : 0] shift4_reg, shift4_next;
 logic [1 : 0] shift2_reg, shift2_next;
 // main counter //
@@ -159,8 +161,7 @@ logic shift_data_validation;
 logic [VLANE_NUM - 1 : 0] read_data_valid;
 logic partial_results_valid;
 logic shift_partial;
-// Signals for load //
-logic [3 : 0] load_bwen;
+
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -186,8 +187,8 @@ logic [5 : 0] inst_type_comp;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
-assign vmrf_wen_o = dp0_reg.vmrf_wen;
-assign vrf_bwen_o = (current_state == LOAD_MODE) ? load_bwen : bwen_mux;
+assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
+assign vrf_bwen_o = ((current_state == LOAD_MODE) & (dp0_reg.waddr_cnt_en == 1)) ? load_bwen_i : bwen;
 assign vrf_ren_o = dp0_reg.vrf_ren;
 assign vrf_oreg_ren_o = dp0_reg.vrf_oreg_ren;
 assign dp0_next.vrf_ren = vrf_ren_i;
@@ -212,6 +213,22 @@ assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 // Write address generation //
 assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
+/////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////
+always_comb begin
+    if(current_state == REDUCTION_WRITE_MODE) begin
+        for(int i = 0; i < VLANE_NUM; i++) begin
+            bwen[i] = 0;
+        end
+        bwen[0] = bwen_mux;
+    end
+    else begin
+        for(int i = 0; i < VLANE_NUM; i++) begin
+            bwen[i] = bwen_mux;
+        end
+    end
+end
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -440,10 +457,9 @@ always_comb begin
     dp0_next.write_data_sel = dp0_reg.write_data_sel;
     dp0_next.vrf_starting_raddr = dp0_reg.vrf_starting_raddr;
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
-    dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
+    dp0_next.ALU_opmode = dp0_reg.ALU_opmode;;
     // Loads //
     ready_for_load_o = 0;
-    load_bwen = {4{1'b0}};
     
     case(current_state)
         IDLE : begin
@@ -584,7 +600,6 @@ always_comb begin
                 dp0_next.waddr_cnt_en = 1;
             end
             ready_for_load_o = dp0_reg.waddr_cnt_en;
-            load_bwen = {4{dp0_reg.waddr_cnt_en}};
             
             if(load_last_i) begin
                 next_state = IDLE;

@@ -134,10 +134,10 @@ typedef struct packed
     logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm;
     logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel, store_load_index_mux_sel;
     logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] ALU_ctrl;
-    // logic [W_PORTS_NUM - 1 : 0] imm_sign;
     logic [W_PORTS_NUM - 1 : 0] store_data_valid;
     logic [W_PORTS_NUM - 1 : 0] store_load_index_valid;
     logic [W_PORTS_NUM - 1 : 0] read_data_valid;
+    logic [1 : 0] sew;
     
 } ALU_packet; 
 
@@ -250,7 +250,7 @@ ALU_inst
     .alu_a_i(op1),
     .alu_b_i(op2),
     .alu_c_i(op3),
-    .sew_i(vsew_i),
+    .sew_i(ALU_signals_reg[VRF_DELAY - 1].sew),
     .alu_vld_i(ALU_signals_reg[VRF_DELAY - 1].read_data_valid),
     .alu_vld_o(alu_output_valid_next[0]),
     .alu_o(ALU_data_o[W_PORTS_NUM - 1 : 0]),
@@ -295,7 +295,6 @@ always_comb begin
     ALU_signals_next[0].op3_sel = op3_sel_i;
     ALU_signals_next[0].ALU_x_data = ALU_x_data_i;
     ALU_signals_next[0].ALU_imm = ALU_imm_i;
-    // ALU_signals_next[0].imm_sign = imm_sign_i;
     ALU_signals_next[0].ALU_reduction_data = ALU_reduction_data_i;
     ALU_signals_next[0].store_data_mux_sel = store_data_mux_sel_i;
     ALU_signals_next[0].store_load_index_mux_sel = store_load_index_mux_sel_i;
@@ -303,6 +302,8 @@ always_comb begin
     ALU_signals_next[0].store_data_valid = store_data_valid_i;
     ALU_signals_next[0].store_load_index_valid = store_load_index_valid_i;
     ALU_signals_next[0].read_data_valid = read_data_valid_i;
+    ALU_signals_next[0].sew = vsew_i;
+    
 end
 
 generate
@@ -347,7 +348,7 @@ generate
         assign read_data_prep_next[i_gen] = {vrf_rdata[i_gen], {{16{1'b0}}, read_data_hw_mux[i_gen]}, {{24{1'b0}}, read_data_byte_mux[i_gen]}};
         assign read_data_byte_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2];
         assign read_data_hw_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2][0];
-        assign read_data_mux_sel[i_gen] = vsew_i;
+        assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 1].sew;
         
     end
         

@@ -51,6 +51,7 @@ module Vlane_with_low_lvl_ctrl
     input logic load_last_i,                                                                                            // UPDATED
     output logic ready_for_load_o,                                                                                      // UPDATED
     input logic [VLANE_NUM - 1 : 0][31 : 0] load_data_i,
+    input logic [VLANE_NUM - 1 : 0][3 : 0] load_bwen_i,
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_data_mux_sel_i,
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] store_load_index_mux_sel_i,
     
@@ -112,13 +113,14 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_output;
 logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 2 : 0][31 : 0] lane_result;
 
 // Driver - Interconnect signals
+logic [1 : 0] vsew_di;
 logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_di;                              // TO BE CHECKED
 logic [W_PORTS_NUM - 1 : 0] vrf_ren_di;
 logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren_di;
 logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial_di;
 logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete_di;
 logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_di;
-logic [W_PORTS_NUM - 2 : 0][3 : 0] vrf_bwen_partial_di;
+logic [W_PORTS_NUM - 2 : 0][VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_partial_di;
 logic [VLANE_NUM - 1 : 0][3 : 0] vrf_bwen_complete_di;
 logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_di;   
 logic [W_PORTS_NUM - 1 : 0] vmrf_wen_di;
@@ -140,6 +142,7 @@ logic [W_PORTS_NUM - 1 : 0] vector_mask_di;
 logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_di;
 
 // Interconnect - Vector lane signals
+logic [VLANE_NUM - 1 : 0][1 : 0] vsew_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] read_data_valid_il;
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_ren_il;
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_oreg_ren_il;
@@ -181,7 +184,6 @@ generate
                 .INST_TYPE_NUM(INST_TYPE_NUM),
                 .VLANE_NUM(VLANE_NUM),
                 .ALU_OPMODE(ALU_OPMODE)
-                //.STRIDE_ENABLE("YES")
             )
             Complete_sublane_driver_inst
             (
@@ -189,6 +191,7 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_i(vsew_i),
+                .vsew_o(vsew_di),
                 .vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
                 .start_i(start_i[0]),
@@ -207,6 +210,7 @@ generate
                 .vrf_bwen_o(vrf_bwen_complete_di),
                 .vmrf_addr_o(vmrf_addr_di[0]),   
                 .vmrf_wen_o(vmrf_wen_di[0]),
+                .load_bwen_i(load_bwen_i),
                 .load_valid_i(load_valid_i),
                 .load_last_i(load_last_i),
                 .ready_for_load_o(ready_for_load[0]),
@@ -276,6 +280,7 @@ generate
                 .vrf_bwen_o(vrf_bwen_partial_di[i - 1]),
                 .vmrf_addr_o(vmrf_addr_di[i]),   
                 .vmrf_wen_o(vmrf_wen_di[i]),
+                .load_bwen_i(load_bwen_i),
                 .load_valid_i(load_valid_i),
                 .load_last_i(load_last_i),
                 .ready_for_load_o(ready_for_load[i]),
@@ -320,6 +325,8 @@ Driver_vlane_interconnect_inst
 (
     .clk_i(clk_i),
     .rst_i(rst_i),
+    .vsew_i(vsew_di),
+    .vsew_o(vsew_il),
     .read_data_valid_i(read_data_valid_di),
     .read_data_valid_o(read_data_valid_il),
     .vrf_ren_i(vrf_ren_di),
@@ -396,7 +403,7 @@ generate
             .clk_i(clk_i),
             .clk2_i(clk2_i),
             .rst_i(rst_i),
-            .vsew_i(vsew_i[1 : 0]),
+            .vsew_i(vsew_il[i]),
             .vrf_ren_i(vrf_ren_il[i]),
             .vrf_oreg_ren_i(vrf_oreg_ren_il[i]),
             .vrf_raddr_i(vrf_raddr_il[i]),

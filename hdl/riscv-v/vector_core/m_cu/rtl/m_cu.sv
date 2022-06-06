@@ -1,7 +1,7 @@
 // Coded by Djordje Miseljic | e-mail: djordjemiseljic@uns.ac.rs //////////////////////////////////////////////////////////////////////////////// // default_nettype of none prevents implicit logic declaration.
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit logic declaration.
-`default_nettype none
+`default_nettype wire
 timeunit 1ps;
 timeprecision 1ps;
 
@@ -82,9 +82,10 @@ module m_cu #(
   input  logic                                   ldbuff_write_done_i     ,
   input  logic                                   ldbuff_read_done_i      ,
   // MCU <=> V_LANE IF
-  input  logic                                   vlane_store_valid_i     , 
+  input  logic                                   vlane_store_dvalid_i    , 
+  output logic                                   vlane_store_rdy_o       , 
   input  logic                                   vlane_load_rdy_i        ,
-  input  logic                                   vlane_load_valid_i      ,
+  input  logic                                   vlane_load_ivalid_i     ,
   output logic                                   vlane_load_last_o       ,
   // MCU <=> AXIM CONTROL IF [read channel]
   output logic                                   ctrl_rstart_o           ,
@@ -288,6 +289,8 @@ module m_cu #(
     store_idx_lmul_next     = store_idx_lmul_reg;
     store_idx_sew_next      = store_idx_sew_reg;
     store_baseaddr_o        = mcu_base_addr_i;
+    vlane_store_rdy_o       = 1'b0;
+    store_cfg_update_o      = 1'b0;
     mcu_st_rdy_o            = 1'b0;
     store_baseaddr_update_o = 1'b0;
     store_baseaddr_set_o    = 1'b0;
@@ -342,7 +345,8 @@ module m_cu #(
       // UNIT STORE STATES
       // UNIT_PREP
       unit_store_prep: begin
-        sbuff_wen_o = vlane_store_valid_i;
+        sbuff_wen_o = vlane_store_dvalid_i;
+        vlane_store_rdy_o = 1'b1;
         if(sbuff_write_done_i) begin
           store_state_next = unit_store_tx;
           sbuff_wen_o           = 1'b0;
@@ -373,7 +377,8 @@ module m_cu #(
       // STRIDED STORE STATES
       // STRIDED_STORE_PREP
       strided_store_prep: begin
-        sbuff_wen_o = vlane_store_valid_i;
+        vlane_store_rdy_o = 1'b1;
+        sbuff_wen_o = vlane_store_dvalid_i;
         if(sbuff_write_done_i) begin
           store_state_next      = strided_store_tx_prep;
           sbuff_wen_o           = 1'b0;
@@ -414,7 +419,8 @@ module m_cu #(
       // INDEXED STORE STATES
       // INDEXED_STORE_PREP
       indexed_store_prep: begin
-        sbuff_wen_o = vlane_store_valid_i;
+        vlane_store_rdy_o = 1'b1;
+        sbuff_wen_o = vlane_store_dvalid_i;
         if(sbuff_write_done_i) begin
           sbuff_wen_o             = 1'b0;
           store_baseaddr_set_o    = 1'b1;
@@ -487,15 +493,17 @@ module m_cu #(
     load_idx_lmul_next      = load_idx_lmul_reg;
     load_idx_sew_next       = load_idx_sew_reg;
     load_baseaddr_o         = mcu_base_addr_i;
+    load_cfg_update_o       = 1'b0;
     mcu_ld_rdy_o            = 1'b0;
     load_baseaddr_update_o  = 1'b0;
     load_baseaddr_set_o     = 1'b0;
     load_cntr_rst_o         = 1'b0;
-    save_load_type          = 0;
+    save_load_type          = 1'b0;
     libuff_read_stall_o     = 1'b0;
     libuff_read_flush_o     = 1'b0;
     libuff_wen_o            = 1'b0;
     libuff_ren_o            = 1'b0;
+    libuff_rvalid           = 1'b1;
     ldbuff_read_stall_o     = 1'b0;
     ldbuff_read_flush_o     = !ldbuff_rvalid_d[0];
     ldbuff_wen_o            = 1'b0;
@@ -517,7 +525,7 @@ module m_cu #(
           load_baseaddr_set_o   = 1'b1;
           if(mcu_unit_ld_st_i)begin
             //unit
-            load_state_next         = unit_store_prep;
+            load_state_next         = unit_load_prep;
             load_data_sew_next      = mcu_data_width_i;
             load_data_lmul_next     = emul;
             load_idx_sew_next       = mcu_data_width_i;  // Not used in this context
@@ -525,7 +533,7 @@ module m_cu #(
           end
           else if (mcu_strided_ld_st_i)begin
             //strided
-            load_state_next         = strided_store_prep;
+            load_state_next         = strided_load_prep;
             load_data_sew_next      = mcu_data_width_i;
             load_data_lmul_next     = emul;
             load_idx_sew_next       = mcu_data_width_i;  // Not used in this context
@@ -533,7 +541,7 @@ module m_cu #(
           end
           else if (mcu_idx_ld_st_i)begin
             //indexed
-            load_state_next        = indexed_store_prep;
+            load_state_next        = indexed_load_prep;
             load_data_sew_next     = mcu_sew_i;
             load_data_lmul_next    = mcu_lmul_i;
             load_idx_sew_next      = mcu_data_width_i;
@@ -549,7 +557,7 @@ module m_cu #(
         rd_tready_o   = 1'b1;
         ldbuff_wen_o  = rd_tvalid_i;
         if(rd_tlast_i) begin
-          store_state_next = unit_load_tx;
+          load_state_next = unit_load_tx;
           ctrl_rstart_o         = 1'b0;
           ldbuff_rvalid         = 1'b1;
           ldbuff_ren_o          = 1'b1;
@@ -624,7 +632,7 @@ module m_cu #(
       // INDEXED_LOAD_PREP
       indexed_load_prep: begin
         ldbuff_read_flush_o = 1'b1;
-        libuff_wen_o = vlane_load_valid_i;
+        libuff_wen_o = vlane_load_ivalid_i;
         if(libuff_write_done_i) begin
           libuff_wen_o              = 1'b0;
           libuff_ren_o              = 1'b1;

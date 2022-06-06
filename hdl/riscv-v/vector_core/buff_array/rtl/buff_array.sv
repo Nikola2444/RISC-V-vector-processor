@@ -1,7 +1,7 @@
 // Coded by Djordje Miseljic | e-mail: djordjemiseljic@uns.ac.rs
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit logic declaration.
-`default_nettype none
+`default_nettype wire
 timeunit 1ps;
 timeprecision 1ps;
 
@@ -179,7 +179,7 @@ module buff_array #(
   logic [V_LANE_NUM-1:0][3:0]               ldbuff_wen;
   logic [V_LANE_NUM-1:0][3:0]               ldbuff_pr_wen; // Priority
   logic [31:0]                              ldbuff_wptr  [0:V_LANE_NUM-1];
-  logic [31:0]                              ldbuff_rdata [0:V_LANE_NUM-1];
+  logic [35:0]                              ldbuff_rdata [0:V_LANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_raddr;
   logic [31:0]                              ldbuff_rptr  [0:V_LANE_NUM-1];
   logic                                     ldbuff_roen;
@@ -211,7 +211,7 @@ module buff_array #(
       store_baseaddr_reg <= store_baseaddr_i;
       store_stride_reg   <= store_stride_i;
     end
-    else if(store_baseaddr_update_i)begin
+    else if(store_baseaddr_update_i) begin
       case(store_type_i[1:0])
       1:      // indexed
         store_baseaddr_reg <= store_baseaddr_reg + sbuff_rptr_ext - (1<<cfg_store_data_sew_i[0]); // TODO double-check this
@@ -399,7 +399,7 @@ module buff_array #(
       default: begin // FOR SEW = 8
         if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
-            sdbuff_wen[i/4][i%4] <= (vlane<V_LANE_NUM*2) ? 1'b1 : 1'b0;
+            sdbuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
           sdbuff_wen <= ((sdbuff_wen<<(V_LANE_NUM)) | (sdbuff_wen>>(V_LANE_NUM*4-V_LANE_NUM)));
       end
@@ -426,7 +426,7 @@ module buff_array #(
       default: begin // FOR SEW = 8
         if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
-            sibuff_wen[i/4][i%4] <= (vlane<V_LANE_NUM*2) ? 1'b1 : 1'b0;
+            sibuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
           sibuff_wen <= ((sibuff_wen<<(V_LANE_NUM)) | (sibuff_wen>>(V_LANE_NUM*4-V_LANE_NUM)));
       end
@@ -436,7 +436,7 @@ module buff_array #(
   // MAIN ITERATOR OVER V_LANE BUFFERS
   genvar vlane;
   generate 
-    for (vlane=0; vlane<V_LANE_NUM; vlane++) begin: sbuff_vlane_iterator // MAIN V_LANE ITERATOR
+    for (vlane=0; vlane<V_LANE_NUM; vlane++) begin : sbuff_vlane_iterator // MAIN V_LANE ITERATOR
 
       // Multiplex narrower data in so writes are in the correct position for byte-write enable
       always_comb begin
@@ -467,18 +467,19 @@ module buff_array #(
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
       ) store_data_buffer (
-        .clk      (clk),
+        .clka      (clk),
+        .clkb      (clk),
         .addra    (sdbuff_waddr),
         .addrb    (sdbuff_raddr),
         .dina     (sdbuff_wdata[vlane]),
-        .wea      ({4{sdbuff_wen_i}} & sdbuff_wen[vlane]),
+        .wea      ({4{sbuff_wen_i}} & sdbuff_wen[vlane]),
         .enb      (sdbuff_ren),
         .rstb     (sdbuff_rocl),
         .regceb   (sdbuff_roen),
         .doutb    (sdbuff_rdata[vlane])
       );
 
-      assign sdbuff_wdata[vlane] = vlane_store_data_i[vlane];
+
       assign sdbuff_ren  = !sbuff_read_stall_i;
       assign sdbuff_roen = !sbuff_read_stall_i;
       assign sdbuff_rocl = sbuff_read_flush_i;
@@ -487,23 +488,23 @@ module buff_array #(
       // Xilinx Simple Dual Port Single Clock RAM with Byte-write
       sdp_bwe_bram #(
         .NB_COL(4),                           // Specify number of columns (number of bytes)
-        .COL_WIDTH(9),                        // Specify column width (byte width, typically 8 or 9)
+        .COL_WIDTH(8),                        // Specify column width (byte width, typically 8 or 9)
         .RAM_DEPTH(BUFF_DEPTH),               // Specify RAM depth (number of entries)
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
       ) store_index_buffer (
-        .clk      (clk),
+        .clka      (clk),
+        .clkb      (clk),
         .addra    (sibuff_waddr),
         .addrb    (sibuff_raddr),
         .dina     (sibuff_wdata[vlane]),
-        .wea      ({4{sibuff_wen_i}} & sibuff_wen[vlane]),
+        .wea      ({4{sbuff_wen_i}} & sibuff_wen[vlane]),
         .enb      (sibuff_ren),
         .rstb     (sibuff_rocl),
         .regceb   (sibuff_roen),
         .doutb    (sibuff_rdata[vlane])
       );
 
-      assign sibuff_wdata[vlane] = vlane_store_ptr_i[vlane];
       assign sibuff_ren  = !sbuff_read_stall_i;
       assign sibuff_roen = !sbuff_read_stall_i;
       assign sibuff_rocl = sbuff_read_flush_i;
@@ -611,7 +612,7 @@ module buff_array #(
         lbuff_byte_cnt <= ((cfg_vlenb_i)>>(-$signed(cfg_load_data_lmul_i[1:0])));
     end
   end
-  assign lbuff_word_cnt = lbuff_byte_cnt >> cfg_load_data_l2_i[1:0];
+  assign lbuff_word_cnt = lbuff_byte_cnt >> cfg_load_data_lmul_i[1:0];
   assign lbuff_word_batch_cnt = lbuff_word_cnt >> $clog2(V_LANE_NUM);
   assign lbuff_32b_batch_cnt = (lbuff_byte_cnt >> 2) >> $clog2(V_LANE_NUM);
 
@@ -759,7 +760,7 @@ module buff_array #(
       default: begin // FOR SEW = 8
         if(load_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
-            libuff_wen[i/4][i%4] <= (vlane<V_LANE_NUM*2) ? 1'b1 : 1'b0;
+            libuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
         else if (libuff_wen_i)
           libuff_wen <= ((libuff_wen<<(V_LANE_NUM)) | (libuff_wen>>(V_LANE_NUM*4-V_LANE_NUM)));
       end
@@ -849,12 +850,13 @@ module buff_array #(
       // Xilinx Simple Dual Port Single Clock RAM with Byte-write
       sdp_bwe_bram #(
         .NB_COL(4),                           // Specify number of columns (number of bytes)
-        .COL_WIDTH(8),                        // Specify column width (byte width, typically 8 or 9)
+        .COL_WIDTH(9),                        // Specify column width (byte width, typically 8 or 9)
         .RAM_DEPTH(BUFF_DEPTH),               // Specify RAM depth (number of entries)
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
       ) load_data_buffer (
-        .clk      (clk),
+        .clka     (clk),
+        .clkb     (clk),
         .addra    (ldbuff_waddr),
         .addrb    (ldbuff_raddr),
         .dina     (ldbuff_wdata[vlane]),
@@ -879,7 +881,8 @@ module buff_array #(
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
       ) load_index_buffer (
-        .clk      (clk),
+        .clka     (clk),
+        .clkb     (clk),
         .addra    (libuff_waddr),
         .addrb    (libuff_raddr),
         .dina     (libuff_wdata[vlane]),
@@ -890,7 +893,6 @@ module buff_array #(
         .doutb    (libuff_rdata[vlane])
       );
 
-      assign libuff_wdata[vlane] = vlane_load_ptr_i[vlane];
       assign libuff_ren  = !libuff_read_stall_i;
       assign libuff_roen = !libuff_read_stall_i;
       assign libuff_rocl = libuff_read_flush_i;

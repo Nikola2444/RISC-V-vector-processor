@@ -167,11 +167,12 @@ module m_cu #(
   logic       sbuff_read_invalidate;
   // Store Signals
   logic       save_store_type;
+  logic       save_store_cfg;
   logic [2:0] store_type_reg,store_type_next;
-  typedef enum {store_idle, unit_store_prep, unit_store_tx, strided_store_prep, strided_store_tx_prep, strided_store_tx, indexed_store_prep, indexed_store_tx_init, indexed_store_tx_prep, indexed_store_tx} store_fsm;
+  typedef enum logic[3:0] {store_idle, store_idle_buffed, unit_store_prep, unit_store_tx, strided_store_prep, strided_store_tx_prep, strided_store_tx, indexed_store_prep, indexed_store_tx_init, indexed_store_tx_prep, indexed_store_tx} store_fsm;
   store_fsm store_state_reg, store_state_next;
   // LOAD Signals
-  typedef enum {load_idle, unit_load_prep, unit_load_tx, strided_load_prep, strided_load_tx_prep, strided_load_tx, indexed_load_prep, indexed_load_tx_init, indexed_load_tx_prep, indexed_load_tx} load_fsm;
+  typedef enum logic[3:0] {load_idle, unit_load_prep, unit_load_tx, strided_load_prep, strided_load_tx_prep, strided_load_tx, indexed_load_prep, indexed_load_tx_init, indexed_load_tx_prep, indexed_load_tx} load_fsm;
   load_fsm load_state_reg, load_state_next;
   logic       save_load_type;
   logic [2:0] load_type_reg,load_type_next;
@@ -244,15 +245,25 @@ module m_cu #(
       store_idx_sew_reg         <= 0;
       store_idx_lmul_reg        <= 0;
     end
-    else if (save_store_type) begin
-      store_type_reg            <= {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
-      store_data_lmul_reg       <= store_data_lmul_next;
-      store_data_sew_reg        <= store_data_sew_next;
-      store_idx_lmul_reg        <= store_idx_lmul_next;
-      store_idx_sew_reg         <= store_idx_sew_next;
+    else begin
+      if (save_store_type) 
+        store_type_reg            <= store_type_next;
+      if (save_store_cfg)begin
+        store_data_lmul_reg       <= store_data_lmul_next;
+        store_data_sew_reg        <= store_data_sew_next;
+        store_idx_lmul_reg        <= store_idx_lmul_next;
+        store_idx_sew_reg         <= store_idx_sew_next;
+      end
     end
   end
+  //assign store_type_next = save_store_type ? {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i} : store_type_reg;
   assign store_type_next = {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
+
+  assign store_type_o           = store_type_reg;
+  assign cfg_store_data_lmul_o  = store_data_lmul_reg;
+  assign cfg_store_data_sew_o   = store_data_sew_reg;
+  assign cfg_store_idx_lmul_o   = store_idx_lmul_reg;
+  assign cfg_store_idx_sew_o    = store_idx_sew_reg;
 
   // save load configuration
   always_ff @(posedge clk, negedge rstn)
@@ -272,14 +283,14 @@ module m_cu #(
       load_idx_sew_reg         <= load_idx_sew_next;
     end
   end
+  //assign load_type_next = save_load_type ? {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i} : load_type_reg;
   assign load_type_next = {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
 
-  assign store_type_o           = store_type_next;
-  assign cfg_store_data_lmul_o  = store_data_lmul_next;
-  assign cfg_store_data_sew_o   = store_data_sew_next;
-  assign cfg_store_idx_lmul_o   = store_idx_lmul_next;
-  assign cfg_store_idx_sew_o    = store_idx_sew_next;
-
+  assign load_type_o           = load_type_reg;
+  assign cfg_load_data_lmul_o  = load_data_lmul_next;
+  assign cfg_load_data_sew_o   = load_data_sew_next;
+  assign cfg_load_idx_lmul_o   = load_idx_lmul_next;
+  assign cfg_load_idx_sew_o    = load_idx_sew_next;
   // MAIN STORE FSM M_CU NEXTSTATE & CONTROL
   always_comb begin
     // default values for output signals
@@ -295,6 +306,7 @@ module m_cu #(
     store_baseaddr_update_o = 1'b0;
     store_baseaddr_set_o    = 1'b0;
     save_store_type         = 1'b0;
+    save_store_cfg          = 1'b0;
     sbuff_read_stall_o      = 1'b0;
     sbuff_read_invalidate   = 1'b0;
     sbuff_read_flush_o      = 1'b0;
@@ -307,33 +319,45 @@ module m_cu #(
     case (store_state_reg)
       // IDLE
       store_idle: begin
-        mcu_st_rdy_o = 1'b1;
-        if(mcu_st_vld_reg)
+        mcu_st_rdy_o          = 1'b1;
+        if(mcu_st_vld_reg) // All buffered update buff array, change state
         begin
-          save_store_type       = 1'b1;
           store_cfg_update_o    = 1'b1;
           store_cntr_rst_o      = 1'b1;
-          store_baseaddr_set_o  = 1'b1;
           wr_tvalid             = 1'b1;
-          if(mcu_unit_ld_st_i)begin
+          if(store_type_reg[2])begin
             //unit
             store_state_next        = unit_store_prep;
-            store_data_sew_next     = mcu_data_width_i;
-            store_data_lmul_next    = emul;
-            store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
-            store_idx_lmul_next     = emul;              // Not used in this context
           end
-          else if (mcu_strided_ld_st_i)begin
+          else if (store_type_reg[1])begin
             //strided
             store_state_next        = strided_store_prep;
+          end
+          else if (store_type_reg[0])begin
+            //indexed
+            store_state_next        = indexed_store_prep;
+          end
+        end
+        if(mcu_st_vld_i)begin // Buffer the configuration
+          save_store_type       = 1'b1;
+          save_store_cfg        = 1'b1;
+          store_baseaddr_set_o  = 1'b1;
+          if(store_type_next[2])begin
+            //unit
             store_data_sew_next     = mcu_data_width_i;
             store_data_lmul_next    = emul;
             store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
             store_idx_lmul_next     = emul;              // Not used in this context
           end
-          else if (mcu_idx_ld_st_i)begin
+          else if (store_type_next[1])begin
+            //strided
+            store_data_sew_next     = mcu_data_width_i;
+            store_data_lmul_next    = emul;
+            store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+            store_idx_lmul_next     = emul;              // Not used in this context
+          end
+          else if (store_type_next[0])begin
             //indexed
-            store_state_next        = indexed_store_prep;
             store_data_sew_next     = mcu_sew_i;
             store_data_lmul_next    = mcu_lmul_i;
             store_idx_sew_next      = mcu_data_width_i;
@@ -347,29 +371,24 @@ module m_cu #(
       unit_store_prep: begin
         sbuff_wen_o = vlane_store_dvalid_i;
         vlane_store_rdy_o = 1'b1;
-        if(sbuff_write_done_i) begin
+        if(sbuff_write_done_i && vlane_store_dvalid_i) begin
           store_state_next = unit_store_tx;
-          sbuff_wen_o           = 1'b0;
           ctrl_wstart_o         = 1'b1;
-          wr_tvalid             = 1'b1;
-          sbuff_ren_o           = 1'b1;
+          wr_tvalid             = 1'b1; // pre-read 1
+          sbuff_ren_o           = 1'b1; // pre-read 1
         end
       end
       // UNIT_STORE
       unit_store_tx: begin
-        if(sbuff_read_done_i) begin
+        wr_tvalid             = 1'b1;
+        sbuff_ren_o           = 1'b1;
+        if(sbuff_read_done_i && wr_tready_i) begin
           sbuff_ren_o           = 1'b0;
           if(ctrl_wdone_i)
             store_state_next = store_idle;
         end
-        if(wr_tready_i) begin
-          wr_tvalid             = 1'b1;
-          sbuff_ren_o           = 1'b1;
-        end
-        else begin
+        if(!wr_tready_i) begin
           sbuff_read_stall_o    = 1'b1;
-          sbuff_read_invalidate = 1'b1;
-          wr_tvalid             = 1'b0;
           sbuff_ren_o           = 1'b0;
         end
       end
@@ -477,11 +496,6 @@ module m_cu #(
     endcase
   end
   
-  assign load_type_o           = load_type_next;
-  assign cfg_load_data_lmul_o  = load_data_lmul_next;
-  assign cfg_load_data_sew_o   = load_data_sew_next;
-  assign cfg_load_idx_lmul_o   = load_idx_lmul_next;
-  assign cfg_load_idx_sew_o    = load_idx_sew_next;
   // TODO THIS IS A COPY OF A PREVIOUS FSM
   // TODO CONVERTING TO LOAD FSM IN PROGRESS
   // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL

@@ -7,7 +7,7 @@ timeprecision 1ps;
 
 module m_cu #(
   parameter integer VLEN                     = 8192,
-  parameter integer V_LANE_NUM               = 8 ,
+  parameter integer VLANE_NUM               = 8 ,
   parameter integer MAX_VECTORS_BUFFD        = 1 ,
   parameter integer C_M_AXI_ADDR_WIDTH       = 32,
   parameter integer C_M_AXI_DATA_WIDTH       = 32,
@@ -31,9 +31,11 @@ module m_cu #(
   input  logic                                   mcu_st_vld_i            ,
   // SHEDULER <=> M_CU CONFIG IF [loads]
   output logic 	                                 mcu_ld_rdy_o            ,
+  output logic 	                                 mcu_ld_buffered_o       ,
   input  logic                                   mcu_ld_vld_i            ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
-  input  logic [$clog2(VLEN)-1:0]                cfg_vlenb_i             ,
+  input  logic [31:0]                            mcu_vl_i                ,
+  output logic [$clog2(VLEN)-1:0]                cfg_vlenb_o             ,
   // MCU => BUFF_ARRAY CONFIG IF [stores]
   output logic [2:0]                             cfg_store_data_lmul_o   ,
   output logic [2:0]                             cfg_store_data_sew_o    ,
@@ -83,6 +85,7 @@ module m_cu #(
   input  logic                                   ldbuff_read_done_i      ,
   // MCU <=> V_LANE IF
   input  logic                                   vlane_store_dvalid_i    , 
+  input  logic                                   vlane_store_ivalid_i    , 
   output logic                                   vlane_store_rdy_o       , 
   input  logic                                   vlane_load_rdy_i        ,
   input  logic                                   vlane_load_ivalid_i     ,
@@ -182,6 +185,8 @@ module m_cu #(
   ///////////////////////////////////////////////////////////////////////////////
   // Begin RTL
   ///////////////////////////////////////////////////////////////////////////////
+
+  assign cfg_vlenb_o = mcu_vl_i[$clog2(VLEN)-1:0];
 
   assign emul_addr = {mcu_data_width_i[1:0], mcu_lmul_i[2:0], mcu_sew_i[1:0]};
   assign emul = emul_calc[emul_addr][2:0];
@@ -516,6 +521,7 @@ module m_cu #(
     load_baseaddr_o         = mcu_base_addr_i;
     load_cfg_update_o       = 1'b0;
     mcu_ld_rdy_o            = 1'b0;
+    mcu_ld_buffered_o       = 1'b0;
     load_baseaddr_update_o  = 1'b0;
     load_baseaddr_set_o     = 1'b0;
     load_cntr_rst_o         = 1'b0;
@@ -584,6 +590,7 @@ module m_cu #(
         rd_tready_o   = 1'b1;
         ldbuff_wen_o  = rd_tvalid_i;
         if(rd_tlast_i) begin
+          mcu_ld_buffered_o     = 1'b1;
           load_state_next = unit_load_tx;
           ldbuff_rvalid         = 1'b1; // pre-read 1
           ldbuff_ren_o          = 1'b1; // pre-read 1

@@ -19,6 +19,7 @@ module buff_array #(
   input  logic                                   rstn                    ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
   input  logic [$clog2(VLEN)-1:0]                cfg_vlenb_i             ,
+  input  logic [$clog2(VLEN)-1:0]                cfg_vlenw_i             ,
   // MCU => BUFF_ARRAY CONFIG IF [stores]
   input  logic [2:0]                             cfg_store_data_lmul_i   ,
   input  logic [2:0]                             cfg_store_idx_lmul_i    ,
@@ -151,7 +152,7 @@ module buff_array #(
   logic [$clog2(VLMAX)-1:0]                 libuff_read_cntr;
   logic [BATCH_CNTR_WIDTH-1:0]              libuff_write_cntr; 
   logic [BATCH_CNTR_WIDTH-1:0]              ldbuff_read_cntr; 
-  logic [$clog2(VLMAX)-1:0]                 ldbuff_write_cntr;
+  logic [$clog2(VLMAX)-1:0]                 ldbuff_write_cntr,ldbuff_write_cntr_next;
 
   // STORE BUFFER INTERFACE ************
   // Store Data Buffer Signals
@@ -241,7 +242,7 @@ module buff_array #(
   end
   assign sbuff_read_cntr_next  = sbuff_read_cntr + 1;
   assign sbuff_read_cntr_nnext  = sbuff_read_cntr + (V_LANE_NUM/2);
-  assign sbuff_read_done_o = (sbuff_read_cntr_next == sbuff_word_cnt);
+  assign sbuff_read_done_o = store_type_i[2] ? (sbuff_read_cntr_next == sbuff_32b_cnt) : (sbuff_read_cntr_next == sbuff_word_cnt);
 
 
   // Write counter addresses write ports of all store buffers
@@ -331,28 +332,51 @@ module buff_array #(
 
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of V_LANE_NUM buffers to output 
+  // READ ADDRESS SELECT
+  always_comb  begin
+    if(store_type_i[2]) begin //unit store always as 32-bit data
+      sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)); 
+      sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)); // nnext - prepare data in advance (2 clock-delay)
+      sbuff_rdata_mux_amt = sbuff_read_cntr[0+:$clog2(V_LANE_NUM)];
+    end
+    else begin // else depends on sbuff
+      case(cfg_store_data_sew_i[1:0])
+        2: // FOR SEW = 32
+        begin
+          sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)); 
+          sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)); // nnext - prepare data in advance (2 clock-delay)
+          sbuff_rdata_mux_amt = sbuff_read_cntr[0+:$clog2(V_LANE_NUM)];
+        end
+        1: // FOR SEW = 16
+        begin
+          sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)+1);
+          sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)+1);
+          sbuff_rdata_mux_amt = sbuff_read_cntr[1+:$clog2(V_LANE_NUM)];
+        end
+        default: // FOR SEW = 8
+        begin
+          sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)+2);
+          sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)+2);
+          sbuff_rdata_mux_amt = sbuff_read_cntr[2+:$clog2(V_LANE_NUM)];
+        end
+      endcase
+    end
+  end
+
+  // WRITE ADDRESS SELECT
   always_comb  begin
     case(cfg_store_data_sew_i[1:0])
       2: // FOR SEW = 32
       begin
         sdbuff_waddr        = sbuff_write_cntr; 
-        sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)); // next - prepare data in advance (2 clock-delay)
-        sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)); // next - prepare data in advance (2 clock-delay)
-        sbuff_rdata_mux_amt = sbuff_read_cntr[0+:$clog2(V_LANE_NUM)];
       end
       1: // FOR SEW = 16
       begin
         sdbuff_waddr        = sbuff_write_cntr  >>(1); 
-        sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)+1);
-        sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)+1);
-        sbuff_rdata_mux_amt = sbuff_read_cntr[1+:$clog2(V_LANE_NUM)];
       end
       default: // FOR SEW = 8
       begin
         sdbuff_waddr        = sbuff_write_cntr  >>(2);
-        sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(V_LANE_NUM)+2);
-        sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(V_LANE_NUM)+2);
-        sbuff_rdata_mux_amt = sbuff_read_cntr[2+:$clog2(V_LANE_NUM)];
       end
     endcase
   end
@@ -367,7 +391,9 @@ module buff_array #(
       sbuff_rdata_mux_amt_d[0] <= sbuff_rdata_mux_amt;
     end
   end
-  assign sbuff_rdata_mux = sdbuff_rdata[sbuff_rdata_mux_amt_d[1]];
+
+  assign sbuff_rdata_mux = sdbuff_rdata[(sbuff_rdata_mux_amt_d[1])];
+
   // Alternatively: (this way option cfg_store_data_sew=2'b11 not ignored)
   //assign sdbuff_waddr    = sbuff_write_cntr  >>(2-cfg_store_data_sew_i[1:0]);
   //assign sdbuff_raddr    = sbuff_read_cntr   >>$clog2(V_LANE_NUM)>>(2-cfg_store_data_sew_i[1:0]);
@@ -422,7 +448,7 @@ module buff_array #(
       default: begin // FOR SEW = 8
         if(store_cfg_update_i)
           for(int i=0; i<(V_LANE_NUM*4); i++)
-            sdbuff_wen[i/4][i%4] <= (i<V_LANE_NUM*2) ? 1'b1 : 1'b0;
+            sdbuff_wen[i/4][i%4] <= (i<V_LANE_NUM) ? 1'b1 : 1'b0;
         else if (sbuff_wen_i)
           sdbuff_wen <= ((sdbuff_wen<<(V_LANE_NUM)) | (sdbuff_wen>>(V_LANE_NUM*4-V_LANE_NUM)));
       end
@@ -589,14 +615,13 @@ module buff_array #(
   always_ff @(posedge clk) begin
     if (!rstn || load_cntr_rst_i)begin
       ldbuff_write_cntr <= 0;
-      ldbuff_write_done_o <= 1'b0;
     end
     else if (ldbuff_wen_i) begin
-      ldbuff_write_cntr <= ldbuff_write_cntr + 1;
-      if (ldbuff_write_cntr >= lbuff_word_cnt)
-        ldbuff_write_done_o <= 1'b1;
+      ldbuff_write_cntr <= ldbuff_write_cntr_next;
     end
   end
+  assign ldbuff_write_cntr_next = ldbuff_write_cntr + 1;
+  assign ldbuff_write_done_o = (ldbuff_write_cntr == lbuff_word_cnt);
 
   // Counter for number of data read from ldbuff
   always_ff @(posedge clk) begin

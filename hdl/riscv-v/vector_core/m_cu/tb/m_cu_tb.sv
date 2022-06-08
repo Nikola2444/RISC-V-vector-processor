@@ -316,11 +316,11 @@ endclass
     @(negedge clk);
     @(negedge clk);
     @(negedge clk);
-    mcu_sew              =3'b010;
+    mcu_sew              =3'b000;
     mcu_lmul             =3'b000;
     mcu_base_addr        =32'h40000000;
     mcu_stride           =0;
-    mcu_data_width       =3'b010;
+    mcu_data_width       =3'b000;
     mcu_idx_ld_st        =1'b0;
     mcu_strided_ld_st    =1'b0;
     mcu_unit_ld_st       =1'b1;
@@ -344,8 +344,6 @@ endclass
   integer iter=0;
   always begin
     //vlane_rand vlane_r;
-    vlane_store_dvalid <= 1;
-    vlane_load_rdy     <= 0;
     for(int i=0; i<V_LANE_NUM; i++)begin
       vlane_store_data[i]<=iter+i;
       vlane_store_ptr [i]<=iter+i;
@@ -362,7 +360,8 @@ endclass
 
    
   // AXIMCTRL INTERFACE
-  int word_num = 0;
+  int word_num  = 0;
+  int wait_time = 0;
 
   always begin
     //aximctrl_rand aximctrl_r;
@@ -379,8 +378,15 @@ endclass
         if(wr_tvalid && wr_tready)begin
           word_num++;
         end
-        if(word_num==(cfg_vlenb/4))
-          ctrl_wdone <= 1'b1;
+        if(word_num==(cfg_vlenb/4))begin
+          wr_tready <= 1'b0;
+          wait_time = $urandom_range(0,10);
+          for(int i=0; i<wait_time; i++)
+            @(negedge clk);
+            ctrl_wdone <= 1'b1;
+            @(negedge clk);
+            ctrl_wdone <= 1'b0;
+        end
       end
     end
   end

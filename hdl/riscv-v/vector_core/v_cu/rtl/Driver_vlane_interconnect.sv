@@ -113,7 +113,7 @@ typedef struct packed
 
     // VRF signals
     logic [W_PORTS_NUM - 1 : 0] vrf_ren;
-    logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vrf_oreg_ren;
+    logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren;
     logic [W_PORTS_NUM - 2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_partial;
     logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_complete;
     logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr;
@@ -247,9 +247,9 @@ generate
         
         for(genvar k = 0; k < R_PORTS_NUM; k++) begin
             
-            assign primary_vrf_ren[i][k] = input_reg.vrf_ren[k >> 1];;              // R0, R1 -> W0, R2, R3 -> W1, R4, R5 -> W3, ... 
-            assign primary_vrf_oreg_ren[i][k] = input_reg.vrf_oreg_ren[k >> 1];
-            assign primary_el_extractor[i][k] = input_reg.el_extractor[k >> 1];
+            assign primary_vrf_ren[i][k] = input_reg.vrf_ren[k / 2];              // R0, R1 -> W0, R2, R3 -> W1, R4, R5 -> W3, ... 
+            assign primary_vrf_oreg_ren[i][k] = input_reg.vrf_oreg_ren[k / 2];
+            assign primary_el_extractor[i][k] = input_reg.el_extractor[k / 2];
             
             assign secondary_vrf_ren[i][k] = input_reg.vrf_ren[read_port_allocation_i[k]];
             assign secondary_vrf_oreg_ren[i][k] = input_reg.vrf_oreg_ren[read_port_allocation_i[k]];

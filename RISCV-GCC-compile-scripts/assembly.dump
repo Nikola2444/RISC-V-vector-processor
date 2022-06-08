@@ -5,7 +5,7 @@ assembly.o:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 <.text>:
-   0:	022180d7          	vadd.vv	v1,v2,v3
+   0:	023120d7          	vredsum.vs	v1,v3,v2
    4:	0a218257          	vsub.vv	v4,v2,v3
    8:	022182d7          	vadd.vv	v5,v2,v3
    c:	02520357          	vadd.vv	v6,v5,v4

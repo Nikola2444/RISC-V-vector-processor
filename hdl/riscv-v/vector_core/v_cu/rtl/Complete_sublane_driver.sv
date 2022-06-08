@@ -75,13 +75,15 @@ module Complete_sublane_driver
     input logic [$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_i,                        // Determined by port allocation
     input logic [31 : 0] ALU_x_data_i,
     input logic [4 : 0] ALU_imm_i,
-    input logic [ALU_OPMODE - 1 : 0] ALU_opmode_i,                              // Not yet finished
+    input logic [ALU_OPMODE - 1 : 0] ALU_opmode_i,
+    input logic                      reduction_op_i,
     output logic [1 : 0] op2_sel_o,
     output logic [$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_o,
     output logic [31 : 0] ALU_x_data_o,
     output logic [4 : 0] ALU_imm_o,
     output logic [31 : 0] ALU_reduction_data_o,
     output logic [ALU_OPMODE - 1 : 0] ALU_ctrl_o,
+    output logic                      reduction_op_o,                              // Not yet finished
     input logic alu_en_32bit_mul_i,                                            // NEW SIGNAL
     output logic alu_en_32bit_mul_o,                               
     
@@ -162,6 +164,7 @@ typedef struct packed
     logic reverse_bwen;
     logic slide_enable_buffering;                                       // 1 - buffering enabled, 0 - for disabled
     logic start_decrementor;
+    logic reduction_op;
     
     // 1-cycle delayed data for slides
     logic [$clog2(MEM_DEPTH) - 1 : 0] waddr_ff;
@@ -256,6 +259,7 @@ assign store_load_index_mux_sel_o = dp0_reg.store_load_index_mux_sel;
 assign read_limit_carry = (vl_i[$clog2(VLANE_NUM) - 1 : 0] == 0);
 assign read_limit_add = (vl_i >> $clog2(VLANE_NUM)) + !read_limit_carry;
 assign read_limit_comp = (main_cnt == dp0_reg.read_limit - 1);
+
 assign store_load_index_valid_o = dp0_reg.store_load_index_valid;
 assign store_data_valid_o = dp0_reg.store_data_valid;
 assign op2_sel_o = (current_state == REDUCTION_MODE) ? 2'b11 : dp0_reg.op2_sel;
@@ -268,6 +272,7 @@ assign write_data_sel_o = dp0_reg.write_data_sel;
 assign read_data_valid_o = (dp0_reg.delay_addr == 1) ? read_data_valid_slide : read_data_valid;
 assign read_data_valid[VLANE_NUM - 1 : 1] = read_data_valid_dv[VLANE_NUM - 1 : 1];
 assign ALU_ctrl_o = dp0_reg.ALU_opmode;
+assign reduction_op_o = dp0_reg.reduction_op;
 assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 // Slides //
 assign SA_complete_lane = slide_amount_i[$clog2(VLANE_NUM) - 1 : 0];
@@ -555,7 +560,7 @@ end
    begin
       if (!rst_i)
 	ready_o <= 1'b1;
-      else if (start_i && ready_o)
+                                                                                                                                                               else if (start_i && ready_o)
 	ready_o <= 1'b0;
       else if (next_state == IDLE && !ready_o)
 	ready_o <= 1'b1;    
@@ -606,6 +611,7 @@ always_comb begin
     dp0_next.vrf_starting_raddr = dp0_reg.vrf_starting_raddr;
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
     dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
+    dp0_next.reduction_op = dp0_reg.reduction_op;
     // Slides
     dp0_next.up_down_slide = dp0_reg.up_down_slide;
     dp0_next.slide_amount = dp0_reg.slide_amount;
@@ -624,6 +630,7 @@ always_comb begin
     dp0_next.slide_enable_buffering = dp0_reg.slide_enable_buffering;
     // 32-bit multiply
     dp0_next.alu_en_32bit_mul = dp0_reg.alu_en_32bit_mul;
+   
     
     case(current_state)
         IDLE : begin
@@ -661,6 +668,7 @@ always_comb begin
               dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
               dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
               dp0_next.ALU_opmode = ALU_opmode_i;
+              dp0_next.reduction_op = reduction_op_i;
               dp0_next.vmrf_wen = 0;
               dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
               dp0_next.sew = vsew_i[1 : 0];
@@ -767,7 +775,7 @@ always_comb begin
             
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                 4'b0001 : begin                                            // REDUCTION
-                    if(read_limit_comp) begin                               // Not yet specified                  
+                    if(main_cnt == (dp0_reg.read_limit - 1 +7)) begin                               // Not yet specified                  
                         next_state = REDUCTION_MODE;
                         rst_main_cnt = 1;
                     end                                   

@@ -53,6 +53,7 @@ module scheduler
    logic 	       v_OPMVV_check;
    logic 	       v_OPMVX_check;
    logic 	       v_OPCFG_check;
+   logic               v_OPCFG_check_reg;
 
    logic 	       v_strided_check;
    logic 	       v_unit_check;
@@ -84,15 +85,17 @@ module scheduler
    begin
       if (!rstn)
       begin
-	 vector_instr_reg <= 'h0;
-	 scalar_rs1_reg   <= 'h0;
-	 scalar_rs2_reg   <= 'h0;
+	 vector_instr_reg  <= 'h0;
+	 scalar_rs1_reg    <= 'h0;
+	 scalar_rs2_reg    <= 'h0;
+	 v_OPCFG_check_reg <= 1'b0;
       end
       else if (next_instr_rdy)
       begin
-	 vector_instr_reg <= vector_instr_next;
-	 scalar_rs1_reg   <= rs1_i;
-	 scalar_rs2_reg   <= rs2_i;
+	 vector_instr_reg  <= vector_instr_next;
+	 scalar_rs1_reg    <= rs1_i;
+	 scalar_rs2_reg    <= rs2_i;
+	 v_OPCFG_check_reg <= v_OPCFG_check;
       end
    end
 
@@ -221,7 +224,7 @@ module scheduler
    end
 
    //logic that checks if there is a load being buffered by M_CU
-   assign mcu_ld_vld_o = (!mcu_ld_buffering_reg && v_ld_instr_check);
+   assign mcu_ld_vld_o = (!mcu_ld_buffering_reg && v_ld_instr_check && !v_OPCFG_check_reg);
    always @(posedge clk)
    begin
       if (!rstn)

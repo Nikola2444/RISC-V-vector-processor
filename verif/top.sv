@@ -5,7 +5,7 @@ module riscv_v_verif_top;
 
    import riscv_v_test_pkg::*;
 
-   localparam V_LANES = 8;
+   localparam V_LANES = 4;
    localparam VLEN = 4096;
    localparam VRF_DEPTH=VLEN/V_LANES;
    logic [31:0] vrf_lvt [V_LANES][2][VRF_DEPTH-1:0] = '{default:'1};

@@ -71,13 +71,15 @@ module Partial_sublane_driver
     input logic [31 : 0] ALU_x_data_i,
     input logic [4 : 0] ALU_imm_i,
     input logic [ALU_OPMODE - 1 : 0] ALU_opmode_i,                              // Not yet finished
+    input logic                      reduction_op_i,                              // Not yet finished
     output logic [1 : 0] op2_sel_o,
     output logic [$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_o,
     output logic [31 : 0] ALU_x_data_o,
     output logic [4 : 0] ALU_imm_o,
     output logic [31 : 0] ALU_reduction_data_o,
     output logic [ALU_OPMODE - 1 : 0] ALU_ctrl_o,                                   // Not yet finished
-    
+    output logic                      reduction_op_o,                              // Not yet finished
+
     // Misc signals
     input vector_mask_i,
     output logic[1 : 0] el_extractor_o,
@@ -132,6 +134,7 @@ typedef struct packed
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
     logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
     logic [ALU_OPMODE - 1 : 0] ALU_opmode;
+   logic 		       reduction_op;
     
 } dataPacket0;
 
@@ -209,6 +212,7 @@ assign vector_mask_o = dp0_reg.vector_mask;
 assign write_data_sel_o = dp0_reg.write_data_sel;
 assign read_data_valid_o[VLANE_NUM - 1 : 1] = read_data_valid[VLANE_NUM - 1 : 1];
 assign ALU_ctrl_o = dp0_reg.ALU_opmode;
+assign reduction_op_o = dp0_reg.reduction_op;
 assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 // Write address generation //
@@ -457,7 +461,8 @@ always_comb begin
     dp0_next.write_data_sel = dp0_reg.write_data_sel;
     dp0_next.vrf_starting_raddr = dp0_reg.vrf_starting_raddr;
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
-    dp0_next.ALU_opmode = dp0_reg.ALU_opmode;;
+    dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
+    dp0_next.reduction_op = dp0_reg.reduction_op;
     // Loads //
     ready_for_load_o = 0;
     
@@ -497,6 +502,7 @@ always_comb begin
               dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
               dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
               dp0_next.ALU_opmode = ALU_opmode_i;
+              dp0_next.reduction_op = reduction_op_i;
               dp0_next.vmrf_wen = 0;
            end
             if(dp0_reg.start) begin

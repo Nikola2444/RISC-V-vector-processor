@@ -61,6 +61,7 @@ module Driver_vlane_interconnect
     input logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_i,
     input logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_i,
     input logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_i,
+    input logic [W_PORTS_NUM - 1 : 0] reduction_op_i,
     input logic alu_en_32bit_mul_i,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] op2_sel_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] op3_sel_o,
@@ -68,6 +69,7 @@ module Driver_vlane_interconnect
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_o,
+    output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0]                     reduction_op_o,
     output logic [VLANE_NUM - 1 : 0] alu_en_32bit_mul_o,
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
@@ -136,6 +138,7 @@ typedef struct packed
     logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm;
     logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data;
     logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl;
+    logic [W_PORTS_NUM - 1 : 0]                     reduction_op;
     logic alu_en_32bit_mul;
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
@@ -187,6 +190,7 @@ assign input_next.ALU_x_data = ALU_x_data_i;
 assign input_next.ALU_imm = ALU_imm_i;
 assign input_next.ALU_reduction_data = ALU_reduction_data_i;
 assign input_next.ALU_ctrl = ALU_ctrl_i;
+assign input_next.reduction_op = reduction_op_i;
 assign input_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
 
 // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
@@ -222,6 +226,7 @@ generate
             assign ALU_imm_o[i][j] = input_reg.ALU_imm[j];
             assign ALU_reduction_data_o[i][j] = input_reg.ALU_reduction_data[j];
             assign ALU_ctrl_o[i][j] = input_reg.ALU_ctrl[j];
+            assign reduction_op_o[i][j] = input_reg.reduction_op[j];
             assign vector_mask_o[i][j] = input_reg.vector_mask[j];
             assign write_data_sel_o[i][j] = input_reg.write_data_sel[j];
             

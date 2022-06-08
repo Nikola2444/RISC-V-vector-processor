@@ -1,7 +1,7 @@
 .text                     # Start text section
     .balign 4                 # align 4 byte instructions by 4 bytes
     	
-    vadd.vv v1, v2, v3
+    vredsum.vs v1, v3, v2
     vsub.vv v4, v2, v3    
     vadd.vv v5, v2, v3
     vadd.vv v6, v5, v4
@@ -13,3 +13,4 @@
     vsetvli x2, x0, e8, m1	
     vadd.vv v6, v8, v7
     vsub.vv v2, v5, v4
+    

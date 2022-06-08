@@ -69,6 +69,7 @@ module vector_core #
    logic [W_PORTS_NUM-1:0] 	   start;
    logic [4:0] 			   alu_imm;	// From v_cu_inst of v_cu.v
    logic [ALU_OPMODE_WIDTH-1:0]    alu_opmode;// From v_cu_inst of v_cu.v
+   logic 			   reduction_op;// From v_cu_inst of v_cu.v
    logic [31:0] 		   alu_x_data;	// From v_cu_inst of v_cu.v
    logic [$clog2(LP_MAX_VL_PER_LANE)-1:0] inst_delay;// From v_cu_inst of v_cu.v
    logic [31:0] 			  vl;
@@ -174,6 +175,7 @@ module vector_core #
 	     .alu_x_data_o		(alu_x_data/*[W_PORTS_NUM-1:0][31:0]*/),
 	     .alu_imm_o			(alu_imm/*[W_PORTS_NUM-1:0][4:0]*/),
 	     .alu_opmode_o		(alu_opmode/*[W_PORTS_NUM-1:0][ALU_OPMODE_WIDTH-1:0]*/),
+	     .reduction_op_o               (reduction_op),
 	     .up_down_slide_o		(up_down_slide),
 	     .slide_amount_o		(slide_amount[31:0]),
 	     .vector_mask_o		(vector_mask),
@@ -200,7 +202,7 @@ module vector_core #
       .VREG_LOC_PER_LANE		(VREG_LOC_PER_LANE),
       .W_PORTS_NUM			(W_PORTS_NUM),
       .R_PORTS_NUM			(R_PORTS_NUM),
-      .INST_TYPE_NUM			(8),
+      .INST_TYPE_NUM			(7),
       .VLANE_NUM			(VLANE_NUM),
       .ALU_OPMODE			(9),
       .MULTIPUMP_WRITE			(MULTIPUMP_WRITE),
@@ -243,6 +245,7 @@ module vector_core #
       .op3_sel_i			(op3_sel),
       .ALU_x_data_i			(alu_x_data[31:0]),
       .ALU_imm_i			(alu_imm[4:0]),
+      .reduction_op_i                   (reduction_op),
       .ALU_opmode_i			(alu_opmode),
       .alu_en_32bit_mul_i		(1'b0),
       .up_down_slide_i			(up_down_slide),

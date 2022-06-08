@@ -1,9 +1,12 @@
 `include "../../../../packages/typedef_pkg.sv"
-module alu_submodule(/*AUTOARG*/
+module alu_submodule #
+  (parameter V_LANE_NUM)
+   (/*AUTOARG*/
    // Outputs
    alu_vld_o, result_o,
    // Inputs
-   clk, rstn, sew_i, alu_opmode_i, op1_i, op2_i, op3_i, alu_vld_i
+   clk, rstn, sew_i, alu_opmode_i, op1_i, op2_i, op3_i, alu_vld_i,
+   reduction_op_i
    );
    localparam LP_MAX_PIPE_STAGES=4;
    //opmode for all operation exept multiply
@@ -14,13 +17,15 @@ module alu_submodule(/*AUTOARG*/
    localparam logic [2:0] LP_DSP_Z_MUX_NORMAL=3'b011;
    localparam logic [2:0] LP_DSP_Z_MUX_MUL=3'b000;
    localparam logic [2:0] LP_DSP_Z_MUX_MUL_ACC=3'b010;
+   localparam logic [2:0] LP_DSP_Z_MUX_REDUCTION=3'b010;
 
    localparam logic [1:0] LP_DSP_Y_MUX_MUL=2'b01;
    localparam logic [1:0] LP_DSP_Y_MUX_MUL_ACC=2'b01;
 
+
    localparam logic [1:0] LP_DSP_X_MUX_NORMAL=2'b11;
    localparam logic [1:0] LP_DSP_X_MUX_MUL=2'b01;
-   localparam logic [1:0] LP_DSP_X_MUX_MUL_ACC=2'b01;
+   localparam logic [1:0] LP_DSP_X_MUX_MUL_ACC=2'b01;   
 
    input clk;
    input rstn;
@@ -30,6 +35,7 @@ module alu_submodule(/*AUTOARG*/
    input [31:0] op2_i;
    input [31:0] op3_i;
    input 	alu_vld_i;
+   input        reduction_op_i;
 
    output 	alu_vld_o;
    output [31:0] result_o;
@@ -77,7 +83,8 @@ module alu_submodule(/*AUTOARG*/
    logic [31:0] 		  op2_reg;
    logic [1:0][31:0] 		  op3_reg;
    logic [1:0]			  sew_reg;
-   logic [2:0][8:0] 			  alu_opmode_reg;
+   logic [2:0][8:0] 		  alu_opmode_reg;
+   logic [3:0] 			  reduction_op_reg;                      
    logic [15:0] 		  dsp_A_upper_bits;
    logic [1:0] 			  dsp_B_upper_bits_reg;
    logic [15:0] 		  dsp_C_upper_bits;
@@ -88,30 +95,59 @@ module alu_submodule(/*AUTOARG*/
 
    // output signals
    logic [31:0] 		  result_reg;
+   logic 			  reduction_first_operand_reg;
    // Logic that sends valid signal through the pipeline.
+   //assign reduction_first_operand_reg = !res_vld_reg[2] && res_vld_reg[1] && reduction_op_reg[0];
+
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 reduction_first_operand_reg <= 1'b0;
+      end
+      else
+      begin
+	 if(!reduction_first_operand_reg && reduction_op_reg[0] && !reduction_op_reg[1])
+	   reduction_first_operand_reg <= 1'b1;
+	 else if (res_vld_reg[1])
+	   reduction_first_operand_reg <= 1'b0;
+	   
+      end
+   end
+
    always @ (posedge clk)
    begin
       if (!rstn)
       begin
-	 res_vld_reg <= '{default:'0};	 
+	 res_vld_reg <= '{default:'0};
+	 
 	 op1_reg <= 'h0;
 	 op2_reg <= 'h0;
 	 op3_reg <= '{default:'0};
 	 alu_opmode_reg <='{default:'0};
 	 comp_out_reg <= 'h0;
 	 sew_reg <= 2'b0;
+	 reduction_op_reg <= 'h0;
       end
       else
       begin
-	 res_vld_reg <= {res_vld_reg[LP_MAX_PIPE_STAGES-2:0], alu_vld_i};
+	 res_vld_reg <= {res_vld_reg[LP_MAX_PIPE_STAGES-2:0], alu_vld_i};	 
 	 op1_reg <= op1_i;
 	 op2_reg <= op2_i;
 	 op3_reg <= {op3_reg[0], op3_i};
+	 reduction_op_reg <= {reduction_op_reg[2:0], reduction_op_i};
+
 	 alu_opmode_reg[0] <= alu_opmode_i;
-	 if (alu_opmode_reg[0][6:5]==2'b10)
-	   alu_opmode_reg[1] <= {alu_opmode_reg[0][8:4], 2'b00, alu_opmode_reg[0][1:0]};
-	 else
-	   alu_opmode_reg[1] <= alu_opmode_reg[0];
+	 if (!reduction_first_operand_reg)
+	 begin
+	   if (alu_opmode_reg[0][6:5]==2'b10)
+	     alu_opmode_reg[1] <= {alu_opmode_reg[0][8:4], 2'b00, alu_opmode_reg[0][1:0]};
+	   else  // if there is no valid data reset alu_opmode_reg
+	     alu_opmode_reg[1] <= alu_opmode_reg[0];
+	 end
+	 else if (V_LANE_NUM != 0)
+	   alu_opmode_reg[1][3:0] <= 0;
+
 	 alu_opmode_reg[2] <= alu_opmode_reg[1];
 	 comp_out_reg <= {comp_out_reg[0], comp_out_next};
 	 sew_reg <= sew_i;
@@ -137,8 +173,7 @@ module alu_submodule(/*AUTOARG*/
 	   op2_reg_sign_ext = {{24{op2_reg[7]}}, op2_reg[7:0]};
 	 if (sew_reg==2'b01)
 	   op2_reg_sign_ext = {{16{op2_reg[15]}}, op2_reg[15:0]};
-      end
-      
+      end      
    end
    assign alu_vld_o = res_vld_reg[LP_MAX_PIPE_STAGES-1];
 
@@ -153,10 +188,23 @@ module alu_submodule(/*AUTOARG*/
    assign dsp_y_mux = alu_opmode_reg[1][6:5] == 2'b00 ? {alu_opmode_reg[1][4], 1'b0} :
 		      alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Y_MUX_MUL :
 		      LP_DSP_Y_MUX_MUL_ACC;
-   assign dsp_z_mux = alu_opmode_reg[1][6:5] == 2'b00 ? LP_DSP_Z_MUX_NORMAL :
-		      alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Z_MUX_MUL :
-		      LP_DSP_Z_MUX_MUL_ACC;
-   
+   generate
+      if (V_LANE_NUM !=0)
+      begin
+	 assign dsp_z_mux = reduction_op_reg[1] == 1'b1 ? LP_DSP_Z_MUX_REDUCTION :
+			    alu_opmode_reg[1][6:5] == 2'b00 ? LP_DSP_Z_MUX_NORMAL :
+			    alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Z_MUX_MUL :
+			    LP_DSP_Z_MUX_MUL_ACC;
+      end
+      else
+      begin
+	 assign dsp_z_mux = reduction_op_reg[1] == 1'b1 && reduction_first_operand_reg ? LP_DSP_Z_MUX_NORMAL:
+			    reduction_op_reg[1] == 1'b1 ? LP_DSP_Z_MUX_REDUCTION :
+			    alu_opmode_reg[1][6:5] == 2'b00 ? LP_DSP_Z_MUX_NORMAL :
+			    alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Z_MUX_MUL :
+			    LP_DSP_Z_MUX_MUL_ACC;
+      end
+   endgenerate
 
    assign dsp_ALUMODE = alu_opmode_reg[1][3:0];
    assign dsp_OPMODE  = {dsp_z_mux, dsp_y_mux, dsp_x_mux};
@@ -178,23 +226,25 @@ module alu_submodule(/*AUTOARG*/
 
    always @(posedge clk)
    begin
-      result_reg = alu_opmode_reg[2][6:5]==2'b01 ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
-      if (sew_reg == 2'b00)
-      begin
-	 if (alu_opmode_reg[2][6:5]==2'b10) // take the value from dsp
+      if (res_vld_reg[2])begin
+	 result_reg = alu_opmode_reg[2][6:5]==2'b01 ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
+	 if (sew_reg == 2'b00)
 	 begin
-	    if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
-	      result_reg[7:0] = dsp_P[15:8];
-	 end	 
+	    if (alu_opmode_reg[2][6:5]==2'b10) // take the value from dsp
+	    begin
+	       if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
+		 result_reg[7:0] = dsp_P[15:8];
+	    end	 
+	 end
+	 if (sew_reg == 2'b01)
+	 begin	 
+	    if (alu_opmode_reg[2][6:5]==2'b10)
+	    begin
+	       if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
+		 result_reg[15:0] = dsp_P[31:16];
+	    end	 
+	 end
       end
-      if (sew_reg == 2'b01)
-      begin	 
-	 if (alu_opmode_reg[2][6:5]==2'b10)
-	 begin
-	    if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
-	      result_reg[15:0] = dsp_P[31:16];
-	 end	 
-      end      
    end
    //assign result_o = alu_opmode_reg[6:5]==2'b01 ? {dsp_P[31:1], comp_out_reg} : dsp_P;
    assign result_o = result_reg;
@@ -203,7 +253,7 @@ module alu_submodule(/*AUTOARG*/
    assign  dsp_CEB1 = 1'b1;
    assign  dsp_CEB2 = 1'b1;
    assign  dsp_CEC = 1'b1;
-   assign  dsp_CEP = 1'b1;
+   assign  dsp_CEP = res_vld_reg[1];
    assign  dsp_CEM = 1'b1;
    assign  dsp_CEALUMODE = 1'b1;
    assign  dsp_CEOPMODE = 1'b1;
@@ -212,7 +262,7 @@ module alu_submodule(/*AUTOARG*/
    assign  dsp_RSTA = !rstn;
    assign  dsp_RSTB = !rstn;
    assign  dsp_RSTC = !rstn;
-   assign  dsp_RSTP = !rstn || alu_opmode_reg[1][6:5]==2'b01;
+   assign  dsp_RSTP = !rstn || alu_opmode_reg[1][6:5]==2'b01 || (!reduction_op_reg[2] && !res_vld_reg[1]);
    assign  dsp_RSTM = !rstn;
    assign  dsp_RSTALUMODE = !rstn;
    assign  dsp_RSTOPMODE = !rstn;

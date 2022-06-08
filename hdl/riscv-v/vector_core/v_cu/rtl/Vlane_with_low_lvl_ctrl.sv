@@ -61,6 +61,7 @@ module Vlane_with_low_lvl_ctrl
     input logic [31 : 0] ALU_x_data_i,
     input logic [4 : 0] ALU_imm_i,
     input logic [ALU_OPMODE - 1 : 0] ALU_opmode_i,
+    input logic reduction_op_i,
     input logic alu_en_32bit_mul_i,                                                               // UPDATED
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
@@ -134,6 +135,7 @@ logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_di;
 logic [W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_di;
 logic [W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_di;
 logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_di;
+logic [W_PORTS_NUM - 1 : 0] reduction_op_di;
 logic alu_en_32bit_mul_di;                                                                      // UPDATED
 logic up_down_slide_di;
 logic [W_PORTS_NUM - 1 : 0] request_write_control_di;                                           // UPDATED
@@ -162,6 +164,7 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_x_data_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][4 : 0] ALU_imm_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_reduction_data_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_il;
+logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0]                     reduction_op_il;
 logic [VLANE_NUM - 1 : 0] alu_en_32bit_mul_il;                                                  // UPDATED
 logic [VLANE_NUM - 1 : 0] up_down_slide_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] request_write_control_il;                        // UPDATED
@@ -226,12 +229,14 @@ generate
                 .ALU_x_data_i(ALU_x_data_i),
                 .ALU_imm_i(ALU_imm_i),
                 .ALU_opmode_i(ALU_opmode_i),
+                .reduction_op_i (reduction_op_i),
                 .op2_sel_o(op2_sel_di[0]),
                 .op3_sel_o(op3_sel_di[0]),
                 .ALU_x_data_o(ALU_x_data_di[0]),
                 .ALU_imm_o(ALU_imm_di[0]),
                 .ALU_reduction_data_o(ALU_reduction_data_di[0]),
                 .ALU_ctrl_o(ALU_ctrl_di[0]),
+                .reduction_op_o (reduction_op_di[0]),
                 .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
                 .alu_en_32bit_mul_o(alu_en_32bit_mul_di),                               
                 .up_down_slide_i(up_down_slide_i),
@@ -297,12 +302,14 @@ generate
                 .ALU_x_data_i(ALU_x_data_i),
                 .ALU_imm_i(ALU_imm_i),
                 .ALU_opmode_i(ALU_opmode_i),
+                .reduction_op_i (reduction_op_i),
                 .op2_sel_o(op2_sel_di[i]),
                 .op3_sel_o(op3_sel_di[i]),
                 .ALU_x_data_o(ALU_x_data_di[i]),
                 .ALU_imm_o(ALU_imm_di[i]),
                 .ALU_reduction_data_o(ALU_reduction_data_di[i]),
-                .ALU_ctrl_o(ALU_ctrl_di[i]),                               
+                .ALU_ctrl_o(ALU_ctrl_di[i]),
+                .reduction_op_o (reduction_op_di[i]),
                 .vector_mask_i(vector_mask_i),
                 .el_extractor_o(el_extractor_di[i]),
                 .vector_mask_o(vector_mask_di[i]),
@@ -361,6 +368,7 @@ Driver_vlane_interconnect_inst
     .ALU_imm_i(ALU_imm_di),
     .ALU_reduction_data_i(ALU_reduction_data_di),
     .ALU_ctrl_i(ALU_ctrl_di),
+    .reduction_op_i (reduction_op_di),
     .alu_en_32bit_mul_i(alu_en_32bit_mul_di),
     .op2_sel_o(op2_sel_il),
     .op3_sel_o(op3_sel_il),
@@ -368,6 +376,7 @@ Driver_vlane_interconnect_inst
     .ALU_imm_o(ALU_imm_il),
     .ALU_reduction_data_o(ALU_reduction_data_il),
     .ALU_ctrl_o(ALU_ctrl_il),
+    .reduction_op_o (reduction_op_il),
     .alu_en_32bit_mul_o(alu_en_32bit_mul_il),
     .up_down_slide_i(up_down_slide_di),
     .request_write_control_i(request_write_control_di),
@@ -396,7 +405,8 @@ generate
             .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
             .MULTIPUMP_READ(MULTIPUMP_READ),
             .RAM_PERFORMANCE(RAM_PERFORMANCE),
-            .MEM_WIDTH(MEM_WIDTH)
+            .MEM_WIDTH(MEM_WIDTH),
+	    .V_LANE_NUM(i)
         )
         Vector_Lane_inst
         (
@@ -432,6 +442,7 @@ generate
             .ALU_imm_i(ALU_imm_il[i]),
             .ALU_reduction_data_i(ALU_reduction_data_il[i]),
             .ALU_ctrl_i(ALU_ctrl_il[i]),
+	    .reduction_op_i(reduction_op_il[i]),
             .read_data_valid_i(read_data_valid_il[i]),
             .ALU_output_o(ALU_output[i])
         );

@@ -6,18 +6,18 @@ module v_cu #
    parameter W_PORTS_NUM = 4)
 
    (/*AUTOARG*/
-    // Outputs
-    instr_rdy_o, sew_o, lmul_o, vl_o, inst_type_o, start_o,
-    inst_delay_o, vrf_ren_o, vrf_oreg_ren_o, vrf_starting_waddr_o,
-    vrf_starting_raddr_vs1_o, vrf_starting_raddr_vs2_o, wdata_width_o,
-    store_data_mux_sel_o, store_load_index_mux_sel_o, op2_sel_o,
-    op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o, up_down_slide_o,
-    slide_amount_o, vector_mask_o,
-    // Inputs
-    clk, rstn, instr_vld_i, scalar_rs1_i, scalar_rs2_i, vector_instr_i,
-    vrf_starting_addr_vld_i, vrf_starting_waddr_i,
-    vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
-    );
+   // Outputs
+   instr_rdy_o, sew_o, lmul_o, vl_o, inst_type_o, start_o,
+   inst_delay_o, vrf_ren_o, vrf_oreg_ren_o, vrf_starting_waddr_o,
+   vrf_starting_raddr_vs1_o, vrf_starting_raddr_vs2_o, wdata_width_o,
+   reduction_op_o, store_data_mux_sel_o, store_load_index_mux_sel_o,
+   op2_sel_o, op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o,
+   up_down_slide_o, slide_amount_o, vector_mask_o,
+   // Inputs
+   clk, rstn, instr_vld_i, scalar_rs1_i, scalar_rs2_i, vector_instr_i,
+   vrf_starting_addr_vld_i, vrf_starting_waddr_i,
+   vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
+   );
 
    
    localparam LP_VECTOR_REGISTER_NUM=32;
@@ -64,7 +64,8 @@ module v_cu #
    output logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 			  vrf_starting_waddr_o;
    output logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 			  vrf_starting_raddr_vs1_o;
    output logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 			  vrf_starting_raddr_vs2_o;
-   output logic [1 : 0] 						  wdata_width_o; 
+   output logic [1 : 0] 						  wdata_width_o;
+   output logic 							  reduction_op_o;
    
    // Load and Store signals
 
@@ -83,7 +84,7 @@ module v_cu #
    output logic [31 : 0] 						  slide_amount_o;
    
    // Misc signals
-   output logic [W_PORTS_NUM - 1 : 0] 					  vector_mask_o;
+   output logic 	 					  vector_mask_o;
    // output logic [W_PORTS_NUM - 1 : 0] rdata_sign_i,
    // output logic [W_PORTS_NUM - 1 : 0] imm_sign_i,
    
@@ -235,6 +236,7 @@ module v_cu #
 
    assign reduction_instr_check = ((instr_vld_reg[6] || instr_vld_reg[7]) && v_instr_funct6_upper == 3'b000) ||
 				  instr_vld_reg[8] && v_instr_funct6_upper == 3'b110;
+   assign reduction_op_o = reduction_instr_check;
    assign slide_instr_check     = !instr_vld_reg[11] && (v_instr_funct6 == 6'b001111 || v_instr_funct6 == 6'b001110);
    assign widening_instr_check  = v_instr_funct6_upper == 3'b111 || v_instr_funct6_upper == 3'b110;
    
@@ -243,7 +245,7 @@ module v_cu #
 			instr_vld_reg[2] ? 3 : // indexed store
 			instr_vld_reg[5] ? 4 : // vector load
 			instr_vld_reg[4] ? 5 : // indexed load
-			reduction_instr_check ? 2 :// reduction instruction
+			reduction_instr_check ? 1 :// reduction instruction
 			slide_instr_check ? 6 : //slide instructions
 			!instr_vld_reg[11] ? 0 : // Normal instruction
 			7; // invalid instrucion
@@ -258,6 +260,7 @@ module v_cu #
    assign vrf_oreg_ren = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
    assign wdata_width_o  = widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
+                                                                       // TODO: take into account narrowing instructions
 
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic

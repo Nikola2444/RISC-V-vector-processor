@@ -149,7 +149,7 @@ module buff_array #(
   logic [$clog2(VLMAX)-3:0]                 lbuff_32b_cnt; 
   logic [$clog2(VLMAX)-1:0]                 libuff_read_cntr;
   logic [BATCH_CNTR_WIDTH-1:0]              libuff_write_cntr; 
-  logic [BATCH_CNTR_WIDTH-1:0]              ldbuff_read_cntr; 
+  logic [BATCH_CNTR_WIDTH-1:0]              ldbuff_read_cntr,ldbuff_read_cntr_next; 
   logic [$clog2(VLMAX)-1:0]                 ldbuff_write_cntr,ldbuff_write_cntr_next;
 
   // STORE BUFFER INTERFACE ************
@@ -616,18 +616,18 @@ module buff_array #(
     end
   end
   assign ldbuff_write_cntr_next = ldbuff_write_cntr + 1;
-  assign ldbuff_write_done_o = (ldbuff_write_cntr == lbuff_word_cnt);
+  assign ldbuff_write_done_o = (ldbuff_write_cntr_next == lbuff_word_cnt);
 
   // Counter for number of data read from ldbuff
   always_ff @(posedge clk) begin
     if (!rstn || load_cntr_rst_i)
       ldbuff_read_cntr <= 0;
     else if (ldbuff_ren_i) begin
-      ldbuff_read_cntr <= ldbuff_read_cntr + 1;
-      if (ldbuff_read_cntr >= lbuff_32b_batch_cnt)
-        ldbuff_read_done_o <= 1'b1;
+      ldbuff_read_cntr <= ldbuff_read_cntr_next;
     end
   end
+  assign ldbuff_read_cntr_next = ldbuff_read_cntr + 1;
+  assign ldbuff_read_done_o = (ldbuff_read_cntr_next == lbuff_32b_batch_cnt);
 
   // Data coming in from axi full needs to be rotated right so data word is at LSB position
 
@@ -658,10 +658,10 @@ module buff_array #(
       lbuff_word_cnt = cfg_vl_i;
     end
   end
-  assign lbuff_byte_cnt = lbuff_word_cnt << cfg_load_data_sew_i[1:0];
+  assign lbuff_byte_cnt       = lbuff_word_cnt << cfg_load_data_sew_i[1:0];
   assign lbuff_word_batch_cnt = lbuff_word_cnt >> $clog2(VLANE_NUM);
-  assign lbuff_32b_batch_cnt  = (lbuff_byte_cnt >> 2);
-  assign lbuff_32b_cnt        = lbuff_32b_batch_cnt >> $clog2(VLANE_NUM);
+  assign lbuff_32b_cnt        = (lbuff_byte_cnt >> 2);
+  assign lbuff_32b_batch_cnt  = lbuff_32b_cnt >> $clog2(VLANE_NUM);
 
   // For indexed and strided operations, we need a counter saving current baseaddr
   always_ff @(posedge clk) begin
@@ -748,7 +748,7 @@ module buff_array #(
   // Selecting current addresses for ldbuff
   // Multiplex selecting data from one of VLANE_NUM buffers to output 
   always_comb  begin
-    case(cfg_store_data_sew_i[1:0])
+    case(cfg_load_data_sew_i[1:0])
       2: // FOR SEW = 32
       begin
         ldbuff_raddr = ldbuff_read_cntr;
@@ -770,7 +770,7 @@ module buff_array #(
   // Selecting current addresses for libuff
   // Multiplex selecting index from one of VLANE_NUM buffers to output 
   always_comb  begin
-    case(cfg_store_idx_sew_i[1:0])
+    case(cfg_load_idx_sew_i[1:0])
       2: // FOR SEW = 32
       begin
         libuff_waddr  = libuff_write_cntr;

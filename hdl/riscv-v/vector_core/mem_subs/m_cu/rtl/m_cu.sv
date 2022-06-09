@@ -530,7 +530,7 @@ module m_cu #(
     libuff_ren_o            = 1'b0;
     libuff_rvalid           = 1'b1;
     ldbuff_read_stall_o     = 1'b0;
-    ldbuff_read_flush_o     = !ldbuff_rvalid_d[0];
+    ldbuff_read_flush_o     = (ldbuff_rvalid_d[2:1]==0);
     ldbuff_wen_o            = 1'b0;
     ldbuff_ren_o            = 1'b0;
     ctrl_rstart             = 1'b0;

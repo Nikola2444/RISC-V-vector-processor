@@ -39,7 +39,7 @@ module m_cu_tb();
   // SHEDULER <=> M_CU CONFIG HS [loads]
   logic 	                                mcu_ld_rdy           ;
   logic                                   mcu_ld_vld           ;
-    logic                                   mcu_ld_buffered           ;
+  logic                                   mcu_ld_buffered      ;
 
   // V_LANE INTERFACE
   logic                                   vlane_store_rdy      ; 
@@ -268,6 +268,7 @@ mem_subsys #(
         rd_tvalid <= $urandom_range(0,1);
 
         rd_tdata <= read_word_num;
+        @(posedge clk);
         if (rd_tvalid && rd_tready)begin
           read_word_num++;
         end

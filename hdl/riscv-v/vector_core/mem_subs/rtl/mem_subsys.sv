@@ -2,8 +2,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit logic declaration.
 `default_nettype wire
-timeunit 1ps;
-timeprecision 1ps;
 
 module mem_subsys #(
   parameter integer VLEN                     = 8192,
@@ -75,7 +73,7 @@ module mem_subsys #(
   // System Signals
   // SHEDULER <=> M_CU CONFIG [general]
   // MCU => BUFF_ARRAY CONFIG IF [stores]
-  logic [$clog2(VLEN)-1:0]                cfg_vlenb            ;
+  logic [$clog2(VLEN)-1:0]                cfg_vl            ;
   logic [2:0]                             cfg_store_data_lmul  ;
   logic [2:0]                             cfg_store_data_sew   ;
   logic [2:0]                             cfg_store_idx_sew    ;
@@ -151,7 +149,7 @@ module mem_subsys #(
  .mcu_ld_vld_i            (mcu_ld_vld_i        ),
  .mcu_ld_buffered_o       (mcu_ld_buffered_o   ),
  .mcu_vl_i                (mcu_vl_i            ),
- .cfg_vlenb_o             (cfg_vlenb           ),
+ .cfg_vl_o                (cfg_vl              ),
  .cfg_store_data_lmul_o   (cfg_store_data_lmul ),
  .cfg_store_data_sew_o    (cfg_store_data_sew  ),
  .cfg_store_idx_sew_o     (cfg_store_idx_sew   ),
@@ -200,6 +198,7 @@ module mem_subsys #(
  .vlane_store_rdy_o       (vlane_store_rdy_o   ),
  .vlane_load_rdy_i        (vlane_load_rdy_i    ),
  .vlane_load_ivalid_i     (vlane_load_ivalid_i ),
+ .vlane_load_dvalid_o     (vlane_load_dvalid_o ),
  .vlane_load_last_o       (vlane_load_last_o   ),
  .ctrl_rstart_o           (ctrl_rstart_o       ),
  .ctrl_rdone_i            (ctrl_rdone_i        ),
@@ -221,7 +220,7 @@ module mem_subsys #(
 ) buff_array_instance (
  .clk                     (clk                  ),
  .rstn                    (rstn                 ),
- .cfg_vlenb_i             (cfg_vlenb            ),
+ .cfg_vl_i                (cfg_vl            ),
  .cfg_store_data_lmul_i   (cfg_store_data_lmul  ),
  .cfg_store_idx_lmul_i    (cfg_store_idx_lmul   ),
  .cfg_store_data_sew_i    (cfg_store_data_sew   ),

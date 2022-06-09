@@ -2,8 +2,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit logic declaration.
 `default_nettype wire
-timeunit 1ps;
-timeprecision 1ps;
 
 module buff_array #(
   parameter integer VLEN                     = 8192,
@@ -18,7 +16,7 @@ module buff_array #(
   input  logic                                   clk                     ,
   input  logic                                   rstn                    ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
-  input  logic [$clog2(VLEN)-1:0]                cfg_vlenb_i             ,
+  input  logic [$clog2(VLEN)-1:0]                cfg_vl_i             ,
   // MCU => BUFF_ARRAY CONFIG IF [stores]
   input  logic [2:0]                             cfg_store_data_lmul_i   ,
   input  logic [2:0]                             cfg_store_idx_lmul_i    ,
@@ -148,6 +146,7 @@ module buff_array #(
   logic [BATCH_CNTR_WIDTH-1:0]              lbuff_32b_batch_cnt; 
   logic [$clog2(VLMAX)-1:0]                 lbuff_word_cnt; 
   logic [$clog2(VLMAX)-1:0]                 lbuff_byte_cnt; 
+  logic [$clog2(VLMAX)-3:0]                 lbuff_32b_cnt; 
   logic [$clog2(VLMAX)-1:0]                 libuff_read_cntr;
   logic [BATCH_CNTR_WIDTH-1:0]              libuff_write_cntr; 
   logic [BATCH_CNTR_WIDTH-1:0]              ldbuff_read_cntr; 
@@ -157,7 +156,7 @@ module buff_array #(
   // Store Data Buffer Signals
   logic [31:0]                              sdbuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]               sdbuff_wen;
+  logic [VLANE_NUM-1:0][3:0]                sdbuff_wen;
   logic [31:0]                              sdbuff_rdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr_curr;
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr_nnext;
@@ -169,7 +168,7 @@ module buff_array #(
   // Store Index Buffer Signals
   logic [31:0]                              sibuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]               sibuff_wen;
+  logic [VLANE_NUM-1:0][3:0]                sibuff_wen;
   logic [31:0]                              sibuff_rdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr;
   logic [31:0]                              sibuff_rptr  [0:VLANE_NUM-1];
@@ -180,8 +179,8 @@ module buff_array #(
   // Load Data Buffer Signals
   logic [35:0]                              ldbuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]               ldbuff_wen;
-  logic [VLANE_NUM-1:0][3:0]               ldbuff_pr_wen; // Priority
+  logic [VLANE_NUM-1:0][3:0]                ldbuff_wen;
+  logic [VLANE_NUM-1:0][3:0]                ldbuff_pr_wen; // Priority
   logic [31:0]                              ldbuff_wptr  [0:VLANE_NUM-1];
   logic [35:0]                              ldbuff_rdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_raddr;
@@ -192,7 +191,7 @@ module buff_array #(
   // Load Index Buffer Signals
   logic [31:0]                              libuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            libuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]               libuff_wen;
+  logic [VLANE_NUM-1:0][3:0]                libuff_wen;
   logic [31:0]                              libuff_wptr  [0:VLANE_NUM-1];
   logic [31:0]                              libuff_rdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr;
@@ -227,8 +226,8 @@ module buff_array #(
     end
   end
 
-  assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit
-  assign ctrl_wxfer_size_o   = store_type_i[1:0]==0 ? (sbuff_byte_cnt) : 4; // maybe sbuff_byte_cnt
+  assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit TODO:DOUBLECHECK
+  assign ctrl_wxfer_size_o   = store_type_i[2]==1'b1 ? (sbuff_byte_cnt) : 4;
 
   // Counter selects data from one store buffer to forward to axi
   always_ff @(posedge clk) begin
@@ -316,17 +315,14 @@ module buff_array #(
   // Number of expected stores
   always_ff @(posedge clk) begin
     if (!rstn) begin
-       sbuff_byte_cnt <= 0;
+      sbuff_word_cnt <= 0;
     end
     else if(store_cfg_update_i) begin
-      if(cfg_store_data_lmul_i[2])
-        sbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_store_data_lmul_i[1:0]);
-      else
-        sbuff_byte_cnt <= ((cfg_vlenb_i)>>(-$signed(cfg_store_data_lmul_i[1:0])));
+      sbuff_word_cnt <= cfg_vl_i;
     end
   end
-  assign sbuff_word_cnt =  sbuff_byte_cnt >> cfg_store_data_sew_i[1:0];
-  assign sbuff_32b_cnt  =  sbuff_byte_cnt >> 2;
+  assign sbuff_byte_cnt = sbuff_word_cnt << cfg_store_data_sew_i[1:0];
+  assign sbuff_32b_cnt  = sbuff_byte_cnt >> 2;
   assign sbuff_word_batch_cnt = sbuff_word_cnt >> $clog2(VLANE_NUM);
 
   // Selecting current addresses for sdbuff
@@ -656,18 +652,16 @@ module buff_array #(
   // Number of expected loads
   always_ff @(posedge clk) begin
     if (!rstn) begin
-       lbuff_byte_cnt <= 0;
+     lbuff_word_cnt <= 0;
     end
     else if(load_cfg_update_i) begin
-      if(cfg_load_data_lmul_i[2])
-        lbuff_byte_cnt <= ((cfg_vlenb_i)<<cfg_load_data_lmul_i[1:0]);
-      else
-        lbuff_byte_cnt <= ((cfg_vlenb_i)>>(-$signed(cfg_load_data_lmul_i[1:0])));
+      lbuff_word_cnt = cfg_vl_i;
     end
   end
-  assign lbuff_word_cnt = lbuff_byte_cnt >> cfg_load_data_lmul_i[1:0];
+  assign lbuff_byte_cnt = lbuff_word_cnt << cfg_load_data_sew_i[1:0];
   assign lbuff_word_batch_cnt = lbuff_word_cnt >> $clog2(VLANE_NUM);
-  assign lbuff_32b_batch_cnt = (lbuff_byte_cnt >> 2) >> $clog2(VLANE_NUM);
+  assign lbuff_32b_batch_cnt  = (lbuff_byte_cnt >> 2);
+  assign lbuff_32b_cnt        = lbuff_32b_batch_cnt >> $clog2(VLANE_NUM);
 
   // For indexed and strided operations, we need a counter saving current baseaddr
   always_ff @(posedge clk) begin
@@ -828,35 +822,20 @@ module buff_array #(
   always_ff @(posedge clk) begin
     if (!rstn || load_cfg_update_i) begin
       ldbuff_wen[VLANE_NUM-1:1] <= 0;
+      case(cfg_load_data_sew_i[1:0])
+        2:       ldbuff_wen[0] <= 4'b1111; // word by word
+        1:       ldbuff_wen[0] <= 4'b0011; // halfword by halfword
+        default: ldbuff_wen[0] <= 4'b0001; // byte by byte coming
+      endcase
     end
-    else begin
+    else if(ldbuff_wen_i) begin // ROTATE
+      case(cfg_load_data_sew_i[1:0])
+        2:       ldbuff_wen[0] <= ldbuff_wen[VLANE_NUM-1];
+        1:       ldbuff_wen[0] <= ((ldbuff_wen[VLANE_NUM-1]<<2) | (ldbuff_wen[VLANE_NUM-1]>>2)); // rol 2
+        default: ldbuff_wen[0] <= ((ldbuff_wen[VLANE_NUM-1]<<1) | (ldbuff_wen[VLANE_NUM-1]>>1)); // rol1
+      endcase
       for(int vlane=1; vlane<(VLANE_NUM); vlane++)
         ldbuff_wen[vlane] <= ldbuff_wen[vlane-1];
-    end
-  end
-  // Upper lowest 4-bit signal depends on sew
-  always_ff @(posedge clk) begin
-    if (!rstn) begin
-      ldbuff_wen[0] <= 0;
-    end
-    else begin
-      case(cfg_load_data_sew_i[1:0])
-        2: begin      // FOR SEW = 32
-          ldbuff_wen[0] <= 4'b1111;
-        end
-        1: begin      // FOR SEW = 16
-          if(load_cfg_update_i)
-            ldbuff_wen[0] <= 4'b0011;
-          else if (ldbuff_wen_i && (ldbuff_wen[VLANE_NUM-1]!=4'b0000))
-            ldbuff_wen[0] <= ((ldbuff_wen[VLANE_NUM-1]<<2) | (ldbuff_wen[VLANE_NUM-1]>>2)); // rol 2
-        end
-        default: begin // FOR SEW = 8
-          if(load_cfg_update_i)
-            ldbuff_wen[0] <= 4'b0001; // byte by byte coming
-          else if (ldbuff_wen_i && (ldbuff_wen[VLANE_NUM-1]!=4'b0000))
-            ldbuff_wen[0] <= ((ldbuff_wen[VLANE_NUM-1]<<1) | (ldbuff_wen[VLANE_NUM-1]>>1)); // rol1
-        end
-      endcase
     end
   end
 

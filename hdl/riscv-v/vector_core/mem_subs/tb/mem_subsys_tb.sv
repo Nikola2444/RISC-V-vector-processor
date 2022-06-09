@@ -2,8 +2,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit logic declaration.
 `default_nettype wire
-timeunit 1ps;
-timeprecision 1ps;
 
 // WHATWHAT
 module m_cu_tb();
@@ -41,6 +39,8 @@ module m_cu_tb();
   // SHEDULER <=> M_CU CONFIG HS [loads]
   logic 	                                mcu_ld_rdy           ;
   logic                                   mcu_ld_vld           ;
+    logic                                   mcu_ld_buffered           ;
+
   // V_LANE INTERFACE
   logic                                   vlane_store_rdy      ; 
   logic [31:0]                            vlane_store_data[0:VLANE_NUM-1];
@@ -100,6 +100,7 @@ mem_subsys #(
  .mcu_st_rdy_o         (mcu_st_rdy          ),
  .mcu_st_vld_i         (mcu_st_vld          ),
  .mcu_ld_rdy_o         (mcu_ld_rdy          ),
+ .mcu_ld_buffered_o    (mcu_ld_buffered          ),
  .mcu_ld_vld_i         (mcu_ld_vld          ),
  .mcu_vl_i             (mcu_vl              ),
  .ctrl_raddr_offset_o  (ctrl_raddr_offset   ),
@@ -144,7 +145,10 @@ mem_subsys #(
     rstn <= 1;
   end
    
-  assign cfg_vlenb = 4096;
+   // NOTE: VL SET HERE ******
+  assign mcu_vl = 1024;
+  
+  
   // SCHEDULER DRIVER
   initial
   begin
@@ -164,15 +168,16 @@ mem_subsys #(
     @(negedge clk);
     @(negedge clk);
     @(negedge clk);
-    mcu_sew              =3'b000;
+    mcu_sew              =3'b010;
     mcu_lmul             =3'b000;
     mcu_base_addr        =32'h40000000;
     mcu_stride           =0;
-    mcu_data_width       =3'b000;
+    mcu_data_width       =3'b010;
     mcu_idx_ld_st        =1'b0;
     mcu_strided_ld_st    =1'b0;
     mcu_unit_ld_st       =1'b1;
-    mcu_st_vld           =1;
+    mcu_st_vld           =0;
+    mcu_ld_vld           =1;
     @(negedge clk);
     mcu_sew              =0;
     mcu_lmul             =0;
@@ -187,11 +192,10 @@ mem_subsys #(
   end
 
    
+   // STORE SIGNAL INTERFACE ************************************
   // LANE INTERFACE
-
   integer iter=0;
   always begin
-    //vlane_rand vlane_r;
     for(int i=0; i<VLANE_NUM; i++)begin
       vlane_store_data[i]<=iter+i;
       vlane_store_idx [i]<=iter+i;
@@ -207,11 +211,10 @@ mem_subsys #(
   end
 
    
-  int wait_time = 0;
   // AXIMCTRL WRITE INTERFACE
+  int wait_time = 0;
   int write_word_num  = 0;
   always begin
-    //aximctrl_rand aximctrl_r;
     wr_tready <= 1'b1;
     ctrl_wdone <= 1'b0;
     @(posedge clk);
@@ -223,21 +226,62 @@ mem_subsys #(
         if(wr_tvalid && wr_tready)begin
           write_word_num++;
         end
-        if(write_word_num==(cfg_vlenb/4))begin
+        if(write_word_num==(mcu_vl/4))begin
           wr_tready <= 1'b0;
           wait_time = $urandom_range(0,10);
-          for(int i=0; i<wait_time; i++)
-            @(negedge clk);
-            ctrl_wdone <= 1'b1;
-            @(negedge clk);
-            ctrl_wdone <= 1'b0;
+          for(int i=0; i<wait_time; i++) @(negedge clk);
+          ctrl_wdone <= 1'b1;
         end
       end
+      @(negedge clk);
+      ctrl_wdone <= 1'b0;
     end
   end
 
+  // LOAD SIGNAL INTERFACE ************************************
+  // LANE INTERFACE
+  
+  always begin
+    vlane_load_rdy <= 1'b0;
+    @(negedge clk);
+    while(!mcu_ld_buffered)@(posedge clk);
+    vlane_load_rdy <= 1'b1;
+  end
 
 
+  // AXIMCTRL READ INTERFACE
+  logic [31:0] read_data_word;
+  int read_word_num = 0;
+  int read_wait_time = 0;
+  always begin
+    rd_tvalid <= 1'b0;
+    rd_tlast <= 1'b0;
+    ctrl_rdone <= 1'b0;
+    rd_tdata <= 0;
+    @(posedge clk);
+    if(ctrl_rstart)begin
+      read_wait_time <= $urandom_range(0,10);
+      for(int i=0; i<read_wait_time; i++) @(negedge clk);
+      while(!ctrl_rdone)begin
+        //$display("while");
+        @(negedge clk);
+        rd_tvalid <= $urandom_range(0,1);
+
+        rd_tdata <= read_word_num;
+        if (rd_tvalid && rd_tready)begin
+          read_word_num++;
+        end
+        if(read_word_num==(mcu_vl-1))
+           rd_tlast <= 1'b1;
+        if(read_word_num==(mcu_vl))begin
+          rd_tvalid <= 1'b0;
+          ctrl_rdone <= 1'b1;
+        end
+      end
+      @(negedge clk);
+      ctrl_rdone <= 1'b0;
+    end
+  end
 
  endmodule : m_cu_tb
 `default_nettype wire

@@ -2,8 +2,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // default_nettype of none prevents implicit logic declaration.
 `default_nettype wire
-timeunit 1ps;
-timeprecision 1ps;
 
 module m_cu #(
   parameter integer VLEN                     = 8192,
@@ -35,7 +33,7 @@ module m_cu #(
   input  logic                                   mcu_ld_vld_i            ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
   input  logic [31:0]                            mcu_vl_i                ,
-  output logic [$clog2(VLEN)-1:0]                cfg_vlenb_o             ,
+  output logic [$clog2(VLEN)-1:0]                cfg_vl_o             ,
   // MCU => BUFF_ARRAY CONFIG IF [stores]
   output logic [2:0]                             cfg_store_data_lmul_o   ,
   output logic [2:0]                             cfg_store_data_sew_o    ,
@@ -186,7 +184,7 @@ module m_cu #(
   // Begin RTL
   ///////////////////////////////////////////////////////////////////////////////
 
-  assign cfg_vlenb_o = mcu_vl_i[$clog2(VLEN)-1:0];
+  assign cfg_vl_o = mcu_vl_i[$clog2(VLEN)-1:0];
 
   assign emul_addr = {mcu_data_width_i[1:0], mcu_lmul_i[2:0], mcu_sew_i[1:0]};
   assign emul = emul_calc[emul_addr][2:0];
@@ -302,7 +300,7 @@ module m_cu #(
     else
       ctrl_rstart_d            <= ctrl_rstart;
   end
-  assign ctrl_rstart = (!ctrl_rstart_d && ctrl_rstart);// pulse
+  assign ctrl_rstart_o = (!ctrl_rstart_d && ctrl_rstart);// pulse
 
   assign load_type_o           = load_type_reg;
   assign cfg_load_data_lmul_o  = load_data_lmul_reg;
@@ -393,11 +391,11 @@ module m_cu #(
       unit_store_tx: begin
         wr_tvalid               = 1'b1;
         sbuff_ren_o             = 1'b1;
+        if(ctrl_wdone_i)
+          store_state_next = store_idle;
         if(sbuff_read_done_i && wr_tready_i) begin
           wr_tvalid             = 1'b0;
           sbuff_ren_o           = 1'b0;
-          if(ctrl_wdone_i)
-            store_state_next = store_idle;
         end
         if(!wr_tready_i) begin
           sbuff_read_stall_o    = 1'b1;
@@ -621,11 +619,11 @@ module m_cu #(
         ldbuff_read_flush_o = 1'b1;
         if (ldbuff_write_done_i)begin
           load_state_next   = strided_load_tx;
-          ctrl_rstart_o     = 1'b0;
+          ctrl_rstart     = 1'b0;
         end
         else begin
           load_state_next   = strided_load_tx_prep;
-          ctrl_rstart_o     = 1'b1;
+          ctrl_rstart     = 1'b1;
         end
       end
       // STRIDED_LOAD_TX_PREP
@@ -681,11 +679,11 @@ module m_cu #(
         ldbuff_read_flush_o = 1'b1;
         if (ldbuff_write_done_i)begin
           load_state_next   = indexed_load_tx;
-          ctrl_rstart_o     = 1'b0;
+          ctrl_rstart     = 1'b0;
         end
         else begin
           load_state_next   = indexed_load_tx_prep;
-          ctrl_rstart_o     = 1'b1;
+          ctrl_rstart     = 1'b1;
         end
       end
       // INDEXED_LOAD_TX_PREP

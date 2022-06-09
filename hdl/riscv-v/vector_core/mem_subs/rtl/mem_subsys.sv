@@ -5,7 +5,7 @@
 
 module mem_subsys #(
   parameter integer VLEN                     = 8192,
-  parameter integer VLANE_NUM                 = 8 ,
+  parameter integer VLANE_NUM                = 8 ,
   parameter integer MAX_VECTORS_BUFFD        = 1 ,
   parameter integer C_M_AXI_ADDR_WIDTH       = 32,
   parameter integer C_M_AXI_DATA_WIDTH       = 32,

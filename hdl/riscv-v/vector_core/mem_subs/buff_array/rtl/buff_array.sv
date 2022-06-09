@@ -69,7 +69,7 @@ module buff_array #(
   input  logic [31:0]                            vlane_store_data_i [0:VLANE_NUM-1],
   input  logic [31:0]                            vlane_store_idx_i  [0:VLANE_NUM-1],
   output logic [31:0]                            vlane_load_data_o  [0:VLANE_NUM-1],
-  output logic [3:0]                             vlane_load_bwe_o [0:VLANE_NUM-1],
+  output logic [3:0]                             vlane_load_bwe_o   [0:VLANE_NUM-1],
   input  logic [31:0]                            vlane_load_idx_i   [0:VLANE_NUM-1],
   // AXIM_CTRL <=> BUFF_ARRAY IF [write channel]
   output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ,
@@ -112,8 +112,8 @@ module buff_array #(
   logic [31:0]                              sbuff_rptr_ext;
   // Read all VLANE buffers -> select one with mux -> rotate to fit address position
   logic [31:0]                              sbuff_rdata_mux;
-  logic [$clog2(VLANE_NUM)-1:0]            sbuff_rdata_mux_amt;
-  logic [$clog2(VLANE_NUM)-1:0]            sbuff_rdata_mux_amt_d [1:0];
+  logic [$clog2(VLANE_NUM)-1:0]             sbuff_rdata_mux_amt;
+  logic [$clog2(VLANE_NUM)-1:0]             sbuff_rdata_mux_amt_d [1:0];
   logic [1:0]                               sbuff_rdata_rol_amt;
   logic [31:0]                              sbuff_rdata_rol;
   // Strobing to write only SEW bytes via AXI master
@@ -135,6 +135,7 @@ module buff_array #(
   logic [1:0]                               lbuff_wdata_ror_amt;
   logic [1:0]                               lbuff_wdata_total_rol_amt;
   logic [31:0]                              lbuff_wdata_rol;
+  logic [31:0]                              lbuff_wdata_mux[0:VLANE_NUM-1];
   // Read all VLANE buffers -> select one with mux -> rotate to lsb part -> extend with zeros
   logic [1:0]                               lbuff_rptr_rol_amt;
   logic [31:0]                              lbuff_rptr_rol;
@@ -633,11 +634,11 @@ module buff_array #(
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
-  assign lbuff_wdata_ror_amt = load_baseaddr_reg[1:0];
-  assign lbuff_wdata_rol_amt = ldbuff_write_cntr[$clog2(VLANE_NUM)+2:$clog2(VLANE_NUM)];
+  assign lbuff_wdata_ror_amt = ldbuff_write_cntr[1:0];
+  assign lbuff_wdata_rol_amt = ldbuff_write_cntr[$clog2(VLANE_NUM)+:2];
   assign lbuff_wdata_total_rol_amt = lbuff_wdata_rol_amt - lbuff_wdata_ror_amt;
   always_comb begin
-    case (lbuff_wdata_rol_amt)
+    case (lbuff_wdata_total_rol_amt)
       3:
         lbuff_wdata_rol = {rd_tdata_i[7:0],rd_tdata_i[31:8]};
       2:
@@ -745,27 +746,9 @@ module buff_array #(
   end
   assign libuff_not_empty_o = (libuff_write_cntr != 0);
   
-  // Selecting current addresses for ldbuff
-  // Multiplex selecting data from one of VLANE_NUM buffers to output 
-  always_comb  begin
-    case(cfg_load_data_sew_i[1:0])
-      2: // FOR SEW = 32
-      begin
-        ldbuff_raddr = ldbuff_read_cntr;
-        ldbuff_waddr = ldbuff_write_cntr  >>$clog2(VLANE_NUM);
-      end
-      1: // FOR SEW = 16
-      begin
-        ldbuff_raddr = ldbuff_read_cntr   >>1;
-        ldbuff_waddr = ldbuff_write_cntr  >>($clog2(VLANE_NUM)+1);
-      end
-      default: // FOR SEW = 8
-      begin
-        ldbuff_raddr = ldbuff_read_cntr  >>2;
-        ldbuff_waddr = ldbuff_write_cntr >>($clog2(VLANE_NUM)+2);
-      end
-    endcase
-  end
+
+  assign ldbuff_waddr = ldbuff_write_cntr >>($clog2(VLANE_NUM));
+  assign ldbuff_raddr = ldbuff_read_cntr;
 
   // Selecting current addresses for libuff
   // Multiplex selecting index from one of VLANE_NUM buffers to output 
@@ -816,26 +799,57 @@ module buff_array #(
     endcase
   end
 
+
   // Changing write enable signals for narrow writes [load data buffer]
   // Narrower data is packed into 32-bit buffer
   // Upper VLANE_NUM 4-bit signals are just shifed
   always_ff @(posedge clk) begin
     if (!rstn || load_cfg_update_i) begin
-      ldbuff_wen[VLANE_NUM-1:1] <= 0;
       case(cfg_load_data_sew_i[1:0])
-        2:       ldbuff_wen[0] <= 4'b1111; // word by word
-        1:       ldbuff_wen[0] <= 4'b0011; // halfword by halfword
-        default: ldbuff_wen[0] <= 4'b0001; // byte by byte coming
+        2:begin       
+        for(int ln=0; ln<VLANE_NUM; ln++)
+          if(ln<1)
+            ldbuff_wen[ln] <= 4'b1111; // word by word
+          else
+            ldbuff_wen[ln] <= 4'b0000; // word by word
+        end
+        1:begin
+        for(int ln=0; ln<VLANE_NUM; ln++)
+          if(ln<2)
+            ldbuff_wen[ln] <= 4'b0011; // halfword by halfword
+          else
+            ldbuff_wen[ln] <= 4'b0000; // word by word
+        end
+        default: begin
+        for(int ln=0; ln<VLANE_NUM; ln++)
+          if(ln<4)
+            ldbuff_wen[ln] <= 4'b0001; // byte by byte coming
+          else
+            ldbuff_wen[ln] <= 4'b0000; // word by word
+        end
       endcase
     end
     else if(ldbuff_wen_i) begin // ROTATE
       case(cfg_load_data_sew_i[1:0])
-        2:       ldbuff_wen[0] <= ldbuff_wen[VLANE_NUM-1];
-        1:       ldbuff_wen[0] <= ((ldbuff_wen[VLANE_NUM-1]<<2) | (ldbuff_wen[VLANE_NUM-1]>>2)); // rol 2
-        default: ldbuff_wen[0] <= ((ldbuff_wen[VLANE_NUM-1]<<1) | (ldbuff_wen[VLANE_NUM-1]>>1)); // rol1
+        2:begin //SEW32
+        for(int ln=0; ln<(VLANE_NUM); ln++)
+          ldbuff_wen[(ln+1)%VLANE_NUM] <= ldbuff_wen[ln];
+        end
+        1:begin //SEW16
+        for(int ln=0; ln<(VLANE_NUM); ln++)
+          if(ln>=(VLANE_NUM-2))
+            ldbuff_wen[(ln+2)%VLANE_NUM] <= ((ldbuff_wen[ln]<<2) | (ldbuff_wen[ln]>>2));//rol2
+          else
+            ldbuff_wen[(ln+2)%VLANE_NUM] <= ldbuff_wen[ln];
+        end
+        default:begin //SEW8
+        for(int ln=0; ln<(VLANE_NUM); ln++)
+          if(ln>=(VLANE_NUM-4))
+            ldbuff_wen[(ln+4)%VLANE_NUM] <= ((ldbuff_wen[ln]<<1) | (ldbuff_wen[ln]>>3));//rol1
+          else
+            ldbuff_wen[(ln+4)%VLANE_NUM] <= ldbuff_wen[ln];
+        end
       endcase
-      for(int vlane=1; vlane<(VLANE_NUM); vlane++)
-        ldbuff_wen[vlane] <= ldbuff_wen[vlane-1];
     end
   end
 
@@ -855,7 +869,25 @@ module buff_array #(
 
   // MAIN GENERATE OVER VECTOR LANES
   generate 
-    for (vlane=0; vlane<VLANE_NUM; vlane++) begin: load_vlane_iterator // MAIN V_LANE ITERATOR
+  for (vlane=0; vlane<VLANE_NUM; vlane++) begin: load_vlane_iterator // MAIN V_LANE ITERATOR
+
+    // Multiplex narrower data in so writes are in the correct position for byte-write enable
+    always_comb begin
+      case(cfg_load_data_sew_i[1:0])
+        2: begin       // FOR SEW = 32
+          lbuff_wdata_mux[vlane] = rd_tdata_i[vlane];
+        end
+        1: begin       // FOR SEW = 16
+          lbuff_wdata_mux[vlane] = {rd_tdata_i[(vlane%2)*16+:16], rd_tdata_i[(vlane%2)*16+:16]};
+        end
+        default: begin // FOR SEW = 8
+          lbuff_wdata_mux[vlane] = {rd_tdata_i[(vlane%4)*8+:8],rd_tdata_i[(vlane%4)*8+:8],
+                                    rd_tdata_i[(vlane%4)*8+:8],rd_tdata_i[(vlane%4)*8+:8]};
+        end
+      endcase
+    end
+    assign ldbuff_wdata[vlane] = {ldbuff_wen[vlane][3], lbuff_wdata_mux[vlane][31:24], ldbuff_wen[vlane][2], lbuff_wdata_mux[vlane][23:16],
+                                  ldbuff_wen[vlane][1], lbuff_wdata_mux[vlane][15:8],  ldbuff_wen[vlane][0], lbuff_wdata_mux[vlane][7:0]};
 
       // Multiplex narrower data in so writes are in the correct position for byte-write enable
       always_comb begin
@@ -873,8 +905,6 @@ module buff_array #(
         endcase
       end
 
-      assign ldbuff_wdata[vlane] = {ldbuff_wen[vlane][3], rd_tdata_i[31:24], ldbuff_wen[vlane][2], rd_tdata_i[23:16],
-                                     ldbuff_wen[vlane][1], rd_tdata_i[15:8], ldbuff_wen[vlane][0],rd_tdata_i[7:0]};
 
       assign vlane_load_data_o[vlane] = {ldbuff_rdata[vlane][34:27],ldbuff_rdata[vlane][25:18],ldbuff_rdata[vlane][16:9],ldbuff_rdata[vlane][7:0]};
 

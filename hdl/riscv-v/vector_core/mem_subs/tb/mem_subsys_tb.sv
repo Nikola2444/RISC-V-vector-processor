@@ -168,11 +168,11 @@ mem_subsys #(
     @(negedge clk);
     @(negedge clk);
     @(negedge clk);
-    mcu_sew              =3'b010;
+    mcu_sew              =3'b000;
     mcu_lmul             =3'b000;
     mcu_base_addr        =32'h40000000;
     mcu_stride           =0;
-    mcu_data_width       =3'b010;
+    mcu_data_width       =3'b000;
     mcu_idx_ld_st        =1'b0;
     mcu_strided_ld_st    =1'b0;
     mcu_unit_ld_st       =1'b1;
@@ -238,6 +238,7 @@ mem_subsys #(
     end
   end
 
+  int sew_in_bytes = 1;
   // LOAD SIGNAL INTERFACE ************************************
   // LANE INTERFACE
   
@@ -266,17 +267,18 @@ mem_subsys #(
         //$display("while");
         @(negedge clk);
         rd_tvalid <= $urandom_range(0,1);
-
-        rd_tdata <= read_word_num;
+        rd_tdata[0+:8]  <= (read_word_num+0);
+        rd_tdata[8+:8]  <= (read_word_num+1);
+        rd_tdata[16+:8] <= (read_word_num+2);
+        rd_tdata[24+:8] <= (read_word_num+3);
         @(posedge clk);
-        if (rd_tvalid && rd_tready)begin
-          read_word_num++;
-        end
-        if(read_word_num==(mcu_vl-1))
-           rd_tlast <= 1'b1;
-        if(read_word_num==(mcu_vl))begin
-          rd_tvalid <= 1'b0;
-          ctrl_rdone <= 1'b1;
+        if(rd_tvalid && rd_tready) 
+          read_word_num+=(4/sew_in_bytes);
+        if(read_word_num==(mcu_vl-(4/sew_in_bytes)))
+          rd_tlast    <= 1'b1;
+        if(read_word_num==mcu_vl)begin
+          rd_tvalid   <= 1'b0;
+          ctrl_rdone  <= 1'b1;
         end
       end
       @(negedge clk);

@@ -337,6 +337,7 @@ module m_cu #(
         mcu_st_rdy_o          = 1'b1;
         if(mcu_st_vld_reg) // All buffered update buff array, change state
         begin
+          mcu_st_rdy_o          = 1'b0;
           store_cfg_update_o    = 1'b1;
           store_cntr_rst_o      = 1'b1;
           wr_tvalid             = 1'b1;
@@ -530,7 +531,7 @@ module m_cu #(
     libuff_ren_o            = 1'b0;
     libuff_rvalid           = 1'b1;
     ldbuff_read_stall_o     = 1'b0;
-    ldbuff_read_flush_o     = (ldbuff_rvalid_d[2:1]==0);
+    ldbuff_read_flush_o     = (ldbuff_rvalid_d[2:0]==0);
     ldbuff_wen_o            = 1'b0;
     ldbuff_ren_o            = 1'b0;
     ctrl_rstart             = 1'b0;
@@ -544,6 +545,7 @@ module m_cu #(
         mcu_ld_rdy_o = 1'b1;
         if(mcu_ld_vld_reg)   // Based on buffered data start the execution
         begin
+          mcu_ld_rdy_o = 1'b0;
           load_cfg_update_o    = 1'b1;
           load_cntr_rst_o      = 1'b1;
           case(load_type_reg)

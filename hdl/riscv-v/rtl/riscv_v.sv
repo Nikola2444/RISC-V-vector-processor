@@ -112,7 +112,7 @@ module riscv_v #
    vector_core_inst
      (/*AUTO_INST*/
       // Outputs
-      .vector_stall_o			(vector_stall_o),
+
       .ctrl_raddr_offset_o		(ctrl_raddr_offset_o[C_M_AXI_ADDR_WIDTH-1:0]),
       .ctrl_rxfer_size_o		(ctrl_rxfer_size_o[C_XFER_SIZE_WIDTH-1:0]),
       .ctrl_rstart_o			(ctrl_rstart_o),
@@ -125,16 +125,18 @@ module riscv_v #
       // Inputs
       .clk				(clk),
       .clk2				(clk2),
-      .rstn				(rstn),
-      .rs1_i				(rs1[31:0]),
-      .rs2_i				(rs2[31:0]),
-      .vector_instr_i			(v_instruction[31:0]),
+      .rstn				(rstn),      
       .ctrl_rdone_i			(ctrl_rdone_i),
       .rd_tdata_i			(rd_tdata_i[C_M_AXI_DATA_WIDTH-1:0]),
       .rd_tvalid_i			(rd_tvalid_i),
       .rd_tlast_i			(rd_tlast_i),
       .ctrl_wdone_i			(ctrl_wdone_i),
-      .wr_tready_i			(wr_tready_i));
+      .wr_tready_i			(wr_tready_i),
+      //scheduler i/o
+      .rs1_i				(rs1[31:0]),
+      .rs2_i				(rs2[31:0]),
+      .vector_instr_i			(v_instruction[31:0]),
+      .vector_stall_o			(vector_stall));
 
    
 

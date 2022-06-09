@@ -476,8 +476,7 @@ module v_cu #
    
    assign store_data_mux_sel_o=start_o == 1 ? 0 :
 			       start_o == 2 ? 2 :
-			       start_o == 4 ? 4 :
-			       start_o == 8;
+			       start_o == 4 ? 4 : 8;
 
 
    

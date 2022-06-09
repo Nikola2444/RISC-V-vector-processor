@@ -7,6 +7,7 @@ package riscv_v_test_pkg;
  `include "uvm_macros.svh" // Include the UVM macros
 
    import bd_instr_if_agent_pkg::*;
+   import bd_v_data_if_agent_pkg::*;
    import AXI4_agent_pkg::*;
    import riscv_v_seq_pkg::*;
    import configurations_pkg::*;   

@@ -66,6 +66,16 @@ add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_counter.sv
 add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_read_master.sv
 add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_write_master.sv
 add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl.sv
+
+#mem_subsystem
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/axi_m_controller.v
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/m_cu.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/buff_array\/rtl\/buff_array.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/rtl/mem_subsys.sv
+
+add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_read_master.sv
+add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_write_master.sv
+add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl.sv
 #top files
 add_files -norecurse ..\/hdl\/riscv-v\/rtl\/riscv_v.sv
 add_files -norecurse ..\/hdl\/riscv-v\/rtl\/riscv_v_w_mem_subsystem.sv
@@ -74,6 +84,7 @@ set_property top riscv_v_w_mem_subsystem [current_fileset]
 #verification files
 
 add_files -fileset sim_1 -norecurse ..\/verif\/bd_instr_if_Agent\/bd_instr_if_agent_pkg.sv
+add_files -fileset sim_1 -norecurse ..\/verif\/bd_v_data_if_Agent\/bd_v_data_if_agent_pkg.sv
 add_files -fileset sim_1 -norecurse ..\/verif\/AXI4_Agent\/AXI4_agent_pkg.sv
 add_files -fileset sim_1 -norecurse ..\/verif\/Sequences\/riscv_v_seq_pkg.sv
 add_files -fileset sim_1 -norecurse ..\/verif\/Configurations\/configurations_pkg.sv

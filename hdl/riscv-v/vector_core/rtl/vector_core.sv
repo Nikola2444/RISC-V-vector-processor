@@ -139,9 +139,9 @@ module vector_core #
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]	vlane_store_load_idx;
    logic 					vlane_store_rdy; 
    logic [VLANE_NUM-1:0][31:0] 			vlane_load_data;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][3:0]	vlane_load_bwe[0:VLANE_NUM-1];
    
-   logic 					vlane_store_load_ivalid; 
+   logic 					vlane_store_load_ivalid;
+   logic [0:VLANE_NUM-1][3:0] 			vlane_load_bwen;
    logic 					vlane_load_rdy       ;
    logic 					vlane_load_last      ;
    logic 					vlane_load_dvalid    ;
@@ -291,7 +291,7 @@ module vector_core #
       .vrf_starting_raddr_i		({vrf_starting_waddr, vrf_starting_raddr_vs2, vrf_starting_raddr_vs1}), //TODO: how to orded them ?
       .wdata_width_i			(wdata_width[1:0]),
       .ready_o				(port_group_ready[W_PORTS_NUM-1:0]),
-
+      .load_bwen_i                      (vlane_load_bwen),
       .store_data_mux_sel_i		(store_data_mux_sel),
       .store_load_index_mux_sel_i	(store_load_idx_mux_sel),
       .op2_sel_i			(op2_sel[1:0]),
@@ -314,7 +314,8 @@ module vector_core #
       begin
 	 mcu_store_data[i] = vlane_store_data[i][vlane_store_driver];
 	 mcu_store_load_idx[i] = vlane_store_load_idx[i][vlane_store_driver];	 
-	 vlane_load_data[i] = mcu_load_data[i];	 
+	 vlane_load_data[i] = mcu_load_data[i];
+	 vlane_load_bwen[i] = mcu_load_bwe[i];
       end       
    end
 

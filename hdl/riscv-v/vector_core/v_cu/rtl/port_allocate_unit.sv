@@ -11,6 +11,7 @@ module port_allocate_unit#
     output logic [W_PORTS_NUM-1:0] 	   start_o,
     input logic [W_PORTS_NUM-1:0] 	   port_rdy_i,
     output logic [$clog2(R_PORTS_NUM)-1:0] op3_port_sel_o,
+    output logic [1:0] 			   store_driver_o,
 
 
     output 				   alloc_port_vld_o
@@ -18,6 +19,53 @@ module port_allocate_unit#
 
    logic [$clog2(W_PORTS_NUM)-1:0] 	   port_group_to_allocate_reg, port_group_to_allocate_next;
    logic [R_PORTS_NUM/2-1:0] 		   r_port_status;
+   logic [3:0]				   store_in_progress_reg;
+   logic [3:0] 				   load_in_progress_reg;
+   logic [1:0] 				   store_driver_idx;
+   
+
+   assign store_driver_idx = store_in_progress_reg == 1 ? 0:
+			     store_in_progress_reg == 2 ? 1:
+			     store_in_progress_reg == 4 ? 2 : 3;
+   assign store_driver_o = store_driver_idx;
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 store_in_progress_reg <= 'h0;
+      end
+      else
+      begin
+	 if (alloc_port_vld_o && instr_vld_i[3:2])
+	 begin
+	    store_in_progress_reg <= start_o;
+	 end
+	 else if (port_rdy_i[store_driver_idx])
+	   store_in_progress_reg <= 'h0;
+      end
+   end
+
+   assign load_driver_idx =  load_in_progress_reg == 1 ? 0:
+			     load_in_progress_reg == 2 ? 1:
+			     load_in_progress_reg == 4 ? 2 : 3;
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 load_in_progress_reg <= 'h0;
+      end
+      else
+      begin
+	 if (alloc_port_vld_o && instr_vld_i[5])
+	 begin
+	    load_in_progress_reg <= start_o;
+	 end
+	 else if (port_rdy_i[load_driver_idx])
+	   load_in_progress_reg <= 'h0;
+      end
+   end
+   
+
 
    assign mvv_101xxx_instr_check = instr_vld_i[1];
    
@@ -82,7 +130,11 @@ module port_allocate_unit#
    end
 
    // Outputs
-   assign instr_rdy_o[10:0] = {11{port_rdy_i != 0}};
+
+   assign instr_rdy_o[1:0] = {2{port_rdy_i != 0}};
+   assign instr_rdy_o[3:2] = {2{port_rdy_i != 0}} && store_in_progress_reg!=0 && instr_vld_i[3:2]!=0;//store_rdy
+   assign instr_rdy_o[5:4] = {2{port_rdy_i != 0}} && load_in_progress_reg!=0 && instr_vld_i[3:2]!=0;//store_rdy
+   assign instr_rdy_o[10:6] = {5{port_rdy_i != 0}};
    //Config instruction ready
    assign instr_rdy_o[11] = port_rdy_i == 4'hf; 
    

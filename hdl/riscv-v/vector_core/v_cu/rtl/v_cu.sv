@@ -7,12 +7,13 @@ module v_cu #
 
    (/*AUTOARG*/
    // Outputs
-   instr_rdy_o, sew_o, lmul_o, vl_o, inst_type_o, start_o,
-   inst_delay_o, vrf_ren_o, vrf_oreg_ren_o, vrf_starting_waddr_o,
-   vrf_starting_raddr_vs1_o, vrf_starting_raddr_vs2_o, wdata_width_o,
-   reduction_op_o, store_data_mux_sel_o, store_load_index_mux_sel_o,
-   op2_sel_o, op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o,
-   up_down_slide_o, slide_amount_o, vector_mask_o,
+   instr_rdy_o, sew_o, lmul_o, store_driver_o, vl_o, inst_type_o,
+   start_o, inst_delay_o, vrf_ren_o, vrf_oreg_ren_o,
+   vrf_starting_waddr_o, vrf_starting_raddr_vs1_o,
+   vrf_starting_raddr_vs2_o, wdata_width_o, reduction_op_o,
+   store_data_mux_sel_o, store_load_index_mux_sel_o, op2_sel_o,
+   op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o, up_down_slide_o,
+   slide_amount_o, vector_mask_o,
    // Inputs
    clk, rstn, instr_vld_i, scalar_rs1_i, scalar_rs2_i, vector_instr_i,
    vrf_starting_addr_vld_i, vrf_starting_waddr_i,
@@ -39,6 +40,7 @@ module v_cu #
 
    output [2:0]  sew_o;
    output [2:0]  lmul_o;
+   output [1:0]  store_driver_o;
    //interface with renaming unit
    input logic 	 vrf_starting_addr_vld_i;
    (* dont_touch = "yes" *)input logic [8*$clog2(MEM_DEPTH)-1:0]  vrf_starting_waddr_i;
@@ -125,6 +127,8 @@ module v_cu #
    logic [2:0] 								  sew_o;
    logic [$clog2(VLEN)-1:0] 						  vlmax;
    typedef logic [7:0][2:0][$clog2(VLEN):0] 				  vlmax_array_type;
+
+   logic [3:0] 								  store_driver_reg; 
    
    localparam vlmax_array_type vlmax_array=init_vlmax();
 
@@ -435,7 +439,7 @@ module v_cu #
    
    // Port resource allocation unit
    port_allocate_unit #
-     (/*AUTOINSTPARAM*/
+     (/*AUTOINST_PARAM*/
       // Parameters
       .R_PORTS_NUM			(R_PORTS_NUM),
       .W_PORTS_NUM			(W_PORTS_NUM))
@@ -444,13 +448,14 @@ module v_cu #
       // Outputs
       .instr_rdy_o	(instr_rdy_o[11:0]),
       .start_o		(start_o),
-
+      .store_driver_o   (store_driver_o),
       .op3_port_sel_o	(op3_sel_o),
       .alloc_port_vld_o	(alloc_port_vld),
       // Inputs
       .clk		(clk),
       .rstn		(rstn),
       .port_rdy_i	(port_group_ready_i),
+
       .vrf_starting_addr_vld_i(vrf_starting_addr_vld_reg),
       .instr_vld_i	(instr_vld_reg[11:0]));
    // Here we need to insert component which uses generated control signals to
@@ -467,7 +472,14 @@ module v_cu #
    assign vrf_starting_waddr_o = vrf_starting_waddr_reg;
    assign vrf_starting_raddr_vs1_o = vrf_starting_raddr0_reg;
    assign vrf_starting_raddr_vs2_o = vrf_starting_raddr1_reg;
+   
+   
+   assign store_data_mux_sel_o=start_o == 1 ? 0 :
+			       start_o == 2 ? 2 :
+			       start_o == 4 ? 4 :
+			       start_o == 8;
 
-   assign store_data_mux_sel_o=start_o;
+
+   
    assign store_load_index_mux_sel_o=start_o;
 endmodule

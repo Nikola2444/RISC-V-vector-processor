@@ -11,11 +11,14 @@ module vector_core #
    parameter C_XFER_SIZE_WIDTH        = 32
    )
    (/*AUTOARG*/
-    // Outputs
-    vector_stall_o,
-    // Inputs
-    clk, clk2, rstn, rs1_i, rs2_i, vector_instr_i
-    );
+   // Outputs
+   vector_stall_o, ctrl_raddr_offset_o, ctrl_rxfer_size_o,
+   ctrl_rstart_o, rd_tready_o, ctrl_waddr_offset_o, ctrl_wxfer_size_o,
+   ctrl_wstart_o, wr_tdata_o, wr_tvalid_o,
+   // Inputs
+   clk, clk2, rstn, rs1_i, rs2_i, vector_instr_i, ctrl_rdone_i,
+   rd_tdata_i, rd_tvalid_i, rd_tlast_i, ctrl_wdone_i, wr_tready_i
+   );
    localparam LP_VECTOR_REGISTER_NUM=32;
    localparam LP_MAX_LMUL=8;
    localparam MEM_DEPTH=VLEN/VLANE_NUM;
@@ -26,71 +29,71 @@ module vector_core #
    localparam VREG_LOC_PER_LANE = VLEN/VLANE_NUM/32; 
 
    input 	 clk;
-   input   clk2;
+   input 	 clk2;
    input 	 rstn;
 
    //scalar core interface
    input [31:0]  rs1_i;
    input [31:0]  rs2_i;
    input [31:0]  vector_instr_i;
-   output 	     vector_stall_o;
+   output 	 vector_stall_o;
    //data interface    
-  // MCU <=> AXIM CONTROL IF [read channel]
-  output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ;
-  output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_o       ;
-  output logic                                   ctrl_rstart_o           ;
-  input  logic                                   ctrl_rdone_i            ;
-  input  logic [C_M_AXI_DATA_WIDTH-1:0]          rd_tdata_i              ;
-  input  logic                                   rd_tvalid_i             ;
-  output logic                                   rd_tready_o             ;
-  input  logic                                   rd_tlast_i              ;
-  // MCU <=> AXIM CONTROL IF [write channel]
-  output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_waddr_offset_o     ;
-  output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size_o       ;
-  output logic                                   ctrl_wstart_o           ;
-  input  logic                                   ctrl_wdone_i            ;
-  output logic [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_o              ;
-  output logic                                   wr_tvalid_o             ;
-  input  logic                                   wr_tready_i             ;
+   // MCU <=> AXIM CONTROL IF [read channel]
+   output logic [C_M_AXI_ADDR_WIDTH-1:0] ctrl_raddr_offset_o     ;
+   output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_rxfer_size_o       ;
+   output logic 			 ctrl_rstart_o           ;
+   input  logic 			 ctrl_rdone_i            ;
+   input  logic [C_M_AXI_DATA_WIDTH-1:0] rd_tdata_i              ;
+   input  logic 			 rd_tvalid_i             ;
+   output logic 			 rd_tready_o             ;
+   input  logic 			 rd_tlast_i              ;
+   // MCU <=> AXIM CONTROL IF [write channel]
+   output logic [C_M_AXI_ADDR_WIDTH-1:0] ctrl_waddr_offset_o     ;
+   output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_wxfer_size_o       ;
+   output logic 			 ctrl_wstart_o           ;
+   input  logic 			 ctrl_wdone_i            ;
+   output logic [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o              ;
+   output logic 			 wr_tvalid_o             ;
+   input  logic 			 wr_tready_i             ;
 
 
    // Scheduler-M_CU interconnections
-   logic [31:0]  mcu_base_addr;	// From scheduler_inst of scheduler.v
-   logic [2:0] 	 mcu_data_width;	// From scheduler_inst of scheduler.v
-   logic 	 mcu_idx_ld_st;	// From scheduler_inst of scheduler.v
-   logic 	 mcu_ld_vld;		// From scheduler_inst of scheduler.v
-   logic 	 mcu_st_vld;		// From scheduler_inst of scheduler.v
-   logic [31:0]  mcu_stride;		// From scheduler_inst of scheduler.v
-   logic 	 mcu_strided_ld_st;	// From scheduler_inst of scheduler.v
-   logic 	 mcu_unit_ld_st;	// From scheduler_inst of scheduler.v
+   logic [31:0] 			 mcu_base_addr;	// From scheduler_inst of scheduler.v
+   logic [2:0] 				 mcu_data_width;	// From scheduler_inst of scheduler.v
+   logic 				 mcu_idx_ld_st;	// From scheduler_inst of scheduler.v
+   logic 				 mcu_ld_vld;		// From scheduler_inst of scheduler.v
+   logic 				 mcu_st_vld;		// From scheduler_inst of scheduler.v
+   logic [31:0] 			 mcu_stride;		// From scheduler_inst of scheduler.v
+   logic 				 mcu_strided_ld_st;	// From scheduler_inst of scheduler.v
+   logic 				 mcu_unit_ld_st;	// From scheduler_inst of scheduler.v
    
-   logic 	 mcu_ld_rdy=1'b1;
-   logic 	 mcu_ld_buffered=1'b1;
-   logic 	 mcu_st_rdy=1'b1;
+   logic 				 mcu_ld_rdy=1'b1;
+   logic 				 mcu_ld_buffered=1'b1;
+   logic 				 mcu_st_rdy=1'b1;
 
    //Scheduler-V_CU interconnections
-   logic [11:0]  instr_vld;		// From scheduler_inst of scheduler.v
-   logic [31:0]  vector_instr;		// From scheduler_inst of scheduler.v
-   logic [2:0] 	 sew;
-   logic [2:0] 	 lmul;
-   logic [11:0]  instr_rdy;
-   logic [31:0]  scalar_rs1;
-   logic [31:0]  scalar_rs2;
+   logic [11:0] 			 instr_vld;		// From scheduler_inst of scheduler.v
+   logic [31:0] 			 vector_instr;		// From scheduler_inst of scheduler.v
+   logic [2:0] 				 sew;
+   logic [2:0] 				 lmul;
+   logic [11:0] 			 instr_rdy;
+   logic [31:0] 			 scalar_rs1;
+   logic [31:0] 			 scalar_rs2;
 
    //renaming_unit-vcu
-   logic 	 ru_vrf_starting_addr_vld;
-   logic [8*$clog2(MEM_DEPTH)-1:0] ru_vrf_starting_waddr;
-   logic [8*$clog2(MEM_DEPTH)-1:0] ru_vrf_starting_raddr0;
-   logic [8*$clog2(MEM_DEPTH)-1:0] ru_vrf_starting_raddr1;
+   logic 				 ru_vrf_starting_addr_vld;
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	 ru_vrf_starting_waddr;
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr0;
+   logic [8*$clog2(MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr1;
    
 
    // V_CU-Vector_lanes interconnections
-   logic [2:0] 			   inst_type;
-   logic [W_PORTS_NUM-1:0] 	   start;
-   logic [4:0] 			   alu_imm;	// From v_cu_inst of v_cu.v
-   logic [ALU_OPMODE_WIDTH-1:0]    alu_opmode;// From v_cu_inst of v_cu.v
-   logic 			   reduction_op;// From v_cu_inst of v_cu.v
-   logic [31:0] 		   alu_x_data;	// From v_cu_inst of v_cu.v
+   logic [2:0] 				 inst_type;
+   logic [W_PORTS_NUM-1:0] 		 start;
+   logic [4:0] 				 alu_imm;	// From v_cu_inst of v_cu.v
+   logic [ALU_OPMODE_WIDTH-1:0] 	 alu_opmode;// From v_cu_inst of v_cu.v
+   logic 				 reduction_op;// From v_cu_inst of v_cu.v
+   logic [31:0] 			 alu_x_data;	// From v_cu_inst of v_cu.v
    logic [$clog2(LP_MAX_VL_PER_LANE)-1:0] inst_delay;// From v_cu_inst of v_cu.v
    logic [31:0] 			  vl;
    logic [1:0] 				  op2_sel;	// From v_cu_inst of v_cu.v
@@ -114,28 +117,35 @@ module vector_core #
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel;
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_idx_mux_sel;
 
-    // SHEDULER-MEM_SUBSYS interconnections
-   logic [31:0]                            mcu_base_addr        ;
-   logic [31:0]                            mcu_stride           ;
-   logic [ 2:0]                            mcu_data_width       ;
-   logic                                   mcu_idx_ld_st        ;
-   logic                                   mcu_strided_ld_st    ;
-   logic                                   mcu_unit_ld_st       ;
-   logic 	                                 mcu_st_rdy           ;
-   logic                                   mcu_st_vld           ;
-   logic 	                                 mcu_ld_rdy           ;
-   logic 	                                 mcu_ld_buffered      ;
-   logic                                   mcu_ld_vld           ;
+   // SHEDULER-MEM_SUBSYS interconnections
+   logic [31:0] 			  mcu_base_addr        ;
+   logic [31:0] 			  mcu_stride           ;
+   logic [ 2:0] 			  mcu_data_width       ;
+   logic 				  mcu_idx_ld_st        ;
+   logic [31:0] 			  mcu_store_data[0:VLANE_NUM-1];
+   logic [31:0] 			  mcu_store_load_idx  [0:VLANE_NUM-1];
+   logic [31:0]	                          mcu_load_data[0:VLANE_NUM-1];
+   logic [3:0] 				  mcu_load_bwe[0:VLANE_NUM-1];
+   logic 				  mcu_strided_ld_st    ;
+   logic 				  mcu_unit_ld_st       ;
+   logic 				  mcu_st_rdy           ;
+   logic 				  mcu_st_vld           ;
+   logic 				  mcu_ld_rdy           ;
+   logic 				  mcu_ld_buffered      ;
+   logic 				  mcu_ld_vld           ;
    // V_LANE-MEM_SUBSYS interconnections
-   logic                                   vlane_store_rdy      ; 
-   logic [31:0]                            vlane_store_data      [0:VLANE_NUM-1];
-   logic [31:0]                            vlane_load_data       [0:VLANE_NUM-1];
-   logic [3:0]                             vlane_load_bwe        [0:VLANE_NUM-1];
-   logic [31:0]                            vlane_store_load_idx  [0:VLANE_NUM-1];
-   logic                                   vlane_store_load_ivalid; 
-   logic                                   vlane_load_rdy       ;
-   logic                                   vlane_load_last      ;
-   logic                                   vlane_load_dvalid    ;
+
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] vlane_store_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]	vlane_store_load_idx;
+   logic 					vlane_store_rdy; 
+   logic [VLANE_NUM-1:0][31:0] 			vlane_load_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][3:0]	vlane_load_bwe[0:VLANE_NUM-1];
+   
+   logic 					vlane_store_load_ivalid; 
+   logic 					vlane_load_rdy       ;
+   logic 					vlane_load_last      ;
+   logic 					vlane_load_dvalid    ;
+   logic[1:0] 					vlane_store_driver;
    
    // End of automatics
    /*INSTANTIATE SCHEDULER*/
@@ -185,7 +195,7 @@ module vector_core #
       .vrf_starting_raddr1_o(ru_vrf_starting_raddr1),
       .vrf_starting_addr_vld_o(ru_vrf_starting_addr_vld),
       // Inputs
-      .instr_vld_i	(1'b1),
+      .instr_vld_i	(instr_vld),
       //.lmul_i		(lmul_i[1:0]),      
       .vector_instr_i(vector_instr));
    
@@ -202,6 +212,7 @@ module vector_core #
 	     .sew_o			(sew[2:0]),
 	     .lmul_o			(lmul[2:0]),
 	     .vl_o			(vl[31:0]),
+	     .store_driver_o            (vlane_store_driver),
 	     .inst_type_o		(inst_type[2:0]),
 	     .start_o			(start[W_PORTS_NUM-1:0]),
 	     .inst_delay_o		(inst_delay/*[W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0]*/),
@@ -297,60 +308,70 @@ module vector_core #
       .primary_read_data_i		(8'hff));//TODO: what is this
 
 
+   always_comb
+   begin
+      for (int i=0; i<VLANE_NUM; i++)
+      begin
+	 mcu_store_data[i] = vlane_store_data[i][vlane_store_driver];
+	 mcu_store_load_idx[i] = vlane_store_load_idx[i][vlane_store_driver];	 
+	 vlane_load_data[i] = mcu_load_data[i];	 
+      end       
+   end
+
    // Instantiate MEM_SUBSYS
-    mem_subsys #(
-      .VLEN               (VLEN                 ),
-      .V_LANE_NUM         (VLANE_NUM            ),
-      .MAX_VECTORS_BUFFD  (1), // FIXED, not implemented yet
-      .C_M_AXI_ADDR_WIDTH (C_M_AXI_ADDR_WIDTH   ),
-      .C_M_AXI_DATA_WIDTH (C_M_AXI_DATA_WIDTH   ),
-      .C_XFER_SIZE_WIDTH  (C_XFER_SIZE_WIDTH    )
-    )mem_subsys_inst
-    (
-     .clk                  (clk                 ),
-     .rstn                 (rstn                ),
-     .mcu_sew_i            (sew                 ),
-     .mcu_lmul_i           (lmul                ),
-     .mcu_vl_i             (vl                  ),
-     .mcu_base_addr_i      (mcu_base_addr       ),
-     .mcu_stride_i         (mcu_stride          ),
-     .mcu_data_width_i     (mcu_data_width      ),
-     .mcu_idx_ld_st_i      (mcu_idx_ld_st       ),
-     .mcu_strided_ld_st_i  (mcu_strided_ld_st   ),
-     .mcu_unit_ld_st_i     (mcu_unit_ld_st      ),
-     .mcu_st_rdy_o         (mcu_st_rdy          ),
-     .mcu_st_vld_i         (mcu_st_vld          ),
-     .mcu_ld_rdy_o         (mcu_ld_rdy          ),
-     .mcu_ld_buffered_o    (mcu_ld_buffered     ),
-     .mcu_ld_vld_i         (mcu_ld_vld          ),
-     .ctrl_raddr_offset_o  (ctrl_raddr_offset_o ),
-     .ctrl_rxfer_size_o    (ctrl_rxfer_size_o   ),
-     .ctrl_rstart_o        (ctrl_rstart_o       ),
-     .ctrl_rdone_i         (ctrl_rdone_i        ),
-     .rd_tdata_i           (rd_tdata_i          ),
-     .rd_tvalid_i          (rd_tvalid_i         ),
-     .rd_tready_o          (rd_tready_o         ),
-     .rd_tlast_i           (rd_tlast_i          ),
-     .ctrl_waddr_offset_o  (ctrl_waddr_offset_o ),
-     .ctrl_wxfer_size_o    (ctrl_wxfer_size_o   ),
-     .ctrl_wstart_o        (ctrl_wstart_o       ),
-     .ctrl_wdone_i         (ctrl_wdone_i        ),
-     .wr_tdata_o           (wr_tdata_o          ),
-     .wr_tvalid_o          (wr_tvalid_o         ),
-     .wr_tready_i          (wr_tready_i         ),
-     .vlane_store_data_i   (vlane_store_data    ),
-     .vlane_store_idx_i    (vlane_store_load_idx),
-     .vlane_store_dvalid_i (vlane_store_dvalid  ),
-     .vlane_store_ivalid_i (vlane_store_laod_ivalid),
-     .vlane_store_rdy_o    (vlane_store_rdy     ),
-     .vlane_load_data_o    (vlane_load_data     ),
-     .vlane_load_bwe_o     (vlane_load_bwe      ),
-     .vlane_load_idx_i     (vlane_store_load_idx),
-     .vlane_load_rdy_i     (vlane_load_rdy      ),
-     .vlane_load_ivalid_i  (vlane_store_load_ivalid),
-     .vlane_load_dvalid_o  (vlane_load_dvalid   ),
-     .vlane_load_last_o    (vlane_load_last     )
-    );
+   mem_subsys #(
+		.VLEN               (VLEN                 ),
+		.VLANE_NUM         (VLANE_NUM            ),
+		.MAX_VECTORS_BUFFD  (1), // FIXED, not implemented yet
+		.C_M_AXI_ADDR_WIDTH (C_M_AXI_ADDR_WIDTH   ),
+		.C_M_AXI_DATA_WIDTH (C_M_AXI_DATA_WIDTH   ),
+		.C_XFER_SIZE_WIDTH  (C_XFER_SIZE_WIDTH    )
+		)mem_subsys_inst
+     (
+      .clk                  (clk                 ),
+      .rstn                 (rstn                ),
+      .mcu_sew_i            (sew                 ),
+      .mcu_lmul_i           (lmul                ),
+      .mcu_vl_i             (vl                  ),
+      .mcu_base_addr_i      (mcu_base_addr       ),
+      .mcu_stride_i         (mcu_stride          ),
+      .mcu_data_width_i     (mcu_data_width      ),
+      .mcu_idx_ld_st_i      (mcu_idx_ld_st       ),
+      .mcu_strided_ld_st_i  (mcu_strided_ld_st   ),
+      .mcu_unit_ld_st_i     (mcu_unit_ld_st      ),
+      .mcu_st_rdy_o         (mcu_st_rdy          ),
+      .mcu_st_vld_i         (mcu_st_vld          ),
+      .mcu_ld_rdy_o         (mcu_ld_rdy          ),
+      .mcu_ld_buffered_o    (mcu_ld_buffered     ),
+      .mcu_ld_vld_i         (mcu_ld_vld          ),
+      .ctrl_raddr_offset_o  (ctrl_raddr_offset_o ),
+      .ctrl_rxfer_size_o    (ctrl_rxfer_size_o   ),
+      .ctrl_rstart_o        (ctrl_rstart_o       ),
+      .ctrl_rdone_i         (ctrl_rdone_i        ),
+      .rd_tdata_i           (rd_tdata_i          ),
+      .rd_tvalid_i          (rd_tvalid_i         ),
+      .rd_tready_o          (rd_tready_o         ),
+      .rd_tlast_i           (rd_tlast_i          ),
+      .ctrl_waddr_offset_o  (ctrl_waddr_offset_o ),
+      .ctrl_wxfer_size_o    (ctrl_wxfer_size_o   ),
+      .ctrl_wstart_o        (ctrl_wstart_o       ),
+      .ctrl_wdone_i         (ctrl_wdone_i        ),
+      .wr_tdata_o           (wr_tdata_o          ),
+      .wr_tvalid_o          (wr_tvalid_o         ),
+      .wr_tready_i          (wr_tready_i         ),
+      .vlane_store_data_i   (mcu_store_data    ),
+      .vlane_store_idx_i    (mcu_store_load_idx),
+      .vlane_store_dvalid_i (vlane_store_dvalid  ),
+      .vlane_store_ivalid_i (vlane_store_laod_ivalid),
+      .vlane_store_rdy_o    (vlane_store_rdy     ),
+      .vlane_load_data_o    (mcu_load_data     ),
+      .vlane_load_bwe_o     (mcu_load_bwe      ),
+      .vlane_load_idx_i     (mcu_store_load_idx),
+      .vlane_load_rdy_i     (vlane_load_rdy      ),
+      .vlane_load_ivalid_i  (vlane_store_load_ivalid),
+      .vlane_load_dvalid_o  (vlane_load_dvalid   ),
+      .vlane_load_last_o    (vlane_load_last     )
+      );
 
    //
 endmodule

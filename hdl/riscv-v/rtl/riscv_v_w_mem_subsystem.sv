@@ -128,6 +128,9 @@ module riscv_v_w_mem_subsystem #
 
    riscv_v #(/*AUTOINST_PARAM*/
 	     // Parameters
+	     .C_M_AXI_ADDR_WIDTH	(C_M_AXI_ADDR_WIDTH),
+	     .C_M_AXI_DATA_WIDTH	(C_M_AXI_DATA_WIDTH),
+	     .C_XFER_SIZE_WIDTH		(C_XFER_SIZE_WIDTH),
 	     .VLEN			(VLEN),
 	     .V_LANES			(V_LANES),
 	     .CHAINING			(CHAINING))

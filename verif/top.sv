@@ -20,6 +20,7 @@ module riscv_v_verif_top;
    backdoor_instr_if backdoor_instr_vif(clk, rstn);
    backdoor_register_bank_if backdoor_register_bank_vif (clk, rstn);
    backdoor_sc_data_if backdoor_sc_data_vif (clk, rstn);
+   backdoor_v_data_if backdoor_v_data_vif (clk, rstn);
 
    
    
@@ -69,6 +70,7 @@ module riscv_v_verif_top;
       uvm_config_db#(virtual backdoor_instr_if)::set(null, "uvm_test_top.env", "backdoor_instr_if", backdoor_instr_vif);
       uvm_config_db#(virtual backdoor_register_bank_if)::set(null, "uvm_test_top.env", "backdoor_register_bank_if", backdoor_register_bank_vif);
       uvm_config_db#(virtual backdoor_sc_data_if)::set(null, "uvm_test_top.env", "backdoor_sc_data_if", backdoor_sc_data_vif);
+      uvm_config_db#(virtual backdoor_v_data_if)::set(null, "uvm_test_top.env", "backdoor_v_data_if", backdoor_v_data_vif);
       run_test();
    end
 

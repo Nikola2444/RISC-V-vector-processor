@@ -246,7 +246,7 @@ module scheduler
 
    //check handshake between scheduler and V_CU
    
-   assign next_instr_rdy = (instr_vld_o & instr_rdy_i) != 'h0 || instr_vld_o == 0;
+   assign next_instr_rdy = ((instr_vld_o & instr_rdy_i) != 'h0 || instr_vld_o == 0) && !(v_ld_instr_check && !mcu_ld_buffered_i);
 
    // maybe extented
    // Stall if new instructions is valid but v_cu is not ready,

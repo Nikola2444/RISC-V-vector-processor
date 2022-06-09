@@ -132,8 +132,8 @@ module port_allocate_unit#
    // Outputs
 
    assign instr_rdy_o[1:0] = {2{port_rdy_i != 0}};
-   assign instr_rdy_o[3:2] = {2{port_rdy_i != 0}} && store_in_progress_reg!=0 && instr_vld_i[3:2]!=0;//store_rdy
-   assign instr_rdy_o[5:4] = {2{port_rdy_i != 0}} && load_in_progress_reg!=0 && instr_vld_i[3:2]!=0;//store_rdy
+   assign instr_rdy_o[3:2] = {2{port_rdy_i != 0 && store_in_progress_reg==0 && instr_vld_i[3:2]==0}};//store_rdy
+   assign instr_rdy_o[5:4] = {2{port_rdy_i != 0 && load_in_progress_reg==0 && instr_vld_i[3:2]==0}};//store_rdy
    assign instr_rdy_o[10:6] = {5{port_rdy_i != 0}};
    //Config instruction ready
    assign instr_rdy_o[11] = port_rdy_i == 4'hf; 

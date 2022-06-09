@@ -1,6 +1,6 @@
 `include "../../../../packages/typedef_pkg.sv"
 module alu_submodule #
-  (parameter V_LANE_NUM)
+  (parameter V_LANE_NUM=0)
    (/*AUTOARG*/
    // Outputs
    alu_vld_o, result_o,
@@ -81,6 +81,7 @@ module alu_submodule #
    logic [31:0] 		  op1_reg_sign_ext;
    logic [31:0] 		  op2_reg_sign_ext;
    logic [31:0] 		  op2_reg;
+   logic [31:0] 		  op2_reg2;
    logic [1:0][31:0] 		  op3_reg;
    logic [1:0]			  sew_reg;
    logic [2:0][8:0] 		  alu_opmode_reg;
@@ -95,7 +96,10 @@ module alu_submodule #
 
    // output signals
    logic [31:0] 		  result_reg;
+   logic                          alu_vld_reg;
    logic 			  reduction_first_operand_reg;
+   logic 			  first_element;
+   logic 			  last_element;
    // Logic that sends valid signal through the pipeline.
    //assign reduction_first_operand_reg = !res_vld_reg[2] && res_vld_reg[1] && reduction_op_reg[0];
 
@@ -107,7 +111,7 @@ module alu_submodule #
       end
       else
       begin
-	 if(!reduction_first_operand_reg && reduction_op_reg[0] && !reduction_op_reg[1])
+	 if(!reduction_first_operand_reg && reduction_op_reg[1] && !reduction_op_reg[2])
 	   reduction_first_operand_reg <= 1'b1;
 	 else if (res_vld_reg[1])
 	   reduction_first_operand_reg <= 1'b0;
@@ -115,12 +119,17 @@ module alu_submodule #
       end
    end
 
+
+
+   assign first_element = res_vld_reg[0] && !res_vld_reg[1];
+   assign last_element   = !alu_vld_i && alu_vld_reg;
+
    always @ (posedge clk)
    begin
       if (!rstn)
       begin
 	 res_vld_reg <= '{default:'0};
-	 
+	 alu_vld_reg <= 'h0;
 	 op1_reg <= 'h0;
 	 op2_reg <= 'h0;
 	 op3_reg <= '{default:'0};
@@ -131,18 +140,44 @@ module alu_submodule #
       end
       else
       begin
-	 res_vld_reg <= {res_vld_reg[LP_MAX_PIPE_STAGES-2:0], alu_vld_i};	 
-	 op1_reg <= op1_i;
+	 
+	 if (V_LANE_NUM!=0)
+	 begin	    
+	    if (reduction_op_i && alu_opmode_i[6:5]==2'b01)
+	    begin
+	       res_vld_reg <= {res_vld_reg[LP_MAX_PIPE_STAGES-2:0], (alu_vld_i | last_element)};
+	       if ((first_element || !comp_out_next)  && res_vld_reg[0])		 
+		 op1_reg <= op2_reg;	       
+	    end
+	    else
+	    begin
+	       res_vld_reg <= {res_vld_reg[LP_MAX_PIPE_STAGES-2:0], alu_vld_i};
+	       op1_reg <= op1_i;
+	    end
+	 end	 
+	 else
+	 begin
+	    res_vld_reg <= {res_vld_reg[LP_MAX_PIPE_STAGES-2:0], alu_vld_i};
+	    if  (reduction_op_reg[1])
+	    begin
+	       if (!comp_out_next && res_vld_reg[0])
+		 op1_reg <= op2_reg;
+	    end
+	    else
+	      op1_reg <= op1_i;
+	 end
 	 op2_reg <= op2_i;
 	 op3_reg <= {op3_reg[0], op3_i};
 	 reduction_op_reg <= {reduction_op_reg[2:0], reduction_op_i};
-
 	 alu_opmode_reg[0] <= alu_opmode_i;
+	 alu_vld_reg <= alu_vld_i;
 	 if (!reduction_first_operand_reg)
 	 begin
 	   if (alu_opmode_reg[0][6:5]==2'b10)
 	     alu_opmode_reg[1] <= {alu_opmode_reg[0][8:4], 2'b00, alu_opmode_reg[0][1:0]};
-	   else  // if there is no valid data reset alu_opmode_reg
+	   else if ( alu_opmode_reg[0][6:5]==2'b01)
+	     alu_opmode_reg[1] <= {alu_opmode_reg[0][8:4], 4'b0000};
+	   else
 	     alu_opmode_reg[1] <= alu_opmode_reg[0];
 	 end
 	 else if (V_LANE_NUM != 0)
@@ -182,23 +217,25 @@ module alu_submodule #
    //connecting right values to dsp I/O
 
    // Control of x, y, z multiplexers inside DSP depending on alu_opmode
-   assign dsp_x_mux = alu_opmode_reg[1][6:5] == 2'b00 ? LP_DSP_X_MUX_NORMAL :
+   assign dsp_x_mux = alu_opmode_reg[1][6:5] == 2'b00 || alu_opmode_reg[1][6:5] == 2'b01 ? LP_DSP_X_MUX_NORMAL :
 		      alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_X_MUX_MUL :
 		      LP_DSP_X_MUX_MUL_ACC;
-   assign dsp_y_mux = alu_opmode_reg[1][6:5] == 2'b00 ? {alu_opmode_reg[1][4], 1'b0} :
+   assign dsp_y_mux = alu_opmode_reg[1][6:5] == 2'b00 || alu_opmode_reg[1][6:5] == 2'b01 ? {alu_opmode_reg[1][4], 1'b0} :
 		      alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Y_MUX_MUL :
 		      LP_DSP_Y_MUX_MUL_ACC;
    generate
       if (V_LANE_NUM !=0)
       begin
-	 assign dsp_z_mux = reduction_op_reg[1] == 1'b1 ? LP_DSP_Z_MUX_REDUCTION :
+	 assign dsp_z_mux = alu_opmode_reg[1][6:5] == 2'b01 ? LP_DSP_Z_MUX_NORMAL :
+			    reduction_op_reg[1] == 1'b1 ? LP_DSP_Z_MUX_REDUCTION :
 			    alu_opmode_reg[1][6:5] == 2'b00 ? LP_DSP_Z_MUX_NORMAL :
 			    alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Z_MUX_MUL :
 			    LP_DSP_Z_MUX_MUL_ACC;
       end
       else
       begin
-	 assign dsp_z_mux = reduction_op_reg[1] == 1'b1 && reduction_first_operand_reg ? LP_DSP_Z_MUX_NORMAL:
+	 assign dsp_z_mux = alu_opmode_reg[1][6:5] == 2'b01 ? LP_DSP_Z_MUX_NORMAL :
+			    reduction_op_reg[1] == 1'b1 && reduction_first_operand_reg ? LP_DSP_Z_MUX_NORMAL:
 			    reduction_op_reg[1] == 1'b1 ? LP_DSP_Z_MUX_REDUCTION :
 			    alu_opmode_reg[1][6:5] == 2'b00 ? LP_DSP_Z_MUX_NORMAL :
 			    alu_opmode_reg[1][6:4] == 3'b101 ? LP_DSP_Z_MUX_MUL :
@@ -227,7 +264,7 @@ module alu_submodule #
    always @(posedge clk)
    begin
       if (res_vld_reg[2])begin
-	 result_reg = alu_opmode_reg[2][6:5]==2'b01 ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
+	 result_reg = alu_opmode_reg[2][6:5]==2'b01 && !reduction_op_i ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
 	 if (sew_reg == 2'b00)
 	 begin
 	    if (alu_opmode_reg[2][6:5]==2'b10) // take the value from dsp
@@ -259,10 +296,10 @@ module alu_submodule #
    assign  dsp_CEOPMODE = 1'b1;
    assign  dsp_CEINMODE = 1'b1;
 
-   assign  dsp_RSTA = !rstn;
-   assign  dsp_RSTB = !rstn;
+   assign  dsp_RSTA = !rstn || (reduction_op_i && alu_opmode_reg[0][6:5]==2'b01);
+   assign  dsp_RSTB = !rstn || (reduction_op_i && alu_opmode_reg[0][6:5]==2'b01);
    assign  dsp_RSTC = !rstn;
-   assign  dsp_RSTP = !rstn || alu_opmode_reg[1][6:5]==2'b01 || (!reduction_op_reg[2] && !res_vld_reg[1]);
+   assign  dsp_RSTP = !rstn || (!reduction_op_i && alu_opmode_reg[0][6:5]==2'b01) || (!reduction_op_reg[2] && !res_vld_reg[1]);
    assign  dsp_RSTM = !rstn;
    assign  dsp_RSTALUMODE = !rstn;
    assign  dsp_RSTOPMODE = !rstn;
@@ -275,14 +312,14 @@ module alu_submodule #
    begin
       comp_out_next = 1'b0;
       case (alu_opmode_reg[0][8:0])
-	 slt_op: comp_out_next = signed'(op1_reg) < signed'(op2_reg);
-	 sgt_op: comp_out_next = ~(signed'(op1_reg) < signed'(op2_reg));
-	 seq_op: comp_out_next = (op1_reg) == (op2_reg);
-	 sle_op: comp_out_next = (signed'(op1_reg) < signed'(op2_reg) || (op1_reg) == (op2_reg));
-	 sltu_op: comp_out_next = op1_reg < op2_reg;
-	 sgtu_op: comp_out_next = ~(op1_reg < op2_reg);
-	 sleu_op: comp_out_next = ((op1_reg < op2_reg) || (op1_reg == op2_reg));
-	 sneq_op: comp_out_next = ~(op1_reg == op2_reg);
+	 slt_op: comp_out_next = signed'(op1_reg_sign_ext) < signed'(op2_reg_sign_ext);
+	 sgt_op: comp_out_next = ~(signed'(op1_reg_sign_ext) < signed'(op2_reg_sign_ext));
+	 seq_op: comp_out_next = (op1_reg_sign_ext) == (op2_reg_sign_ext);
+	 sle_op: comp_out_next = (signed'(op1_reg_sign_ext) < signed'(op2_reg_sign_ext) || (op1_reg_sign_ext) == (op2_reg_sign_ext));
+	 sltu_op: comp_out_next = op1_reg_sign_ext < op2_reg_sign_ext;
+	 sgtu_op: comp_out_next = ~(op1_reg_sign_ext < op2_reg_sign_ext);
+	 sleu_op: comp_out_next = ((op1_reg_sign_ext < op2_reg_sign_ext) || (op1_reg_sign_ext == op2_reg_sign_ext));
+	 sneq_op: comp_out_next = ~(op1_reg_sign_ext == op2_reg_sign_ext);
       endcase
    end
  

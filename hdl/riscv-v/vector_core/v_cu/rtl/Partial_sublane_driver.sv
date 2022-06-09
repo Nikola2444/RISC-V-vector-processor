@@ -570,7 +570,7 @@ always_comb begin
             
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                 4'b0001 : begin                                            // REDUCTION
-                    if(read_limit_comp) begin                               // Not yet specified                  
+                    if(main_cnt == (dp0_reg.read_limit - 1 + dp0_reg.inst_delay) begin                               // Not yet specified                  
                         next_state = REDUCTION_MODE;
                         rst_main_cnt = 1;
                     end                                   

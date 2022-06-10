@@ -707,6 +707,8 @@ always_comb begin
                     end
                     7'b0010000 : begin                                            // LOAD
                         next_state = LOAD_MODE;
+		        ready_for_load_o = 1'b1;
+                        dp0_next.waddr_cnt_en = 1;
                         dp0_next.write_data_sel = 1;
                     end
                     7'b0100000 : begin                                            // INDEXED_LOAD
@@ -806,16 +808,14 @@ always_comb begin
             
         end 
         LOAD_MODE : begin
-            next_state = LOAD_MODE;
-            
-            //if(load_valid_i) begin
-                dp0_next.waddr_cnt_en = 1;
+            next_state = LOAD_MODE;            
+            //if(load_valid_i) begin            
+       	    ready_for_load_o = 1'b1;
             //end
-            ready_for_load_o = dp0_reg.waddr_cnt_en;
-            
+            //ready_for_load_o = dp0_reg.waddr_cnt_en;            
             if(load_last_i) begin
                 next_state = IDLE;
-                ready_for_load_o = 0;
+                //ready_for_load_o = 0;
             end 
         end
         REDUCTION_MODE : begin

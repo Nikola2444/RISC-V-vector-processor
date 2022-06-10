@@ -121,12 +121,11 @@ module buff_array #(
   logic [1:0]                               sbuff_strobe_rol_amt;
   // Registers for counting data during transactions
   logic [31:0]                              store_baseaddr_reg;
-  logic [$clog2(VLMAX)-1:0]                 sbuff_read_cntr,sbuff_read_cntr_next, sbuff_read_cntr_nnext;
-  logic [BATCH_CNTR_WIDTH-1:0]              sbuff_write_cntr,sbuff_write_cntr_next; 
-  logic [BATCH_CNTR_WIDTH-1:0]              sbuff_word_batch_cnt; 
-  logic [$clog2(VLMAX)-1:0]                 sbuff_word_cnt; 
-  logic [$clog2(VLMAX)-1:0]                 sbuff_byte_cnt; 
-  logic [$clog2(VLMAX)-3:0]                 sbuff_32b_cnt; 
+  logic [$clog2(VLMAX):0]                   sbuff_read_cntr,sbuff_read_cntr_next, sbuff_read_cntr_nnext;
+  logic [$clog2(VLMAX):0]                   sbuff_read_cntr_incr,sbuff_read_cntr_iincr;
+  logic [$clog2(VLMAX):0]                   sbuff_write_cntr,sbuff_write_cntr_next; 
+  logic [$clog2(VLMAX):0]                   sbuff_word_cnt; 
+  logic [$clog2(VLMAX):0]                   sbuff_byte_cnt; 
   logic [31:0]                              store_stride_reg;
   // LOAD LOGIC INTERFACE ***************
   // Read data from AXI full -> rotate right to LSB -> rotate left to right buffer location
@@ -143,15 +142,13 @@ module buff_array #(
   logic [31:0]                              lbuff_rptr_ext;
   // Registers for counting data during transactions
   logic [31:0]                              load_baseaddr_reg;
-  logic [BATCH_CNTR_WIDTH-1:0]              lbuff_word_batch_cnt; 
-  logic [BATCH_CNTR_WIDTH-1:0]              lbuff_32b_batch_cnt; 
   logic [$clog2(VLMAX)-1:0]                 lbuff_word_cnt; 
   logic [$clog2(VLMAX)-1:0]                 lbuff_byte_cnt; 
   logic [$clog2(VLMAX)-3:0]                 lbuff_32b_cnt; 
-  logic [$clog2(VLMAX)-1:0]                 libuff_read_cntr;
-  logic [BATCH_CNTR_WIDTH-1:0]              libuff_write_cntr; 
-  logic [BATCH_CNTR_WIDTH-1:0]              ldbuff_read_cntr,ldbuff_read_cntr_next; 
-  logic [$clog2(VLMAX)-1:0]                 ldbuff_write_cntr,ldbuff_write_cntr_next;
+  logic [$clog2(VLMAX)-1:0]                 libuff_read_cntr,libuff_read_cntr_next;
+  logic [$clog2(VLMAX)-1:0]                 libuff_write_cntr; 
+  logic [$clog2(VLMAX)-1:0]                 ldbuff_read_cntr,ldbuff_read_cntr_next; 
+  logic [$clog2(VLMAX)-1:0]                 ldbuff_write_cntr,ldbuff_write_cntr_next,ldbuff_write_cntr_incr;
 
   // STORE BUFFER INTERFACE ************
   // Store Data Buffer Signals
@@ -228,7 +225,7 @@ module buff_array #(
   end
 
   assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit TODO:DOUBLECHECK
-  assign ctrl_wxfer_size_o   = store_type_i[2]==1'b1 ? (sbuff_byte_cnt) : 4;
+  assign ctrl_wxfer_size_o   = store_type_i[2] ? (sbuff_byte_cnt) : 4;
 
   // Counter selects data from one store buffer to forward to axi
   always_ff @(posedge clk) begin
@@ -239,9 +236,14 @@ module buff_array #(
       sbuff_read_cntr <= sbuff_read_cntr_next;
     end
   end
-  assign sbuff_read_cntr_next  = sbuff_read_cntr + 1;
-  assign sbuff_read_cntr_nnext  = sbuff_read_cntr + (VLANE_NUM/2);
-  assign sbuff_read_done_o = store_type_i[2] ? (sbuff_read_cntr_next == sbuff_32b_cnt) : (sbuff_read_cntr_next == sbuff_word_cnt);
+  assign sbuff_read_cntr_incr  = store_type_i[2] ? 4 : (1<<cfg_store_data_sew_i[1:0]);
+  assign sbuff_read_cntr_next  = sbuff_read_cntr + sbuff_read_cntr_incr;
+  // Needed to prepare data on time when addressing high performance BRAMs
+  // When read cntr passes the treshold of VLANE_NUM/2 this counter will increment setting the next address for
+  // first VLANE/2 BRAMS. Thus, the data will be ready in time
+  assign sbuff_read_cntr_iincr = store_type_i[2] ? 4*(VLANE_NUM/2) : ((VLANE_NUM/2)<<cfg_store_data_sew_i[1:0]);
+  assign sbuff_read_cntr_nnext = sbuff_read_cntr + sbuff_read_cntr_iincr;
+  assign sbuff_read_done_o = (sbuff_read_cntr_next >= sbuff_byte_cnt);
 
 
   // Write counter addresses write ports of all store buffers
@@ -258,10 +260,14 @@ module buff_array #(
       sbuff_write_cntr <= sbuff_write_cntr_next;
     end
   end
-  assign sbuff_write_cntr_next = sbuff_write_cntr + 1;
-  assign sbuff_write_done_o = (sbuff_write_cntr_next == sbuff_word_batch_cnt);
-  assign sbuff_not_empty_o = (sbuff_write_cntr != 0);
+  //COUNTING BATCHES OF WORDS:
+  //assign sbuff_write_cntr_next = sbuff_write_cntr + (1);
+  //assign sbuff_write_done_o = (sbuff_write_cntr_next >= sbuff_word_batch_cnt);
+  //COUNTING BYTES:
+  assign sbuff_write_cntr_next = sbuff_write_cntr + ((VLANE_NUM)<<cfg_store_data_sew_i[1:0]);
+  assign sbuff_write_done_o = (sbuff_write_cntr_next >= sbuff_byte_cnt);
 
+  assign sbuff_not_empty_o = (sbuff_write_cntr != 0);
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
@@ -323,59 +329,15 @@ module buff_array #(
     end
   end
   assign sbuff_byte_cnt = sbuff_word_cnt << cfg_store_data_sew_i[1:0];
-  assign sbuff_32b_cnt  = sbuff_byte_cnt >> 2;
   assign sbuff_word_batch_cnt = sbuff_word_cnt >> $clog2(VLANE_NUM);
 
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of VLANE_NUM buffers to output 
   // READ ADDRESS SELECT
-  always_comb  begin
-    if(store_type_i[2]) begin //unit store always as 32-bit data
-      sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(VLANE_NUM)); 
-      sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)); // nnext - prepare data in advance (2 clock-delay)
-      sbuff_rdata_mux_amt = sbuff_read_cntr[0+:$clog2(VLANE_NUM)];
-    end
-    else begin // else depends on sbuff
-      case(cfg_store_data_sew_i[1:0])
-        2: // FOR SEW = 32
-        begin
-          sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(VLANE_NUM)); 
-          sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)); // nnext - prepare data in advance (2 clock-delay)
-          sbuff_rdata_mux_amt = sbuff_read_cntr[0+:$clog2(VLANE_NUM)];
-        end
-        1: // FOR SEW = 16
-        begin
-          sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(VLANE_NUM)+1);
-          sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+1);
-          sbuff_rdata_mux_amt = sbuff_read_cntr[1+:$clog2(VLANE_NUM)];
-        end
-        default: // FOR SEW = 8
-        begin
-          sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(VLANE_NUM)+2);
-          sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
-          sbuff_rdata_mux_amt = sbuff_read_cntr[2+:$clog2(VLANE_NUM)];
-        end
-      endcase
-    end
-  end
-
-  // WRITE ADDRESS SELECT
-  always_comb  begin
-    case(cfg_store_data_sew_i[1:0])
-      2: // FOR SEW = 32
-      begin
-        sdbuff_waddr        = sbuff_write_cntr; 
-      end
-      1: // FOR SEW = 16
-      begin
-        sdbuff_waddr        = sbuff_write_cntr  >>(1); 
-      end
-      default: // FOR SEW = 8
-      begin
-        sdbuff_waddr        = sbuff_write_cntr  >>(2);
-      end
-    endcase
-  end
+  assign sdbuff_raddr_curr   = sbuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
+  assign sdbuff_raddr_nnext  = sbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2); // nnext - prepare data in advance (2 clock-delay)
+  assign sbuff_rdata_mux_amt = sbuff_read_cntr[2+:$clog2(VLANE_NUM)];
+  assign sdbuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
 
   always_ff @(posedge clk) begin
     if (!rstn) begin
@@ -389,11 +351,6 @@ module buff_array #(
   end
 
   assign sbuff_rdata_mux = sdbuff_rdata[(sbuff_rdata_mux_amt_d[1])];
-
-  // Alternatively: (this way option cfg_store_data_sew=2'b11 not ignored)
-  //assign sdbuff_waddr    = sbuff_write_cntr  >>(2-cfg_store_data_sew_i[1:0]);
-  //assign sdbuff_raddr    = sbuff_read_cntr   >>$clog2(VLANE_NUM)>>(2-cfg_store_data_sew_i[1:0]);
-  //assign sbuff_rdata_mux = sdbuff_rdata[sbuff_read_cntr[(2-cfg_store_data_sew_i[1:0])+:$clog2(VLANE_NUM)]];
 
   // Selecting current addresses for sibuff
   // Multiplex selecting index from one of VLANE_NUM buffers to output 
@@ -616,8 +573,10 @@ module buff_array #(
       ldbuff_write_cntr <= ldbuff_write_cntr_next;
     end
   end
-  assign ldbuff_write_cntr_next = ldbuff_write_cntr + 1;
-  assign ldbuff_write_done_o = (ldbuff_write_cntr_next == lbuff_word_cnt);
+  // COUNTING WORDS
+  assign ldbuff_write_cntr_next = ldbuff_write_cntr + ldbuff_write_cntr_incr;
+  assign ldbuff_write_cntr_incr = (load_type_i[2])? 4 : 1<<cfg_load_data_sew_i[1:0];
+  assign ldbuff_write_done_o = (ldbuff_write_cntr_next >= lbuff_byte_cnt);
 
   // Counter for number of data read from ldbuff
   always_ff @(posedge clk) begin
@@ -627,11 +586,10 @@ module buff_array #(
       ldbuff_read_cntr <= ldbuff_read_cntr_next;
     end
   end
-  assign ldbuff_read_cntr_next = ldbuff_read_cntr + 1;
-  assign ldbuff_read_done_o = (ldbuff_read_cntr_next == lbuff_32b_batch_cnt);
+  assign ldbuff_read_cntr_next = ldbuff_read_cntr + ((VLANE_NUM)<<cfg_load_data_sew_i[1:0]);
+  assign ldbuff_read_done_o = (ldbuff_read_cntr_next >= lbuff_byte_cnt);
 
   // Data coming in from axi full needs to be rotated right so data word is at LSB position
-
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
   assign lbuff_wdata_ror_amt = ldbuff_write_cntr[1:0];
@@ -660,9 +618,8 @@ module buff_array #(
     end
   end
   assign lbuff_byte_cnt       = lbuff_word_cnt << cfg_load_data_sew_i[1:0];
-  assign lbuff_word_batch_cnt = lbuff_word_cnt >> $clog2(VLANE_NUM);
-  assign lbuff_32b_cnt        = (lbuff_byte_cnt >> 2);
-  assign lbuff_32b_batch_cnt  = lbuff_32b_cnt >> $clog2(VLANE_NUM);
+  assign ldbuff_waddr = ldbuff_write_cntr >> ($clog2(VLANE_NUM)+2);
+  assign ldbuff_raddr = ldbuff_read_cntr  >> ($clog2(VLANE_NUM)+2);
 
   // For indexed and strided operations, we need a counter saving current baseaddr
   always_ff @(posedge clk) begin
@@ -695,9 +652,10 @@ module buff_array #(
       libuff_read_cntr <= 0;
     end
     else if(libuff_ren_i) begin
-      libuff_read_cntr <= libuff_read_cntr + 1;
+      libuff_read_cntr <= libuff_read_cntr_next;
     end
   end
+  assign libuff_read_cntr_next = libuff_read_cntr + (1<<cfg_load_idx_sew_i[1:0]);
   assign libuff_read_done_o = (libuff_read_cntr >= lbuff_word_cnt);
 
   // Output barrel shifter after selecting pointer
@@ -716,8 +674,9 @@ module buff_array #(
     endcase
   end
 
+  // sign-extend the pointer
   always_comb begin
-    case(cfg_store_idx_sew_i[1:0])
+    case(cfg_load_idx_sew_i[1:0])
       2: // FOR SEW = 32
         lbuff_rptr_ext = lbuff_rptr_rol;
       1: // FOR SEW = 16
@@ -740,15 +699,11 @@ module buff_array #(
     end
     else if (libuff_wen_i) begin
       libuff_write_cntr <= libuff_write_cntr + 1;
-      if (libuff_write_cntr >= lbuff_word_batch_cnt)
-        libuff_write_done_o <= 1'b1;
     end
   end
+  assign libuff_write_done = (libuff_write_cntr >= lbuff_byte_cnt);
   assign libuff_not_empty_o = (libuff_write_cntr != 0);
   
-
-  assign ldbuff_waddr = ldbuff_write_cntr >>($clog2(VLANE_NUM));
-  assign ldbuff_raddr = ldbuff_read_cntr;
 
   // Selecting current addresses for libuff
   // Multiplex selecting index from one of VLANE_NUM buffers to output 

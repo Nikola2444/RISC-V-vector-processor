@@ -346,7 +346,7 @@ module m_cu #(
           mcu_st_rdy_o          = 1'b0;
           store_cfg_update_o    = 1'b1;
           store_cntr_rst_o      = 1'b1;
-          wr_tvalid             = 1'b1;
+          wr_tvalid             = 1'b0;
           case(store_type_reg)
             3'b001:
               store_state_next        = indexed_store_prep;
@@ -595,13 +595,13 @@ module m_cu #(
         ldbuff_wen_o  = rd_tvalid_i;
         if(rd_tlast_i && rd_tvalid_i) begin
           load_state_next = unit_load_tx;
+          mcu_ld_buffered_o       = 1'b1;
           ldbuff_rvalid         = 1'b1; // pre-read 1
           ldbuff_ren_o          = 1'b1; // pre-read 1
         end
       end
       // UNIT_LOAD
       unit_load_tx: begin
-        mcu_ld_buffered_o       = 1'b1;
         ldbuff_rvalid           = 1'b1;
         ldbuff_ren_o            = 1'b1;
         if(ldbuff_read_done_i && vlane_load_rdy_i) begin

@@ -808,9 +808,9 @@ always_comb begin
         LOAD_MODE : begin
             next_state = LOAD_MODE;
             
-            if(load_valid_i) begin
+            //if(load_valid_i) begin
                 dp0_next.waddr_cnt_en = 1;
-            end
+            //end
             ready_for_load_o = dp0_reg.waddr_cnt_en;
             
             if(load_last_i) begin

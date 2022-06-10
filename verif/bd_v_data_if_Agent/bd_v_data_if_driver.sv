@@ -54,7 +54,7 @@ class bd_v_data_if_driver extends uvm_driver#(bd_v_data_if_seq_item);
 	       begin
 		  data_offset = 0;
 		  ctrl_raddr_offset = backdoor_v_data_vif.ctrl_raddr_offset_o;
-		  ctrl_rxfer_size = backdoor_v_data_vif.ctrl_rxfer_size_o;
+		  ctrl_rxfer_size = backdoor_v_data_vif.ctrl_rxfer_size_o/4;
 		  read_channel = rd_phase;
 	       end
 	    end

@@ -169,6 +169,7 @@ module m_cu #(
   logic [1:0] libuff_rvalid_d;
   logic       sbuff_read_invalidate;
   logic       ctrl_rstart,ctrl_rstart_d;
+  logic       ctrl_wstart,ctrl_wstart_d;
   // Store Signals
   logic       save_store_type;
   logic [2:0] store_type_reg,store_type_next;
@@ -295,12 +296,17 @@ module m_cu #(
   assign load_type_next = {mcu_unit_ld_st_i,mcu_strided_ld_st_i,mcu_idx_ld_st_i};
 
   always_ff @(posedge clk, negedge rstn) begin
-    if(!rstn)
+    if(!rstn)begin
       ctrl_rstart_d            <= 0;
-    else
+      ctrl_wstart_d            <= 0;
+    end
+    else begin
       ctrl_rstart_d            <= ctrl_rstart;
+      ctrl_wstart_d            <= ctrl_wstart;
+    end
   end
   assign ctrl_rstart_o = (!ctrl_rstart_d && ctrl_rstart);// pulse
+  assign ctrl_wstart_o = (!ctrl_wstart_d && ctrl_wstart);// pulse
 
   assign load_type_o           = load_type_reg;
   assign cfg_load_data_lmul_o  = load_data_lmul_reg;
@@ -328,7 +334,7 @@ module m_cu #(
     sbuff_wen_o             = 1'b0;
     sbuff_ren_o             = 1'b0;
     store_cntr_rst_o        = 1'b0;
-    ctrl_wstart_o           = 1'b0;
+    ctrl_wstart             = 1'b0;
     wr_tvalid               = 1'b0;
 
     case (store_state_reg)
@@ -383,7 +389,7 @@ module m_cu #(
         vlane_store_rdy_o = 1'b1;
         if(sbuff_write_done_i && vlane_store_dvalid_i) begin
           store_state_next = unit_store_tx;
-          ctrl_wstart_o         = 1'b1;
+          ctrl_wstart           = 1'b1;
           wr_tvalid             = 1'b1; // pre-read 1
           sbuff_ren_o           = 1'b1; // pre-read 1
         end
@@ -427,7 +433,7 @@ module m_cu #(
           sbuff_ren_o      = 1'b1;
           wr_tvalid        = 1'b1;
         end
-        ctrl_wstart_o      = 1'b1;
+        ctrl_wstart        = 1'b1;
         sbuff_read_invalidate = 1'b1;
         store_state_next = strided_store_tx;
       end
@@ -468,7 +474,7 @@ module m_cu #(
       indexed_store_tx_init: begin
         sbuff_read_stall_o      = 1'b1;
         sbuff_ren_o             = 1'b0;
-        ctrl_wstart_o           = 1'b1;
+        ctrl_wstart             = 1'b1;
         sbuff_read_invalidate   = 1'b1;
         store_state_next        = indexed_store_tx;
       end
@@ -482,7 +488,7 @@ module m_cu #(
           sbuff_ren_o           = 1'b1;
           wr_tvalid             = 1'b1;
         end
-        ctrl_wstart_o           = 1'b1;
+        ctrl_wstart             = 1'b1;
         sbuff_read_invalidate   = 1'b1;
         store_state_next        = indexed_store_tx;
       end
@@ -507,8 +513,6 @@ module m_cu #(
     endcase
   end
   
-  // TODO THIS IS A COPY OF A PREVIOUS FSM
-  // TODO CONVERTING TO LOAD FSM IN PROGRESS
   // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL
   always_comb begin
     // default values for output signals
@@ -589,8 +593,7 @@ module m_cu #(
         ctrl_rstart   = 1'b1;
         rd_tready_o   = 1'b1;
         ldbuff_wen_o  = rd_tvalid_i;
-        if(rd_tlast_i) begin
-          mcu_ld_buffered_o     = 1'b1;
+        if(rd_tlast_i && rd_tvalid_i) begin
           load_state_next = unit_load_tx;
           ldbuff_rvalid         = 1'b1; // pre-read 1
           ldbuff_ren_o          = 1'b1; // pre-read 1
@@ -598,6 +601,7 @@ module m_cu #(
       end
       // UNIT_LOAD
       unit_load_tx: begin
+        mcu_ld_buffered_o       = 1'b1;
         ldbuff_rvalid           = 1'b1;
         ldbuff_ren_o            = 1'b1;
         if(ldbuff_read_done_i && vlane_load_rdy_i) begin
@@ -643,7 +647,7 @@ module m_cu #(
       // STRIDED_TX
       strided_load_tx: begin
         ldbuff_rvalid           = 1'b1;
-        if(wr_tready_i) begin
+        if(rd_tvalid_i) begin
           ldbuff_ren_o          = 1'b1;
         end
         else begin
@@ -704,7 +708,7 @@ module m_cu #(
       // INDEXED_TX
       indexed_load_tx: begin
         ldbuff_rvalid           = 1'b1;
-        if(wr_tready_i) begin
+        if(rd_tvalid_i) begin
           ldbuff_ren_o          = 1'b1;
         end
         else begin

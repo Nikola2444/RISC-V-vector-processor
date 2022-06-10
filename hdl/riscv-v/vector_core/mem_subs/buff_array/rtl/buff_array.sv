@@ -875,7 +875,7 @@ module buff_array #(
     always_comb begin
       case(cfg_load_data_sew_i[1:0])
         2: begin       // FOR SEW = 32
-          lbuff_wdata_mux[vlane] = rd_tdata_i[vlane];
+          lbuff_wdata_mux[vlane] = rd_tdata_i;
         end
         1: begin       // FOR SEW = 16
           lbuff_wdata_mux[vlane] = {rd_tdata_i[(vlane%2)*16+:16], rd_tdata_i[(vlane%2)*16+:16]};

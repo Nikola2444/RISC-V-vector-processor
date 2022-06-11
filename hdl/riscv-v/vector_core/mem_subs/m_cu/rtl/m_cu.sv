@@ -59,6 +59,7 @@ module m_cu #(
   input  logic                                   sbuff_not_empty_i       ,
   input  logic                                   sbuff_write_done_i      ,
   input  logic                                   sbuff_read_done_i       ,
+  input  logic                                   sbuff_read_rdy_i        ,
   // MCU <=> BUFF_ARRAY CONTROL IF [loads]
   output logic                                   load_cfg_update_o       ,
   output logic                                   load_cntr_rst_o         ,
@@ -170,11 +171,14 @@ module m_cu #(
   logic       sbuff_read_invalidate;
   logic       ctrl_rstart,ctrl_rstart_d;
   logic       ctrl_wstart,ctrl_wstart_d;
+  logic       start_store_read_fsm,store_read_fsm_done;
   // Store Signals
   logic       save_store_type;
   logic [2:0] store_type_reg,store_type_next;
-  typedef enum logic[3:0] {store_idle, store_idle_buffed, unit_store_prep, unit_store_tx, strided_store_prep, strided_store_tx_prep, strided_store_tx, indexed_store_prep, indexed_store_tx_init, indexed_store_tx_prep, indexed_store_tx} store_fsm;
-  store_fsm store_state_reg, store_state_next;
+  typedef enum logic[3:0] {store_write_idle, store_write_idle_buffed, store_write, store_write_wait} write_store_fsm;
+  write_store_fsm store_write_state_reg, store_write_state_next;
+  typedef enum logic[3:0] {store_read_idle, store_read_unit, store_read_strided, store_read_indexed} read_store_fsm;
+  read_store_fsm store_read_state_reg, store_read_state_next;
   // LOAD Signals
   typedef enum logic[3:0] {load_idle, unit_load_prep, unit_load_tx, strided_load_prep, strided_load_tx_prep, strided_load_tx, indexed_load_prep, indexed_load_tx_init, indexed_load_tx_prep, indexed_load_tx} load_fsm;
   load_fsm load_state_reg, load_state_next;
@@ -195,24 +199,14 @@ module m_cu #(
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn) begin
-      store_state_reg <= store_idle;
+      store_write_state_reg <= store_write_idle;
+      store_read_state_reg  <= store_read_idle;
       load_state_reg  <= load_idle;
     end
     else begin
-      store_state_reg <= store_state_next;
+      store_write_state_reg <= store_write_state_next;
+      store_read_state_reg  <= store_read_state_next;
       load_state_reg  <= load_state_next;
-    end
-  end
-
-  always_ff @(posedge clk, negedge rstn)
-  begin
-    if(!rstn)begin
-      mcu_st_vld_reg      <= 0;
-      mcu_ld_vld_reg      <= 0;
-    end
-    else begin
-      mcu_st_vld_reg      <= mcu_st_vld_i;
-      mcu_ld_vld_reg      <= mcu_ld_vld_i;
     end
   end
 
@@ -313,10 +307,154 @@ module m_cu #(
   assign cfg_load_data_sew_o   = load_data_sew_reg;
   assign cfg_load_idx_lmul_o   = load_idx_lmul_reg;
   assign cfg_load_idx_sew_o    = load_idx_sew_reg;
+
+
+  assign store_baseaddr_o      = mcu_base_addr_i;
+
+  // WRITE WRITE WRITE WRITE WRITE WRITE WRITE WRITE 
+  // MAIN WRITE STORE FSM M_CU NEXTSTATE & CONTROL
+  always_comb begin
+    // default values for output signals
+    store_write_state_next  = store_write_state_reg;
+    store_data_lmul_next    = store_data_lmul_reg;
+    store_data_sew_next     = store_data_sew_reg;
+    store_idx_lmul_next     = store_idx_lmul_reg;
+    store_idx_sew_next      = store_idx_sew_reg;
+    vlane_store_rdy_o       = 1'b0;
+    store_cfg_update_o      = 1'b0;
+    mcu_st_rdy_o            = 1'b0;
+    store_baseaddr_set_o    = 1'b0;
+    save_store_type         = 1'b0;
+    sbuff_wen_o             = 1'b0;
+    store_cntr_rst_o        = 1'b0;
+    start_store_read_fsm    = 1'b0;
+
+    case (store_write_state_reg)
+      // IDLE
+      store_write_idle: begin
+        mcu_st_rdy_o             = 1'b1;
+        if(mcu_st_vld_i)begin // Buffer the configuration
+          save_store_type        = 1'b1;
+          store_baseaddr_set_o   = 1'b1;
+          store_write_state_next = store_write_idle_buffed;
+          case(store_type_next)
+            3'b001:begin
+              store_data_sew_next     = mcu_sew_i;
+              store_data_lmul_next    = mcu_lmul_i;
+              store_idx_sew_next      = mcu_data_width_i;
+              store_idx_lmul_next     = emul;
+            end
+            3'b010:begin
+              store_data_sew_next     = mcu_data_width_i;
+              store_data_lmul_next    = emul;
+              store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+              store_idx_lmul_next     = emul;              // Not used in this context
+            end
+            default begin
+              store_data_sew_next     = mcu_data_width_i;
+              store_data_lmul_next    = emul;
+              store_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+              store_idx_lmul_next     = emul;              // Not used in this context
+            end
+          endcase
+        end
+      end
+      store_write_idle_buffed:begin
+        store_cfg_update_o    = 1'b1;
+        store_cntr_rst_o      = 1'b1;
+        store_write_state_next= store_write;
+        start_store_read_fsm  = 1'b1;
+      end
+
+      // UNIVERSAL STORE WRITE
+      store_write: begin
+        sbuff_wen_o = vlane_store_dvalid_i;
+        vlane_store_rdy_o = 1'b1;
+        if(sbuff_write_done_i && vlane_store_dvalid_i) begin
+          store_write_state_next = store_write_wait;
+        end
+      end
+
+      // UNIVERSAL STORE WRITE
+      store_write_wait: begin
+        if(store_read_fsm_done) begin
+          store_write_state_next = store_write_idle;
+        end
+      end
+
+      default begin
+      // SEE TOP OF CASE STATEMENT
+      end
+    endcase
+  end
+
+
+  // READ READ READ READ READ READ READ READ READ READ READ
+  // MAIN STORE READ FSM M_CU NEXTSTATE & CONTROL
+  always_comb begin
+    // default values for output signals
+    store_read_state_next   = store_read_state_reg;
+    store_baseaddr_update_o = 1'b0;
+    sbuff_read_stall_o      = 1'b0;
+    sbuff_read_invalidate   = 1'b0;
+    sbuff_read_flush_o      = 1'b0;
+    sbuff_ren_o             = 1'b0;
+    ctrl_wstart             = 1'b0;
+    wr_tvalid               = 1'b0;
+    store_read_fsm_done     = 1'b0;
+
+    case (store_read_state_reg)
+      // IDLE
+      store_read_idle: begin
+      if(start_store_read_fsm)
+        case(store_type_reg)
+          3'b001:begin
+            store_read_state_next = store_read_indexed;
+          end
+          3'b010:begin
+            store_read_state_next = store_read_strided;
+          end
+          default begin
+            store_read_state_next = store_read_unit;
+            ctrl_wstart           = 1'b1;
+          end
+        endcase
+      end
+      // UNIT_STORE
+      store_read_unit: begin
+        if(sbuff_read_rdy_i)begin
+          wr_tvalid               = 1'b1;
+          sbuff_ren_o             = 1'b1;
+          if(ctrl_wdone_i)begin
+            store_read_state_next = store_read_idle;
+            store_read_fsm_done   = 1'b1;
+          end
+          if(sbuff_read_done_i && wr_tready_i) begin
+            wr_tvalid             = 1'b0;
+            sbuff_ren_o           = 1'b0;
+          end
+          if(!wr_tready_i) begin
+            sbuff_read_stall_o    = 1'b1;
+            sbuff_ren_o           = 1'b0;
+          end
+        end
+        else begin //data not ready in buffer
+          sbuff_read_stall_o    = 1'b1;
+          sbuff_ren_o           = 1'b0;
+          sbuff_read_invalidate = 1'b1;
+        end
+      end
+
+      default begin
+      // SEE TOP OF CASE STATEMENT
+      end
+    endcase
+  end
+/*
   // MAIN STORE FSM M_CU NEXTSTATE & CONTROL
   always_comb begin
     // default values for output signals
-    store_state_next        = store_state_reg;
+    store_write_state_next        = store_write_state_reg;
     store_data_lmul_next    = store_data_lmul_reg;
     store_data_sew_next     = store_data_sew_reg;
     store_idx_lmul_next     = store_idx_lmul_reg;
@@ -336,8 +474,9 @@ module m_cu #(
     store_cntr_rst_o        = 1'b0;
     ctrl_wstart             = 1'b0;
     wr_tvalid               = 1'b0;
+    mcu_st_vld_next         = 1'b0
 
-    case (store_state_reg)
+    case (store_write_state_reg)
       // IDLE
       store_idle: begin
         mcu_st_rdy_o          = 1'b1;
@@ -349,16 +488,17 @@ module m_cu #(
           wr_tvalid             = 1'b0;
           case(store_type_reg)
             3'b001:
-              store_state_next        = indexed_store_prep;
+              store_write_state_next        = indexed_store_prep;
             3'b010:
-              store_state_next        = strided_store_prep;
+              store_write_state_next        = strided_store_prep;
             default
-              store_state_next        = unit_store_prep;
+              store_write_state_next        = unit_store_prep;
           endcase
         end
         else if(mcu_st_vld_i)begin // Buffer the configuration
           save_store_type       = 1'b1;
           store_baseaddr_set_o  = 1'b1;
+          mcu_st_vld_next       = mcu_st_vld_i;
           case(store_type_next)
             3'b001:begin
               store_data_sew_next     = mcu_sew_i;
@@ -388,7 +528,7 @@ module m_cu #(
         sbuff_wen_o = vlane_store_dvalid_i;
         vlane_store_rdy_o = 1'b1;
         if(sbuff_write_done_i && vlane_store_dvalid_i) begin
-          store_state_next = unit_store_tx;
+          store_write_state_next = unit_store_tx;
           ctrl_wstart           = 1'b1;
           wr_tvalid             = 1'b1; // pre-read 1
           sbuff_ren_o           = 1'b1; // pre-read 1
@@ -399,7 +539,7 @@ module m_cu #(
         wr_tvalid               = 1'b1;
         sbuff_ren_o             = 1'b1;
         if(ctrl_wdone_i)
-          store_state_next = store_idle;
+          store_write_state_next = store_idle;
         if(sbuff_read_done_i && wr_tready_i) begin
           wr_tvalid             = 1'b0;
           sbuff_ren_o           = 1'b0;
@@ -416,7 +556,7 @@ module m_cu #(
         vlane_store_rdy_o = 1'b1;
         sbuff_wen_o = vlane_store_dvalid_i;
         if(sbuff_write_done_i) begin
-          store_state_next      = strided_store_tx_prep;
+          store_write_state_next      = strided_store_tx_prep;
           sbuff_wen_o           = 1'b0;
           store_baseaddr_set_o  = 1'b1;
           sbuff_ren_o           = 1'b1;
@@ -435,7 +575,7 @@ module m_cu #(
         end
         ctrl_wstart        = 1'b1;
         sbuff_read_invalidate = 1'b1;
-        store_state_next = strided_store_tx;
+        store_write_state_next = strided_store_tx;
       end
       // STRIDED_TX
       strided_store_tx: begin
@@ -446,9 +586,9 @@ module m_cu #(
         if (ctrl_wdone_i) begin
           store_baseaddr_update_o = 1'b1;
           if(sbuff_read_done_i && (wr_tvalid_d[1:0]==0))
-            store_state_next = store_idle;
+            store_write_state_next = store_idle;
           else
-            store_state_next = strided_store_tx_prep;
+            store_write_state_next = strided_store_tx_prep;
         end
       end
 
@@ -464,7 +604,7 @@ module m_cu #(
           sbuff_ren_o             = 1'b1;
           wr_tvalid               = 1'b1;
           if(wr_tvalid_d[1]==1'b1) begin // index is @ output register
-            store_state_next        = indexed_store_tx_prep;
+            store_write_state_next        = indexed_store_tx_prep;
             store_baseaddr_set_o  = 1'b0;
             store_baseaddr_update_o = 1'b1;
           end
@@ -476,7 +616,7 @@ module m_cu #(
         sbuff_ren_o             = 1'b0;
         ctrl_wstart             = 1'b1;
         sbuff_read_invalidate   = 1'b1;
-        store_state_next        = indexed_store_tx;
+        store_write_state_next        = indexed_store_tx;
       end
       // INDEXED_TX_PREP
       indexed_store_tx_prep: begin
@@ -490,7 +630,7 @@ module m_cu #(
         end
         ctrl_wstart             = 1'b1;
         sbuff_read_invalidate   = 1'b1;
-        store_state_next        = indexed_store_tx;
+        store_write_state_next        = indexed_store_tx;
       end
       // INDEXED_TX
       indexed_store_tx: begin
@@ -501,9 +641,9 @@ module m_cu #(
         if (ctrl_wdone_i) begin
           store_baseaddr_update_o = 1'b1;
           if(sbuff_read_done_i && (wr_tvalid_d[1:0]==0))
-            store_state_next = store_idle;
+            store_write_state_next = store_idle;
           else
-            store_state_next = indexed_store_tx_prep;
+            store_write_state_next = indexed_store_tx_prep;
         end
       end
       // DEFAULT
@@ -512,6 +652,7 @@ module m_cu #(
       end
     endcase
   end
+  */
   
   // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL
   always_comb begin

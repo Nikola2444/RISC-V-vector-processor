@@ -80,7 +80,7 @@ module m_cu_tb();
 
 mem_subsys #(
   .VLEN               (VLEN              ),
-  .VLANE_NUM         (VLANE_NUM        ),
+  .VLANE_NUM          (VLANE_NUM        ),
   .MAX_VECTORS_BUFFD  (MAX_VECTORS_BUFFD ),
   .C_M_AXI_ADDR_WIDTH (C_M_AXI_ADDR_WIDTH),
   .C_M_AXI_DATA_WIDTH (C_M_AXI_DATA_WIDTH),
@@ -147,8 +147,8 @@ mem_subsys #(
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   assign mcu_vl = 1024;
-  int sew_in_bytes = 2;
-  int store1_load2 = 2;
+  int sew_in_bytes = 4;
+  int store1_load2 = 1;
   
   // SCHEDULER DRIVER
   initial

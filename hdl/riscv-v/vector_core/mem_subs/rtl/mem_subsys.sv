@@ -98,6 +98,7 @@ module mem_subsys #(
   logic                                   sbuff_not_empty      ;
   logic                                   sbuff_write_done     ;
   logic                                   sbuff_read_done      ;
+  logic                                   sbuff_read_rdy       ;
   // MCU <=> BUFF_ARRAY CONTROL IF [loads]
   logic                                   load_cfg_update      ;
   logic                                   load_cntr_rst        ;
@@ -172,6 +173,7 @@ module mem_subsys #(
  .sbuff_not_empty_i       (sbuff_not_empty     ),
  .sbuff_write_done_i      (sbuff_write_done    ),
  .sbuff_read_done_i       (sbuff_read_done     ),
+ .sbuff_read_rdy_i        (sbuff_read_rdy      ),
  .load_cfg_update_o       (load_cfg_update     ),
  .load_cntr_rst_o         (load_cntr_rst       ),
  .load_type_o             (load_type           ),
@@ -243,6 +245,7 @@ module mem_subsys #(
  .sbuff_not_empty_o       (sbuff_not_empty      ),
  .sbuff_write_done_o      (sbuff_write_done     ),
  .sbuff_read_done_o       (sbuff_read_done      ),
+ .sbuff_read_rdy_o        (sbuff_read_rdy       ),
  .load_cfg_update_i       (load_cfg_update      ),
  .load_cntr_rst_i         (load_cntr_rst        ),
  .load_type_i             (load_type            ),

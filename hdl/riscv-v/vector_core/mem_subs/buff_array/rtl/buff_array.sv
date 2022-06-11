@@ -43,6 +43,7 @@ module buff_array #(
   output logic                                   sbuff_not_empty_o       ,
   output logic                                   sbuff_write_done_o      ,
   output logic                                   sbuff_read_done_o       ,
+  output logic                                   sbuff_read_rdy_o        ,
   // M_CU <=> BUFF_ARRAY IF [loads]
   input  logic                                   load_cfg_update_i       ,
   input  logic                                   load_cntr_rst_i         ,
@@ -245,6 +246,7 @@ module buff_array #(
   assign sbuff_read_cntr_nnext = sbuff_read_cntr + sbuff_read_cntr_iincr;
   assign sbuff_read_done_o = (sbuff_read_cntr_next >= sbuff_byte_cnt);
 
+  assign sbuff_read_rdy_o = (sbuff_write_cntr > sbuff_read_cntr);
 
   // Write counter addresses write ports of all store buffers
   // Each store buffer is then selected with sbuff_wen_i

@@ -1,11 +1,14 @@
 .text                     # Start text section
     .balign 4                 # align 4 byte instructions by 4 bytes
 
-    vle32.v v10, (a3)	
-    vse32.v v1, (a4)
+    vle32.v v10, (a3)
     vsub.vv v4, v2, v3    
     vadd.vv v5, v2, v3
     vadd.vv v6, v5, v4
+    addi x1, x2, 1
+    vslideup.vx v10, v10, x1  
+    
+    
     vsetvli x2, x0, e16, m1
     vor.vv  v2, v5, v3
     vand.vv v5, v2, v3

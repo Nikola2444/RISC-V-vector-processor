@@ -275,8 +275,9 @@ assign ALU_ctrl_o = dp0_reg.ALU_opmode;
 assign reduction_op_o = dp0_reg.reduction_op;
 assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 // Slides //
-assign SA_complete_lane = slide_amount_i[$clog2(VLANE_NUM) - 1 : 0];
-assign slide_complete_lane_adder = !SA_complete_lane + 1;
+//assign SA_complete_lane = slide_amount_i[$clog2(VLANE_NUM) - 1 : 0];
+assign SA_complete_lane = dp0_reg.slide_amount[$clog2(VLANE_NUM) - 1 : 0];
+   assign slide_complete_lane_adder = ~SA_complete_lane + 1;
 assign dp1_next[VRF_DELAY - 1].waddr = waddr;
 assign dp0_next.bwen_ff = bwen_mux;
 assign dp0_next.waddr_ff = waddr;

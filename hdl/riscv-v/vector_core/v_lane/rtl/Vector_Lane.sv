@@ -70,7 +70,7 @@ module Vector_Lane
      ////////////////////////////////////////////////
      localparam VRF_DELAY = 3;
    localparam VMRF_DELAY = 2;
-   localparam SLIDE_PORT_ID = 0;
+   localparam SLIDE_PORT_ID = 1;
    ////////////////////////////////////////////////
     
    // Generate variable    
@@ -177,6 +177,11 @@ module Vector_Lane
    logic [W_PORTS_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][31 : 0] 				    store_load_index_mux;
    logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 				    store_load_index_mux_sel;
    ////////////////////////////////////////////////
+
+   // slide data
+   ////////////////////////////////////////////////
+   logic [VMRF_DELAY-1:0][31:0] 							    slide_data_reg;
+   ////////////////////////////////////////////////
    
    // Moduls instantiation
    ////////////////////////////////////////////////
@@ -268,6 +273,15 @@ module Vector_Lane
    ////////////////////////////////////////////////
        // Choosing slide data
    assign slide_data_o = vrf_rdata[SLIDE_PORT_ID];
+
+   always_ff@(posedge clk_i)
+   begin
+      if (!rst_i)
+	slide_data_reg <= 0;
+      else
+	slide_data_reg <= {slide_data_reg[VMRF_DELAY-2:0], slide_data_i};
+			
+   end
 
    ////////////////////////////////////////////////
    // Pipeline registers for data on the same level as ALU
@@ -373,7 +387,7 @@ module Vector_Lane
             case(write_data_mux_sel[j_gen])
                0: vrf_wdata_mux[j_gen] = ALU_data_o[j_gen];
                1: vrf_wdata_mux[j_gen] = load_data_i;
-               2: vrf_wdata_mux[j_gen] = slide_data_i;
+               2: vrf_wdata_mux[j_gen] = slide_data_reg[VMRF_DELAY-1];
                3: vrf_wdata_mux[j_gen] = 0; // Should insert an assert
                default: vrf_wdata_mux[j_gen] = 0;
             endcase
@@ -414,36 +428,37 @@ module Vector_Lane
          always_ff@(posedge clk_i) begin
             if(!rst_i) begin
                for(int i = 0; i < VMRF_DELAY; i++) begin
-                  vrf_write_reg[i][j_gen] <= 0;
-                  vmrf_write_reg[i][j_gen] <= 0;
-                  vm_reg[i][j_gen] <= 0;
+                  vrf_write_reg[i][j_gen] 	 <= 0;
+                  vmrf_write_reg[i][j_gen] 	 <= 0;
+                  vm_reg[i][j_gen] 		 <= 0;
                   alu_output_valid_reg[i][j_gen] <= 0;
-                  request_control_reg[i][j_gen] <= 0;
+                  request_control_reg[i][j_gen]  <= 0;		 
                end
             end
             else begin
                for(int i = 0; i < VMRF_DELAY; i++) begin
-                  vrf_write_reg[i][j_gen] <= vrf_write_next[i][j_gen];
-                  vmrf_write_reg[i][j_gen] <= vmrf_write_next[i][j_gen];
-                  vm_reg[i][j_gen] <= vm_next[i][j_gen];
+                  vrf_write_reg[i][j_gen] 	 <= vrf_write_next[i][j_gen];
+                  vmrf_write_reg[i][j_gen] 	 <= vmrf_write_next[i][j_gen];
+                  vm_reg[i][j_gen] 		 <= vm_next[i][j_gen];
                   alu_output_valid_reg[i][j_gen] <= alu_output_valid_next[i][j_gen];
-                  request_control_reg[i][j_gen] <= request_control_next[i][j_gen];
+                  request_control_reg[i][j_gen]  <= request_control_next[i][j_gen];
+		  
                end
             end
          end
          
          always_comb begin
             for(int i = 0; i < VMRF_DELAY - 1; i++) begin
-               vrf_write_next[i + 1][j_gen] = vrf_write_reg[i][j_gen];
-               vmrf_write_next[i + 1][j_gen] <= vmrf_write_reg[i][j_gen];
-               vm_next[i + 1][j_gen] <= vm_reg[i][j_gen];
-               alu_output_valid_next[i + 1][j_gen] <= alu_output_valid_reg[i][j_gen];
-               request_control_next[i + 1][j_gen] <= request_control_reg[i][j_gen];
+               vrf_write_next[i + 1][j_gen] 	   = vrf_write_reg[i][j_gen];
+               vmrf_write_next[i + 1][j_gen] 	   = vmrf_write_reg[i][j_gen];
+               vm_next[i + 1][j_gen] 		   = vm_reg[i][j_gen];
+               alu_output_valid_next[i + 1][j_gen] = alu_output_valid_reg[i][j_gen];
+               request_control_next[i + 1][j_gen]  = request_control_reg[i][j_gen];
             end
-            vrf_write_next[0][j_gen] = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]};
-            vmrf_write_next[0][j_gen] = {vmrf_wen_i[j_gen], ALU_vector_mask_o[j_gen], vmrf_addr_i[j_gen]};
-            vm_next[0][j_gen] = vector_mask_i[j_gen];
-            request_control_next[0][j_gen] <= request_control_i[j_gen];
+            vrf_write_next[0][j_gen] 	   = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]};
+            vmrf_write_next[0][j_gen] 	   = {vmrf_wen_i[j_gen], ALU_vector_mask_o[j_gen], vmrf_addr_i[j_gen]};
+            vm_next[0][j_gen] 		   = vector_mask_i[j_gen];
+            request_control_next[0][j_gen] = request_control_i[j_gen];
          end
          
          // Generate VRF read assignments
@@ -454,7 +469,7 @@ module Vector_Lane
                                   (alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_reg[VMRF_DELAY - 1][j_gen]);
          assign vmrf_wdata[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE)];
          assign vmrf_waddr[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE) - 1 : 0];
-         assign bwen_mux_sel[j_gen] = vm_reg[VMRF_DELAY - 1][j_gen];
+         assign bwen_mux_sel[j_gen] = vm_reg[VMRF_DELAY - 1][j_gen]; // 
          assign write_data_mux_sel[j_gen] = write_data_sel_i[j_gen];
          assign ALU_output_o[j_gen] = ALU_data_o[j_gen];
 

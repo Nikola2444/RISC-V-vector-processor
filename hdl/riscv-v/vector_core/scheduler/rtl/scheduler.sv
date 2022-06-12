@@ -88,16 +88,28 @@ module scheduler
 	 vector_instr_reg  <= 'h0;
 	 scalar_rs1_reg    <= 'h0;
 	 scalar_rs2_reg    <= 'h0;
-	 v_OPCFG_check_reg <= 1'b0;
       end
       else if (next_instr_rdy)
       begin
 	 vector_instr_reg  <= vector_instr_next;
 	 scalar_rs1_reg    <= rs1_i;
 	 scalar_rs2_reg    <= rs2_i;
+      end
+   end
+
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 v_OPCFG_check_reg <= 1'b0;
+      end
+      else
+      begin
 	 v_OPCFG_check_reg <= v_OPCFG_check;
       end
    end
+
+   
 
    //if the instructions is indexed load, for the next instruction we insert the second part of that instruction which is
    // a simple vector load.

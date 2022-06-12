@@ -6,15 +6,16 @@ Disassembly of section .text:
 
 0000000000000000 <.text>:
    0:	0206e507          	vle32.v	v10,(a3)
-   4:	020760a7          	vse32.v	v1,(a4)
-   8:	0a218257          	vsub.vv	v4,v2,v3
-   c:	022182d7          	vadd.vv	v5,v2,v3
-  10:	02520357          	vadd.vv	v6,v5,v4
-  14:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
-  18:	2a518157          	vor.vv	v2,v5,v3
-  1c:	262182d7          	vand.vv	v5,v2,v3
-  20:	2a518157          	vor.vv	v2,v5,v3
-  24:	262182d7          	vand.vv	v5,v2,v3
-  28:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
-  2c:	02838357          	vadd.vv	v6,v8,v7
-  30:	0a520157          	vsub.vv	v2,v5,v4
+   4:	0a218257          	vsub.vv	v4,v2,v3
+   8:	022182d7          	vadd.vv	v5,v2,v3
+   c:	02520357          	vadd.vv	v6,v5,v4
+  10:	00110093          	addi	ra,sp,1
+  14:	3aa0c557          	vslideup.vx	v10,v10,ra
+  18:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
+  1c:	2a518157          	vor.vv	v2,v5,v3
+  20:	262182d7          	vand.vv	v5,v2,v3
+  24:	2a518157          	vor.vv	v2,v5,v3
+  28:	262182d7          	vand.vv	v5,v2,v3
+  2c:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
+  30:	02838357          	vadd.vv	v6,v8,v7
+  34:	0a520157          	vsub.vv	v2,v5,v4

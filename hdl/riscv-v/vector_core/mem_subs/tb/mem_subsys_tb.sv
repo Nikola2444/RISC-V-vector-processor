@@ -146,9 +146,9 @@ mem_subsys #(
   end
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  assign mcu_vl = 1024;
-  int sew_in_bytes = 4;
-  int store1_load2 = 1;
+  assign mcu_vl = 249;
+  int sew_in_bytes = 1;
+  int store1_load2 = 2;
   
   // SCHEDULER DRIVER
   initial
@@ -207,6 +207,8 @@ mem_subsys #(
     mcu_unit_ld_st       =0;
     mcu_st_vld           =0;
     mcu_ld_vld           =0;
+
+    
   end
 
    
@@ -253,6 +255,7 @@ mem_subsys #(
       end
       @(negedge clk);
       ctrl_wdone <= 1'b0;
+      write_word_num<=0;
     end
   end
 
@@ -260,7 +263,7 @@ mem_subsys #(
   // LOAD SIGNAL INTERFACE ************************************
   // LANE INTERFACE
   
-  initial begin
+  always begin
     vlane_load_rdy <= 1'b0;
     @(negedge clk);
     @(posedge mcu_ld_buffered);
@@ -312,6 +315,7 @@ mem_subsys #(
       end
       @(negedge clk);
       ctrl_rdone <= 1'b0;
+      read_word_num <= 0;
     end
   end
 

@@ -117,6 +117,7 @@ module mem_subsys #(
   logic                                   ldbuff_read_stall    ;
   logic                                   ldbuff_read_flush    ;
   logic                                   ldbuff_wen           ;
+  logic                                   ldbuff_wlast         ;
   logic                                   ldbuff_ren           ;
   logic                                   ldbuff_not_empty     ;
   logic                                   ldbuff_write_done    ;
@@ -191,6 +192,7 @@ module mem_subsys #(
  .ldbuff_read_stall_o     (ldbuff_read_stall   ),
  .ldbuff_read_flush_o     (ldbuff_read_flush   ),
  .ldbuff_wen_o            (ldbuff_wen          ),
+ .ldbuff_wlast_o          (ldbuff_wlast        ),
  .ldbuff_ren_o            (ldbuff_ren          ),
  .ldbuff_not_empty_i      (ldbuff_not_empty    ),
  .ldbuff_write_done_i     (ldbuff_write_done   ),
@@ -214,7 +216,7 @@ module mem_subsys #(
 
  buff_array #(
   .VLEN               (VLEN              ),
-  .VLANE_NUM          (VLANE_NUM        ),
+  .VLANE_NUM          (VLANE_NUM         ),
   .MAX_VECTORS_BUFFD  (MAX_VECTORS_BUFFD ),
   .C_M_AXI_ADDR_WIDTH (C_M_AXI_ADDR_WIDTH),
   .C_M_AXI_DATA_WIDTH (C_M_AXI_DATA_WIDTH),
@@ -222,7 +224,7 @@ module mem_subsys #(
 ) buff_array_instance (
  .clk                     (clk                  ),
  .rstn                    (rstn                 ),
- .cfg_vl_i                (cfg_vl            ),
+ .cfg_vl_i                (cfg_vl               ),
  .cfg_store_data_lmul_i   (cfg_store_data_lmul  ),
  .cfg_store_idx_lmul_i    (cfg_store_idx_lmul   ),
  .cfg_store_data_sew_i    (cfg_store_data_sew   ),
@@ -258,6 +260,7 @@ module mem_subsys #(
  .libuff_read_stall_i     (libuff_read_stall    ),
  .libuff_read_flush_i     (libuff_read_flush    ),
  .ldbuff_wen_i            (ldbuff_wen           ),
+ .ldbuff_wlast_i          (ldbuff_wlast         ),
  .ldbuff_ren_i            (ldbuff_ren           ),
  .libuff_wen_i            (libuff_wen           ),
  .libuff_ren_i            (libuff_ren           ),

@@ -78,6 +78,7 @@ module m_cu #(
   output logic                                   ldbuff_read_stall_o     ,
   output logic                                   ldbuff_read_flush_o     ,
   output logic                                   ldbuff_wen_o            ,
+  output logic                                   ldbuff_wlast_o          ,
   output logic                                   ldbuff_ren_o            ,
   input  logic                                   ldbuff_not_empty_i      ,
   input  logic                                   ldbuff_write_done_i     ,
@@ -180,10 +181,13 @@ module m_cu #(
   typedef enum logic[3:0] {store_read_idle, store_read_unit, store_read_strided, store_read_indexed} read_store_fsm;
   read_store_fsm store_read_state_reg, store_read_state_next;
   // LOAD Signals
-  typedef enum logic[3:0] {load_idle, unit_load_prep, unit_load_tx, strided_load_prep, strided_load_tx_prep, strided_load_tx, indexed_load_prep, indexed_load_tx_init, indexed_load_tx_prep, indexed_load_tx} load_fsm;
-  load_fsm load_state_reg, load_state_next;
+  typedef enum logic[3:0] {load_read_idle, load_read_idle_buffed, load_read_wait, load_read} read_load_fsm;
+  read_load_fsm load_read_state_reg, load_read_state_next;
+  typedef enum logic[3:0] {load_write_idle, load_write_unit, load_write_strided, load_write_indexed} write_load_fsm;
+  write_load_fsm load_write_state_reg, load_write_state_next;
   logic       save_load_type;
   logic [2:0] load_type_reg,load_type_next;
+  logic       start_load_write_fsm;
 
   ///////////////////////////////////////////////////////////////////////////////
   // Begin RTL
@@ -195,18 +199,22 @@ module m_cu #(
   assign emul = emul_calc[emul_addr][2:0];
   assign emul_valid = emul_calc[emul_addr][3];
 
+  assign ldbuff_wlast_o = rd_tlast_i;
+
   // STORE FSM M_CU STATE
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn) begin
       store_write_state_reg <= store_write_idle;
       store_read_state_reg  <= store_read_idle;
-      load_state_reg  <= load_idle;
+      load_write_state_reg  <= load_write_idle;
+      load_read_state_reg   <= load_read_idle;
     end
     else begin
       store_write_state_reg <= store_write_state_next;
       store_read_state_reg  <= store_read_state_next;
-      load_state_reg  <= load_state_next;
+      load_write_state_reg  <= load_write_state_next;
+      load_read_state_reg  <= load_read_state_next;
     end
   end
 
@@ -653,7 +661,146 @@ module m_cu #(
     endcase
   end
   */
+
+  assign ldbuff_read_flush_o     = (ldbuff_rvalid_d[2:0]==0);
+  assign vlane_load_last_o       = (ldbuff_rvalid_d==3'b100);
+  // READ READ READ READ READ READ READ READ READ
+  // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL
+  always_comb begin
+    // default values for output signals
+    load_read_state_next    = load_read_state_reg;
+    load_data_lmul_next     = load_data_lmul_reg;
+    load_data_sew_next      = load_data_sew_reg;
+    load_idx_lmul_next      = load_idx_lmul_reg;
+    load_idx_sew_next       = load_idx_sew_reg;
+    load_baseaddr_o         = mcu_base_addr_i;
+    load_cfg_update_o       = 1'b0;
+    mcu_ld_rdy_o            = 1'b0;
+    load_baseaddr_set_o     = 1'b0;
+    load_cntr_rst_o         = 1'b0;
+    save_load_type          = 1'b0;
+    libuff_wen_o            = 1'b0;
+    ldbuff_read_stall_o     = 1'b0;
+    ldbuff_ren_o            = 1'b0;
+    ldbuff_rvalid           = 1'b0;
+    start_load_write_fsm    = 1'b0;
+
+    case (load_read_state_reg)
+      // IDLE
+      load_read_idle: begin
+        mcu_ld_rdy_o = 1'b1;
+        if(mcu_ld_vld_i)begin // Buffer the configuration
+          save_load_type       = 1'b1;
+          load_baseaddr_set_o  = 1'b1;
+          load_read_state_next = load_read_idle_buffed;
+          case(load_type_next)
+            3'b001:begin
+              load_data_sew_next     = mcu_sew_i;
+              load_data_lmul_next    = mcu_lmul_i;
+              load_idx_sew_next      = mcu_data_width_i;
+              load_idx_lmul_next     = emul;
+            end
+            3'b010:begin
+              load_data_sew_next     = mcu_data_width_i;
+              load_data_lmul_next    = emul;
+              load_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+              load_idx_lmul_next     = emul;              // Not used in this context
+            end
+            default begin
+              load_data_sew_next     = mcu_data_width_i;
+              load_data_lmul_next    = emul;
+              load_idx_sew_next      = mcu_data_width_i;  // Not used in this context
+              load_idx_lmul_next     = emul;              // Not used in this context
+            end
+          endcase
+        end
+      end
+
+      load_read_idle_buffed: begin
+        load_cfg_update_o     = 1'b1;
+        load_cntr_rst_o       = 1'b1;
+        load_read_state_next  = load_read_wait;
+        start_load_write_fsm  = 1'b1;
+      end
+
+      load_read_wait: begin
+        if(mcu_ld_buffered_o)
+          load_read_state_next = load_read;
+      end
+
+      load_read: begin
+        ldbuff_rvalid           = 1'b1;
+        ldbuff_ren_o            = 1'b1;
+        if(ldbuff_read_done_i && vlane_load_rdy_i) begin
+          ldbuff_ren_o          = 1'b0;
+          ldbuff_rvalid         = 1'b0;
+          if(ldbuff_rvalid_d==3'b100)
+            load_read_state_next = load_read_idle;
+        end
+        if(!vlane_load_rdy_i) begin
+          ldbuff_read_stall_o   = 1'b1;
+          ldbuff_ren_o          = 1'b0;
+        end
   
+      end
+      // DEFAULT
+      default begin
+      // SEE TOP OF CASE STATEMENT
+      end
+    endcase
+  end
+
+  // WRITE WRITE WRITE WRITE WRITE WRITE 
+  // AXIF -> LOAD BUFFER
+  // MAIN LOAD WRITE FSM M_CU NEXTSTATE & CONTROL
+  always_comb begin
+    // default values for output signals
+    load_write_state_next   = load_write_state_reg;
+    mcu_ld_buffered_o       = 1'b0;
+    load_baseaddr_update_o  = 1'b0;
+    libuff_read_stall_o     = 1'b0;
+    libuff_read_flush_o     = 1'b0;
+    libuff_ren_o            = 1'b0;
+    libuff_rvalid           = 1'b1;
+    ldbuff_wen_o            = 1'b0;
+    ctrl_rstart             = 1'b0;
+    rd_tready_o             = 1'b0;
+
+    case (load_write_state_reg)
+      load_write_idle:begin
+        if(start_load_write_fsm)begin
+          case(load_type_reg)
+            3'b001:begin
+              load_write_state_next        = load_write_indexed;
+            end
+            3'b010:begin
+              load_write_state_next        = load_write_strided;
+            end
+            default:begin
+              load_write_state_next        = load_write_unit;
+            end
+          endcase
+        end
+      end
+
+      load_write_unit: begin
+        ctrl_rstart   = 1'b1;
+        rd_tready_o   = 1'b1;
+        ldbuff_wen_o  = rd_tvalid_i;
+        if(rd_tlast_i && rd_tvalid_i) begin
+          load_write_state_next = load_write_idle;
+          mcu_ld_buffered_o     = 1'b1;
+        end
+      end
+
+      // DEFAULT
+      default begin
+      // SEE TOP OF CASE STATEMENT
+      end
+    endcase
+  end
+
+  /*
   // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL
   always_comb begin
     // default values for output signals
@@ -869,6 +1016,7 @@ module m_cu #(
       end
     endcase
   end
+  */
 
  endmodule : m_cu
 `default_nettype wire

@@ -502,15 +502,46 @@ endgenerate;
       end      
    end
 
+   //alu_b reordered
+   localparam LP_32bit_ALU_GROUPS = VLANE_NUM/4;
+   localparam LP_16bit_ALU_GROUPS = VLANE_NUM/2;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_b_16bit;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_b_32bit;
+   always_comb
+   begin
+      for(int byte_sel=0; byte_sel < 16/8; byte_sel++)
+      begin
+	 for (int lane=0; lane<VLANE_NUM; lane+=2)
+	   for (int port=0; port<W_PORTS_NUM; port++)
+	     alu_b_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+      end
 
+      for(int byte_sel=0; byte_sel < 32/8; byte_sel++)
+      begin
+	 for (int lane=0; lane<VLANE_NUM; lane+=4)
+	   for (int port=0; port<W_PORTS_NUM; port++)
+	     alu_b_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
+						     vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+      end
 
+      
+
+      
+   end
    always_comb
    begin
       for (int lane=0; lane<VLANE_NUM; lane++)
 	for (int i=0;i<W_PORTS_NUM;i++)
 	begin
 	   case(op2_sel[i][VRF_DELAY-1])
-              0: alu_b[lane][i] = vs2_data[lane][i];
+	      0:begin
+		 case (alu_sew)
+		    0: alu_b[lane][i] = vs2_data[lane][i];
+		    1: alu_b[lane][i] = alu_b_16bit;
+		    2: alu_b[lane][i] = alu_b_32bit;
+		 endcase
+	      end
+
               1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
               2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
               3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert

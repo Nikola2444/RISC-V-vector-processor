@@ -6,8 +6,8 @@ Disassembly of section .text:
 
 0000000000000000 <.text>:
    0:	0221a0d7          	vredsum.vs	v1,v2,v3
-   4:	0a218257          	vsub.vv	v4,v2,v3
-   8:	022182d7          	vadd.vv	v5,v2,v3
+   4:	0a630257          	vsub.vv	v4,v6,v6
+   8:	027402d7          	vadd.vv	v5,v7,v8
    c:	02520357          	vadd.vv	v6,v5,v4
   10:	00110093          	addi	ra,sp,1
   14:	3aa0c557          	vslideup.vx	v10,v10,ra

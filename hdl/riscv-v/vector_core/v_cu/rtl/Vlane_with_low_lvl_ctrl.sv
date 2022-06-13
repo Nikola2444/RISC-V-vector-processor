@@ -178,9 +178,13 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_il;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  vs1_data;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  vs2_data;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  vs3_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_a;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_b;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_c;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_res;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0][1 : 0] 	  alu_sew;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_in_vld;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1:0] 		  alu_op2_sel;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_reduction;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_out_vld;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_mask_vector;
@@ -462,8 +466,8 @@ generate
      		   .vs1_data_o(vs1_data[i]),
      		   .vs2_data_o(vs2_data[i]),
     		   .vs3_data_o(vs3_data[i]),
+		   .alu_reduction_o(alu_reduction[i]),
      		   .alu_vld_o(alu_in_vld[i]),
-     		   .alu_reduction_o(alu_reduction[i]),
      		   .alu_sew_o(alu_sew[i]),
      		   .alu_vld_i(alu_out_vld[i]),
      		   .alu_res_i(alu_res[i]),
@@ -472,36 +476,83 @@ generate
    end // block: VL_instances
    //generate ALU units
 
-   
-   for (genvar i=0;i<VLANE_NUM;i++)
-   begin: gen_ALU
-      alu#(
-	   .OP_WIDTH(32),
-	   .PARALLEL_IF_NUM(W_PORTS_NUM),
-	   .V_LANE_NUM(i)
-	   )
-      ALU_inst(
-	       .clk(clk_i),
-	       .rstn(rst_i),
-	 
-	       .alu_opmode_i(alu_opmode[i]),
-	       .alu_reduction_i(alu_reduction[i]),
-	       .alu_a_i(vs1_data[i]),
-	       .alu_b_i(vs2_data[i]),
-	       .alu_c_i(vs3_data[i]),
-	       .sew_i(alu_sew[i]),
-	       .alu_vld_i(alu_in_vld[i]),
-	       .alu_vld_o(alu_out_vld[i]),
-	       .alu_o(alu_res[i]),
-	       .alu_mask_vector_o(alu_mask_vector[i]),
-	       .alu_en_32bit_mul_i(1'b0),// Need more details
-	       .alu_stall_i(1'b0) // Need more details
-	 
-	       );
-      // ALU output needed for reduction
-      assign ALU_output[i] = alu_res[i];
-   end
 endgenerate;
+   localparam VRF_DELAY = 3;
+   localparam VMRF_DELAY = 2;
+
+   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
+   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0] op2_sel;
+   always@(posedge clk_i)
+   begin
+      if (!rst_i)
+      begin
+	 ALU_imm_data 	    <= 'h0;
+	 ALU_x_data 	    <= 'h0;
+	 ALU_reduction_data <= 'h0;
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	 begin
+	    ALU_imm_data[i] 	  <= {ALU_imm_data[i][VRF_DELAY-2:0],ALU_imm_il[0][i]};
+	    ALU_x_data[i] 	  <= {ALU_x_data[i][VRF_DELAY-2:0],ALU_x_data_il[0][i]};
+	    ALU_reduction_data[i] <= {ALU_reduction_data[i][VRF_DELAY-2:0],ALU_reduction_data_il[0][i]};
+	    op2_sel[i] <= {op2_sel[i][VRF_DELAY-2:0],op2_sel_il[0][i]};
+	 end
+      end      
+   end
+
+
+
+   always_comb
+   begin
+      for (int lane=0; lane<VLANE_NUM; lane++)
+	for (int i=0;i<W_PORTS_NUM;i++)
+	begin
+	   case(op2_sel[i][VRF_DELAY-1])
+              0: alu_b[lane][i] = vs2_data[lane][i];
+              1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
+              2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
+              3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
+              default: alu_b[lane][i] = vs2_data[lane][i];
+           endcase
+      end
+   end
+
+   assign alu_a = vs1_data;
+   assign alu_c = vs3_data;
+   
+   generate
+      for (genvar i=0;i<VLANE_NUM;i++)
+      begin: gen_ALU
+	 alu#(
+	      .OP_WIDTH(32),
+	      .PARALLEL_IF_NUM(W_PORTS_NUM),
+	      .V_LANE_NUM(i)
+	      )
+	 ALU_inst(
+		  .clk(clk_i),
+		  .rstn(rst_i),
+	    
+		  .alu_opmode_i(alu_opmode[i]),
+		  .alu_reduction_i(alu_reduction[i]),
+		  .alu_a_i(alu_a[i]),
+		  .alu_b_i(alu_b[i]),
+		  .alu_c_i(alu_c[i]),
+		  .sew_i(alu_sew[i]),
+		  .alu_vld_i(alu_in_vld[i]),
+		  .alu_vld_o(alu_out_vld[i]),
+		  .alu_o(alu_res[i]),
+		  .alu_mask_vector_o(alu_mask_vector[i]),
+		  .alu_en_32bit_mul_i(1'b0),// Need more details
+		  .alu_stall_i(1'b0) // Need more details
+	    
+		  );
+	 // ALU output needed for reduction
+	 assign ALU_output[i] = alu_res[i];
+      end
+   endgenerate
+   
 
 
 

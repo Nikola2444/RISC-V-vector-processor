@@ -148,7 +148,7 @@ mem_subsys #(
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   assign mcu_vl = 249;
   int sew_in_bytes = 1;
-  int store1_load2 = 2;
+  int store1_load2 = 1;
   
   // SCHEDULER DRIVER
   initial
@@ -217,8 +217,15 @@ mem_subsys #(
   integer iter=0;
   always begin
     for(int i=0; i<VLANE_NUM; i++)begin
-      vlane_store_data[i]<=iter+i;
-      vlane_store_idx [i]<=iter+i;
+      vlane_store_data[i][0+:8]  <= (iter+i);
+      vlane_store_data[i][8+:8]  <= (iter+1*VLANE_NUM+i);
+      vlane_store_data[i][16+:8] <= (iter+2*VLANE_NUM+i);
+      vlane_store_data[i][24+:8] <= (iter+3*VLANE_NUM+i);
+      
+      vlane_store_idx[i][0+:8]  <= (iter+0*VLANE_NUM+0);
+      vlane_store_idx[i][8+:8]  <= (iter+1*VLANE_NUM+1);
+      vlane_store_idx[i][16+:8] <= (iter+2*VLANE_NUM+2);
+      vlane_store_idx[i][24+:8] <= (iter+3*VLANE_NUM+3);
       vlane_load_idx  [i]<=iter+i;
     end
     @(negedge clk);
@@ -226,7 +233,7 @@ mem_subsys #(
     vlane_load_rdy     <= $urandom_range(0,1);
     @(posedge clk);
     if(vlane_store_rdy && vlane_store_dvalid)begin
-      iter+=VLANE_NUM;
+      iter+=4*VLANE_NUM;
     end
   end
 

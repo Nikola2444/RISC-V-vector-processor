@@ -33,7 +33,7 @@ module m_cu #(
   input  logic                                   mcu_ld_vld_i            ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
   input  logic [31:0]                            mcu_vl_i                ,
-  output logic [$clog2(VLEN)-1:0]                cfg_vl_o             ,
+  output logic [$clog2(VLEN)-1:0]                cfg_vl_o                ,
   // MCU => BUFF_ARRAY CONFIG IF [stores]
   output logic [2:0]                             cfg_store_data_lmul_o   ,
   output logic [2:0]                             cfg_store_data_sew_o    ,
@@ -51,14 +51,19 @@ module m_cu #(
   output logic [31:0]                            store_stride_o          ,
   output logic [31:0]                            store_baseaddr_o        ,
   output logic                                   store_baseaddr_update_o ,
-  output logic                                   store_baseaddr_set_o  ,
-  output logic                                   sbuff_read_stall_o      ,
-  output logic                                   sbuff_read_flush_o      ,
+  output logic                                   store_baseaddr_set_o    ,
+  output logic                                   sdbuff_read_stall_o     ,
+  output logic                                   sdbuff_read_flush_o     ,
+  output logic                                   sibuff_read_stall_o     ,
+  output logic                                   sibuff_read_flush_o     ,
   output logic                                   sbuff_wen_o             ,
-  output logic                                   sbuff_ren_o             ,
-  input  logic                                   sbuff_not_empty_i       ,
-  input  logic                                   sbuff_write_done_i      ,
-  input  logic                                   sbuff_read_done_i       ,
+  output logic                                   sdbuff_ren_o            ,
+  output logic                                   sibuff_ren_o            ,
+  input  logic                                   sibuff_not_empty_i      ,
+  input  logic                                   sdbuff_write_done_i     ,
+  input  logic                                   sibuff_write_done_i     ,
+  input  logic                                   sdbuff_read_done_i      ,
+  input  logic                                   sibuff_read_done_i      ,
   input  logic                                   sbuff_read_rdy_i        ,
   // MCU <=> BUFF_ARRAY CONTROL IF [loads]
   output logic                                   load_cfg_update_o       ,
@@ -66,7 +71,7 @@ module m_cu #(
   output logic [2:0]                             load_type_o             ,
   output logic [31:0]                            load_stride_o           ,
   output logic [31:0]                            load_baseaddr_o         ,
-  output logic                                   load_baseaddr_set_o   ,
+  output logic                                   load_baseaddr_set_o     ,
   output logic                                   load_baseaddr_update_o  ,
   output logic                                   libuff_read_stall_o     ,
   output logic                                   libuff_read_flush_o     ,
@@ -222,12 +227,12 @@ module m_cu #(
   begin
     if(!rstn)
       wr_tvalid_d      <= 0;
-    else if (!sbuff_read_stall_o)
+    else if (!sdbuff_read_stall_o)
       wr_tvalid_d      <= {wr_tvalid_d[1:0], wr_tvalid};
   end
 
-  assign wr_tvalid_o = !sbuff_read_invalidate ? wr_tvalid_out : 1'b0;
-  assign wr_tvalid_out = sbuff_read_done_i ? wr_tvalid_d[2] : wr_tvalid_d[1];
+  assign wr_tvalid_o   = !sbuff_read_invalidate ? wr_tvalid_out : 1'b0;
+  assign wr_tvalid_out = sdbuff_read_done_i ? wr_tvalid_d[2] : wr_tvalid_d[1];
 
   always_ff @(posedge clk, negedge rstn)
   begin
@@ -378,7 +383,7 @@ module m_cu #(
       store_write: begin
         sbuff_wen_o = vlane_store_dvalid_i;
         vlane_store_rdy_o = 1'b1;
-        if(sbuff_write_done_i && vlane_store_dvalid_i) begin
+        if(sdbuff_write_done_i && vlane_store_dvalid_i) begin
           store_write_state_next = store_write_wait;
         end
       end
@@ -403,10 +408,13 @@ module m_cu #(
     // default values for output signals
     store_read_state_next   = store_read_state_reg;
     store_baseaddr_update_o = 1'b0;
-    sbuff_read_stall_o      = 1'b0;
     sbuff_read_invalidate   = 1'b0;
-    sbuff_read_flush_o      = 1'b0;
-    sbuff_ren_o             = 1'b0;
+    sdbuff_read_stall_o     = 1'b0;
+    sdbuff_read_flush_o     = 1'b0;
+    sdbuff_ren_o            = 1'b0;
+    sibuff_read_stall_o     = 1'b0;
+    sibuff_read_flush_o     = 1'b0;
+    sibuff_ren_o            = 1'b0;
     ctrl_wstart             = 1'b0;
     wr_tvalid               = 1'b0;
     store_read_fsm_done     = 1'b0;
@@ -432,24 +440,24 @@ module m_cu #(
       store_read_unit: begin
         if(sbuff_read_rdy_i)begin
           wr_tvalid               = 1'b1;
-          sbuff_ren_o             = 1'b1;
+          sdbuff_ren_o            = 1'b1;
           if(ctrl_wdone_i)begin
             store_read_state_next = store_read_idle;
             store_read_fsm_done   = 1'b1;
           end
-          if(sbuff_read_done_i && wr_tready_i) begin
+          if(sdbuff_read_done_i && wr_tready_i) begin
             wr_tvalid             = 1'b0;
-            sbuff_ren_o           = 1'b0;
+            sdbuff_ren_o          = 1'b0;
           end
           if(!wr_tready_i) begin
-            sbuff_read_stall_o    = 1'b1;
-            sbuff_ren_o           = 1'b0;
+            sdbuff_read_stall_o   = 1'b1;
+            sdbuff_ren_o          = 1'b0;
           end
         end
         else begin //data not ready in buffer
-          sbuff_read_stall_o    = 1'b1;
-          sbuff_ren_o           = 1'b0;
-          sbuff_read_invalidate = 1'b1;
+          sdbuff_read_stall_o     = 1'b1;
+          sdbuff_ren_o            = 1'b0;
+          sbuff_read_invalidate   = 1'b1;
         end
       end
 

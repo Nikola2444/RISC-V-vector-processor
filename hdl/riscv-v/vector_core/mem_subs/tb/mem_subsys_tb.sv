@@ -21,8 +21,8 @@ module m_cu_tb();
   // Local Signals
   ///////////////////////////////////////////////////////////////////////////////
   // System Signals
-  logic                                   clk                =1'b0;
-  logic                                   rstn               =1'b0;
+  logic                                   clk                 =1'b0;
+  logic                                   rstn                =1'b0;
   // SHEDULER <=> M_CU CONFIG [general]
   logic [31:0]                            mcu_vl               ;
   logic [ 2:0]                            mcu_sew              ;
@@ -146,10 +146,10 @@ mem_subsys #(
   end
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  assign mcu_vl = 249;
-  int sew_in_bytes = 1;
-  int store1_load2 = 1;
-  
+  assign mcu_vl = 256;
+  int sew_in_bytes = 4;
+  int store1_load2 = 2;
+  int unit1_stride2_index3 = 2;
   // SCHEDULER DRIVER
   initial
   begin
@@ -189,12 +189,28 @@ mem_subsys #(
         mcu_st_vld           =0;
         mcu_ld_vld           =1;
     end
+    if (unit1_stride2_index3==1)    begin
+        mcu_unit_ld_st       =1'b1;
+        mcu_strided_ld_st    =1'b0;
+        mcu_idx_ld_st        =1'b0;
+    end
+    else if (unit1_stride2_index3==2)    begin 
+        mcu_unit_ld_st       =1'b0;
+        mcu_strided_ld_st    =1'b1;
+        mcu_idx_ld_st        =1'b0;
+    end
+    else
+        mcu_unit_ld_st       =1'b0;
+        mcu_strided_ld_st    =1'b0;
+        mcu_idx_ld_st        =1'b1;
+    begin
+    end
     mcu_lmul             =3'b000;
     mcu_base_addr        =32'h40000000;
     mcu_stride           =0;
     mcu_idx_ld_st        =1'b0;
-    mcu_strided_ld_st    =1'b0;
-    mcu_unit_ld_st       =1'b1;
+    mcu_strided_ld_st    =1'b1;
+    mcu_unit_ld_st       =1'b0;
 
     @(negedge clk);
     mcu_sew              =0;
@@ -226,7 +242,7 @@ mem_subsys #(
       vlane_store_idx[i][8+:8]  <= (iter+1*VLANE_NUM+1);
       vlane_store_idx[i][16+:8] <= (iter+2*VLANE_NUM+2);
       vlane_store_idx[i][24+:8] <= (iter+3*VLANE_NUM+3);
-      vlane_load_idx  [i]<=iter+i;
+      vlane_load_idx [i]<=iter+i;
     end
     @(negedge clk);
     vlane_store_dvalid <= $urandom_range(0,1);
@@ -237,7 +253,7 @@ mem_subsys #(
     end
   end
 
-   
+ /*  
   // AXIMCTRL WRITE INTERFACE
   int wait_time = 0;
   int write_word_num  = 0;
@@ -253,7 +269,8 @@ mem_subsys #(
         if(wr_tvalid && wr_tready)begin
           write_word_num+=(4/sew_in_bytes);
         end
-        if(write_word_num==(mcu_vl-(4/sew_in_bytes)))begin
+        //if(write_word_num==(mcu_vl-(4/sew_in_bytes)))begin
+        if(write_word_num==1)begin
           wr_tready <= 1'b0;
           wait_time = $urandom_range(0,10);
           for(int i=0; i<wait_time; i++) @(negedge clk);
@@ -265,7 +282,40 @@ mem_subsys #(
       write_word_num<=0;
     end
   end
-
+*/
+  
+  // AXIMCTRL WRITE INTERFACE
+  int wait_time = 0;
+  int write_word_num  = 0;
+always begin
+    wr_tready <= 1'b0;
+    ctrl_wdone <= 1'b0;
+    write_word_num = 0;
+    @(posedge clk);
+    if(ctrl_wstart)begin
+      while(!ctrl_wdone)begin
+        wr_tready <= $urandom_range(0,1);
+        @(posedge clk);
+        if(wr_tvalid && wr_tready)begin
+            if(unit1_stride2_index3==1)
+                write_word_num+=(4);
+            else
+                write_word_num+=(sew_in_bytes);
+        end
+        //if(write_word_num==(mcu_vl-(4/sew_in_bytes)))begin
+        if(write_word_num>=ctrl_wxfer_size)begin
+          wr_tready <= #1 1'b0;
+          wait_time = $urandom_range(2,10);
+          for(int i=0; i<wait_time; i++) @(negedge clk);
+          ctrl_wdone <= 1'b1;
+          @(posedge ctrl_wdone);
+        end
+      end
+      @(negedge clk);
+      ctrl_wdone <= 1'b0;
+      write_word_num =0;
+    end
+  end
 
   // LOAD SIGNAL INTERFACE ************************************
   // LANE INTERFACE
@@ -286,37 +336,32 @@ mem_subsys #(
     rd_tvalid   <= 1'b0;
     rd_tlast    <= 1'b0;
     ctrl_rdone  <= 1'b0;
+    read_word_num <= 1'b0;
     rd_tdata    <= 0;
     @(posedge clk);
     if(ctrl_rstart)begin
-      read_wait_time <= $urandom_range(0,10);
+      read_wait_time <= $urandom_range(4,10);
       for(int i=0; i<read_wait_time; i++) @(negedge clk);
       while(!ctrl_rdone)begin
         //$display("while");
         @(negedge clk);
         rd_tvalid <= $urandom_range(0,1);
-        if(sew_in_bytes == 4)begin
-            rd_tdata <= read_word_num; // for sew32
-        end
-        else if (sew_in_bytes == 2)begin
-            rd_tdata[0+:16]  <= (read_word_num+0);
-            rd_tdata[16+:16]  <= (read_word_num+1);
-        end
-        else begin
-            rd_tdata[0+:8]  <= (read_word_num+0);
-            rd_tdata[8+:8]  <= (read_word_num+1);
-            rd_tdata[16+:8] <= (read_word_num+2);
-            rd_tdata[24+:8] <= (read_word_num+3);
-        end
-        
-        @(posedge clk);
-        if(rd_tvalid && rd_tready) 
-          read_word_num+=(4/sew_in_bytes);
-
-        if(read_word_num>=(mcu_vl-(4/sew_in_bytes)))
+        if((read_word_num+sew_in_bytes)>=(ctrl_rxfer_size))
           rd_tlast    <= 1'b1;
-        if(read_word_num>=mcu_vl)begin
+        rd_tdata[0+:8]  <= (read_word_num+0);
+        rd_tdata[8+:8]  <= (read_word_num+1);
+        rd_tdata[16+:8] <= (read_word_num+2);
+        rd_tdata[24+:8] <= (read_word_num+3);
+        @(posedge clk);
+        if(rd_tvalid && rd_tready) begin
+            if(unit1_stride2_index3==1)
+                read_word_num+=(4);
+            else
+                read_word_num+=(sew_in_bytes);
+        end
+        if(read_word_num>=(ctrl_rxfer_size))begin
           rd_tvalid   <= 1'b0;
+          rd_tlast    <= 1'b0;
           ctrl_rdone  <= 1'b1;
         end
       end

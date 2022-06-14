@@ -62,7 +62,22 @@ module Vector_Lane
     input logic [W_PORTS_NUM - 1 : 0] 				       reduction_op_i,
     input logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] 	       ALU_ctrl_i,
     input logic [W_PORTS_NUM - 1 : 0] 				       read_data_valid_i,
-    output logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       ALU_output_o
+    output logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       ALU_output_o,
+
+    // ALU I/O
+    output logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] 	       alu_opmode_o,
+    output logic [W_PORTS_NUM - 1 : 0][ 31 : 0] 		       vs1_data_o,
+    output logic [W_PORTS_NUM - 1 : 0][ 31 : 0] 		       vs2_data_o,
+    output logic [W_PORTS_NUM - 1 : 0][ 31 : 0] 		       vs3_data_o,
+    output logic [W_PORTS_NUM - 1 : 0] 				       alu_vld_o,
+    output logic [W_PORTS_NUM - 1 : 0] 				       alu_reduction_o,
+    output logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       alu_reduction_data_o,
+    output logic [W_PORTS_NUM - 1 : 0][1:0] 			       alu_sew_o,
+    input logic [W_PORTS_NUM - 1 : 0] 				       alu_vld_i,
+    input logic [W_PORTS_NUM - 1 : 0][31:0] 			       alu_res_i,
+    input logic [W_PORTS_NUM - 1 : 0] 				       ALU_mask_vector_i
+    
+
 
     );    
    
@@ -158,8 +173,8 @@ module Vector_Lane
    // ALU
    ////////////////////////////////////////////////
    logic [W_PORTS_NUM - 1 : 0][31 : 0] 							    ALU_data_o;
-   logic [W_PORTS_NUM - 1 : 0] 								    ALU_vector_mask_o;
-   logic [W_PORTS_NUM - 1 : 0][31 : 0] 							    op1, op2, op3;
+   logic [W_PORTS_NUM - 1 : 0] 								    ALU_vector_mask;
+   logic [W_PORTS_NUM - 1 : 0][31 : 0] 							    vs1_data, vs2_data, op3;
    logic [W_PORTS_NUM - 1 : 0][1 : 0] 							    op2_sel;
    logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 				    op3_sel;
    logic [W_PORTS_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][31 : 0] 				    op3_mux;
@@ -243,6 +258,22 @@ module Vector_Lane
       .bwe_i(vmrf_wen)
       );
 
+   assign alu_opmode_o = ALU_ctrl;
+   assign vs1_data_o = vs1_data;
+   assign vs2_data_o = vs2_data;
+
+   
+   assign alu_reduction_o = ALU_reduction;
+   assign alu_sew_o = ALU_signals_reg[VRF_DELAY - 1].sew;
+   assign alu_vld_o = ALU_signals_reg[VRF_DELAY-1].read_data_valid;
+   
+   assign alu_output_valid_next[0] = alu_vld_i;
+   assign ALU_data_o[W_PORTS_NUM-1:0]= alu_res_i;
+   assign ALU_vector_mask=ALU_mask_vector_i;
+
+   
+   
+/* -----\/----- EXCLUDED -----\/-----
    alu 
      #
      (
@@ -257,18 +288,19 @@ module Vector_Lane
       
       .alu_opmode_i(ALU_ctrl),
       .alu_reduction_i(ALU_reduction),
-      .alu_a_i(op1),
-      .alu_b_i(op2),
+      .alu_a_i(vs1_data),
+      .alu_b_i(vs2_data),
       .alu_c_i(op3),
       .sew_i(ALU_signals_reg[VRF_DELAY - 1].sew),
       .alu_vld_i(ALU_signals_reg[VRF_DELAY - 1].read_data_valid),
       .alu_vld_o(alu_output_valid_next[0]),
       .alu_o(ALU_data_o[W_PORTS_NUM - 1 : 0]),
-      .alu_mask_vector_o(ALU_vector_mask_o),
+      .alu_mask_vector_o(ALU_vector_mask),
       .alu_en_32bit_mul_i(1'b0),                                          // Need more details
       .alu_stall_i(1'b0)                                                  // Need more details
       
       );
+ -----/\----- EXCLUDED -----/\----- */
 
    ////////////////////////////////////////////////
        // Choosing slide data
@@ -396,14 +428,17 @@ module Vector_Lane
             ALU_imm[j_gen] = {{27{1'b0}}, ALU_signals_reg[VRF_DELAY - 1].ALU_imm[j_gen]};
             
             // Muxes for ALU operands
-            op1[j_gen] = read_data_mux[j_gen << 1];
+            vs1_data[j_gen] = read_data_mux[j_gen << 1];
+	    vs2_data[j_gen] = read_data_mux[(j_gen << 1) + 1];
+/* -----\/----- EXCLUDED -----\/-----
             case(op2_sel[j_gen])
-               0: op2[j_gen] = read_data_mux[(j_gen << 1) + 1];
-               1: op2[j_gen] = ALU_x_data[j_gen];
-               2: op2[j_gen] = ALU_imm[j_gen];
-               3: op2[j_gen] = ALU_reduction_data[j_gen]; // Should insert an assert
-               default: op2[j_gen] = 0;
+               0: vs2_data[j_gen] = read_data_mux[(j_gen << 1) + 1];
+               1: vs2_data[j_gen] = ALU_x_data[j_gen];
+               2: vs2_data[j_gen] = ALU_imm[j_gen];
+               3: vs2_data[j_gen] = ALU_reduction_data[j_gen]; // Should insert an assert
+               default: vs2_data[j_gen] = 0;
             endcase
+ -----/\----- EXCLUDED -----/\----- */
             
             for(int i = 0; i < R_PORTS_NUM; i++) begin
                op3_mux[j_gen][i] = read_data_mux[i]; 
@@ -456,7 +491,7 @@ module Vector_Lane
                request_control_next[i + 1][j_gen]  = request_control_reg[i][j_gen];
             end
             vrf_write_next[0][j_gen] 	   = {vrf_waddr_i[j_gen] ,vrf_wdata_mux[j_gen], vrf_bwen_i[j_gen]};
-            vmrf_write_next[0][j_gen] 	   = {vmrf_wen_i[j_gen], ALU_vector_mask_o[j_gen], vmrf_addr_i[j_gen]};
+            vmrf_write_next[0][j_gen] 	   = {vmrf_wen_i[j_gen], ALU_vector_mask[j_gen], vmrf_addr_i[j_gen]};
             vm_next[0][j_gen] 		   = vector_mask_i[j_gen];
             request_control_next[0][j_gen] = request_control_i[j_gen];
          end

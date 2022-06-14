@@ -173,6 +173,22 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vector_mask_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_il;
 ////////////////////////////////////////////////////////////////////////////////////
 
+// VLANE-ALU signals
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][ALU_OPMODE-1:0] alu_opmode;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  vs1_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  vs2_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  vs3_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_a;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_b;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_c;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_res;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0][1 : 0] 	  alu_sew;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_in_vld;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1:0] 		  alu_op2_sel;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_reduction;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_out_vld;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_mask_vector;
+
 assign ready_for_load_o = orTree(ready_for_load);
 
 generate
@@ -394,60 +410,184 @@ Driver_vlane_interconnect_inst
 );
 
 generate
-    for(genvar i = 0; i < VLANE_NUM; i++) begin: VL_instances
-        Vector_Lane
-        #(
-            .R_PORTS_NUM(R_PORTS_NUM),
-            .W_PORTS_NUM(W_PORTS_NUM),
-            .MEM_DEPTH(MEM_DEPTH),
-            .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
-            .ALU_CTRL_WIDTH(ALU_OPMODE),
-            .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
-            .MULTIPUMP_READ(MULTIPUMP_READ),
-            .RAM_PERFORMANCE(RAM_PERFORMANCE),
-            .MEM_WIDTH(MEM_WIDTH),
-	    .V_LANE_NUM(i)
-        )
-        Vector_Lane_inst
-        (
-            .clk_i(clk_i),
-            .clk2_i(clk2_i),
-            .rst_i(rst_i),
-            .vsew_i(vsew_il[i]),
-            .vrf_ren_i(vrf_ren_il[i]),
-            .vrf_oreg_ren_i(vrf_oreg_ren_il[i]),
-            .vrf_raddr_i(vrf_raddr_il[i]),
-            .vrf_waddr_i(vrf_waddr_il[i]), 
-            .vrf_bwen_i(vrf_bwen_il[i]),
-            .load_data_i(load_data_il[i]),
-            .slide_data_i(slide_data_input[i]),
-            .slide_data_o(slide_data_output[i]),
-            .vmrf_addr_i(vmrf_addr_il[i]),
-            .vmrf_wen_i(vmrf_wen_il[i]),
-            .el_extractor_i(el_extractor_il[i]),
-            .vector_mask_i(vector_mask_il[i]),
-            .write_data_sel_i(write_data_sel_il[i]),
-            .request_control_i(request_write_control_il[i]),
-            .store_data_valid_o(store_data_valid_o[i]),
-            .store_data_valid_i(store_data_valid_il[i]),
-            .store_load_index_valid_o(store_load_index_valid_o[i]),
-            .store_load_index_valid_i(store_load_index_valid_il[i]),
-            .store_data_o(store_data_o[i]),
-            .store_load_index_o(store_load_index_o[i]),
-            .store_data_mux_sel_i(store_data_mux_sel_il[i]),
-            .store_load_index_mux_sel_i(store_load_index_mux_sel_il[i]),
-            .op2_sel_i(op2_sel_il[i]),
-            .op3_sel_i(op3_sel_il[i]),
-            .ALU_x_data_i(ALU_x_data_il[i]),
-            .ALU_imm_i(ALU_imm_il[i]),
-            .ALU_reduction_data_i(ALU_reduction_data_il[i]),
-            .ALU_ctrl_i(ALU_ctrl_il[i]),
-	    .reduction_op_i(reduction_op_il[i]),
-            .read_data_valid_i(read_data_valid_il[i]),
-            .ALU_output_o(ALU_output[i])
-        );
-    end
+   for(genvar i = 0; i < VLANE_NUM; i++) begin: VL_instances
+      Vector_Lane
+		  #(
+		    .R_PORTS_NUM(R_PORTS_NUM),
+		    .W_PORTS_NUM(W_PORTS_NUM),
+		    .MEM_DEPTH(MEM_DEPTH),
+		    .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
+		    .ALU_CTRL_WIDTH(ALU_OPMODE),
+		    .MULTIPUMP_WRITE(MULTIPUMP_WRITE),
+		    .MULTIPUMP_READ(MULTIPUMP_READ),
+		    .RAM_PERFORMANCE(RAM_PERFORMANCE),
+		    .MEM_WIDTH(MEM_WIDTH),
+		    .V_LANE_NUM(i)
+		    )
+      Vector_Lane_inst
+		  (
+		   .clk_i(clk_i),
+		   .clk2_i(clk2_i),
+		   .rst_i(rst_i),
+		   .vsew_i(vsew_il[i]),
+		   .vrf_ren_i(vrf_ren_il[i]),
+		   .vrf_oreg_ren_i(vrf_oreg_ren_il[i]),
+		   .vrf_raddr_i(vrf_raddr_il[i]),
+		   .vrf_waddr_i(vrf_waddr_il[i]), 
+		   .vrf_bwen_i(vrf_bwen_il[i]),
+		   .load_data_i(load_data_il[i]),
+		   .slide_data_i(slide_data_input[i]),
+		   .slide_data_o(slide_data_output[i]),
+		   .vmrf_addr_i(vmrf_addr_il[i]),
+		   .vmrf_wen_i(vmrf_wen_il[i]),
+		   .el_extractor_i(el_extractor_il[i]),
+		   .vector_mask_i(vector_mask_il[i]),
+		   .write_data_sel_i(write_data_sel_il[i]),
+		   .request_control_i(request_write_control_il[i]),
+		   .store_data_valid_o(store_data_valid_o[i]),
+		   .store_data_valid_i(store_data_valid_il[i]),
+		   .store_load_index_valid_o(store_load_index_valid_o[i]),
+		   .store_load_index_valid_i(store_load_index_valid_il[i]),
+		   .store_data_o(store_data_o[i]),
+		   .store_load_index_o(store_load_index_o[i]),
+		   .store_data_mux_sel_i(store_data_mux_sel_il[i]),
+		   .store_load_index_mux_sel_i(store_load_index_mux_sel_il[i]),
+		   .op2_sel_i(op2_sel_il[i]),
+		   .op3_sel_i(op3_sel_il[i]),
+		   .ALU_x_data_i(ALU_x_data_il[i]),
+		   .ALU_imm_i(ALU_imm_il[i]),
+		   .ALU_reduction_data_i(ALU_reduction_data_il[i]),
+		   .ALU_ctrl_i(ALU_ctrl_il[i]),
+		   .reduction_op_i(reduction_op_il[i]),
+		   .read_data_valid_i(read_data_valid_il[i]),
+		   //.ALU_output_o(ALU_output[i]), // TODO: remove this, taken directly from alu
+
+		   .alu_opmode_o(alu_opmode[i]),
+     		   .vs1_data_o(vs1_data[i]),
+     		   .vs2_data_o(vs2_data[i]),
+    		   .vs3_data_o(vs3_data[i]),
+		   .alu_reduction_o(alu_reduction[i]),
+     		   .alu_vld_o(alu_in_vld[i]),
+     		   .alu_sew_o(alu_sew[i]),
+     		   .alu_vld_i(alu_out_vld[i]),
+     		   .alu_res_i(alu_res[i]),
+     		   .ALU_mask_vector_i(alu_mask_vector)
+		   );
+   end // block: VL_instances
+   //generate ALU units
+
 endgenerate;
+   localparam VRF_DELAY = 3;
+   localparam VMRF_DELAY = 2;
+
+   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
+   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0] op2_sel;
+   always@(posedge clk_i)
+   begin
+      if (!rst_i)
+      begin
+	 ALU_imm_data 	    <= 'h0;
+	 ALU_x_data 	    <= 'h0;
+	 ALU_reduction_data <= 'h0;
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	 begin
+	    ALU_imm_data[i] 	  <= {ALU_imm_data[i][VRF_DELAY-2:0],ALU_imm_il[0][i]};
+	    ALU_x_data[i] 	  <= {ALU_x_data[i][VRF_DELAY-2:0],ALU_x_data_il[0][i]};
+	    ALU_reduction_data[i] <= {ALU_reduction_data[i][VRF_DELAY-2:0],ALU_reduction_data_il[0][i]};
+	    op2_sel[i] <= {op2_sel[i][VRF_DELAY-2:0],op2_sel_il[0][i]};
+	 end
+      end      
+   end
+
+   //alu_b reordered
+   localparam LP_32bit_ALU_GROUPS = VLANE_NUM/4;
+   localparam LP_16bit_ALU_GROUPS = VLANE_NUM/2;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_b_16bit;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_b_32bit;
+   always_comb
+   begin
+      for(int byte_sel=0; byte_sel < 16/8; byte_sel++)
+      begin
+	 for (int lane=0; lane<VLANE_NUM; lane+=2)
+	   for (int port=0; port<W_PORTS_NUM; port++)
+	     alu_b_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+      end
+
+      for(int byte_sel=0; byte_sel < 32/8; byte_sel++)
+      begin
+	 for (int lane=0; lane<VLANE_NUM; lane+=4)
+	   for (int port=0; port<W_PORTS_NUM; port++)
+	     alu_b_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
+						     vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+      end
+
+      
+
+      
+   end
+   always_comb
+   begin
+      for (int lane=0; lane<VLANE_NUM; lane++)
+	for (int i=0;i<W_PORTS_NUM;i++)
+	begin
+	   case(op2_sel[i][VRF_DELAY-1])
+	      0:begin
+		 case (alu_sew)
+		    0: alu_b[lane][i] = vs2_data[lane][i];
+		    1: alu_b[lane][i] = alu_b_16bit;
+		    2: alu_b[lane][i] = alu_b_32bit;
+		 endcase
+	      end
+
+              1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
+              2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
+              3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
+              default: alu_b[lane][i] = vs2_data[lane][i];
+           endcase
+      end
+   end
+
+   assign alu_a = vs1_data;
+   assign alu_c = vs3_data;
+   
+   generate
+      for (genvar i=0;i<VLANE_NUM;i++)
+      begin: gen_ALU
+	 alu#(
+	      .OP_WIDTH(32),
+	      .PARALLEL_IF_NUM(W_PORTS_NUM),
+	      .V_LANE_NUM(i)
+	      )
+	 ALU_inst(
+		  .clk(clk_i),
+		  .rstn(rst_i),
+	    
+		  .alu_opmode_i(alu_opmode[i]),
+		  .alu_reduction_i(alu_reduction[i]),
+		  .alu_a_i(alu_a[i]),
+		  .alu_b_i(alu_b[i]),
+		  .alu_c_i(alu_c[i]),
+		  .sew_i(alu_sew[i]),
+		  .alu_vld_i(alu_in_vld[i]),
+		  .alu_vld_o(alu_out_vld[i]),
+		  .alu_o(alu_res[i]),
+		  .alu_mask_vector_o(alu_mask_vector[i]),
+		  .alu_en_32bit_mul_i(1'b0),// Need more details
+		  .alu_stall_i(1'b0) // Need more details
+	    
+		  );
+	 // ALU output needed for reduction
+	 assign ALU_output[i] = alu_res[i];
+      end
+   endgenerate
+   
+
+
+
+
 
 always_comb begin
     // Left shift : 1 -> 0

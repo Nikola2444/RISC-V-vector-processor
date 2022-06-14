@@ -182,7 +182,7 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_il;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_b;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_c;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_res;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0][1 : 0] 	  alu_sew;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0] 	  alu_sew;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_in_vld;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1:0] 		  alu_op2_sel;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_reduction;
@@ -470,7 +470,7 @@ generate
      		   .alu_vld_o(alu_in_vld[i]),
      		   .alu_sew_o(alu_sew[i]),
      		   .alu_vld_i(alu_out_vld[i]),
-     		   .alu_res_i(alu_res[i]),
+     		   .alu_res_i(alu_res_reordered[i]),
      		   .ALU_mask_vector_i(alu_mask_vector)
 		   );
    end // block: VL_instances
@@ -505,29 +505,42 @@ endgenerate;
    //alu_b reordered
    localparam LP_32bit_ALU_GROUPS = VLANE_NUM/4;
    localparam LP_16bit_ALU_GROUPS = VLANE_NUM/2;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_a_16bit;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_a_32bit;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_b_16bit;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_b_32bit;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_c_16bit;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_c_32bit;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_res_reordered;
    always_comb
    begin
       for(int byte_sel=0; byte_sel < 16/8; byte_sel++)
       begin
 	 for (int lane=0; lane<VLANE_NUM; lane+=2)
 	   for (int port=0; port<W_PORTS_NUM; port++)
-	     alu_b_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+	   begin
+	      alu_b_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+	      alu_a_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
+	      alu_c_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
+	   end
       end
 
       for(int byte_sel=0; byte_sel < 32/8; byte_sel++)
       begin
 	 for (int lane=0; lane<VLANE_NUM; lane+=4)
 	   for (int port=0; port<W_PORTS_NUM; port++)
-	     alu_b_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
-						     vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
-      end
-
-      
-
-      
+	   begin
+	      alu_b_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
+									  vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+	      alu_a_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs1_data[lane+3][port][byte_sel*8 +:8], vs1_data[lane+2][port][byte_sel*8 +:8],
+									  vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
+	      alu_c_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs3_data[lane+3][port][byte_sel*8 +:8], vs3_data[lane+2][port][byte_sel*8 +:8],
+									  vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
+	   end 
+      end            
    end
+
+   
    always_comb
    begin
       for (int lane=0; lane<VLANE_NUM; lane++)
@@ -535,7 +548,7 @@ endgenerate;
 	begin
 	   case(op2_sel[i][VRF_DELAY-1])
 	      0:begin
-		 case (alu_sew)
+		 case (alu_sew[lane][i])
 		    0: alu_b[lane][i] = vs2_data[lane][i];
 		    1: alu_b[lane][i] = alu_b_16bit;
 		    2: alu_b[lane][i] = alu_b_32bit;
@@ -546,12 +559,16 @@ endgenerate;
               2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
               3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
               default: alu_b[lane][i] = vs2_data[lane][i];
-           endcase
+           endcase // case (op2_sel[i][VRF_DELAY-1])
+	   alu_a[lane][i] = alu_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
+			    alu_sew[lane][i] == 2'b01 ? alu_a_16bit[lane][i] : alu_a_32bit[lane][i];
+	   alu_c[lane][i] = alu_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
+			    alu_sew[lane][i] == 2'b01 ? alu_c_16bit[lane][i] : alu_c_32bit[lane][i];
       end
    end
 
-   assign alu_a = vs1_data;
-   assign alu_c = vs3_data;
+   
+
    
    generate
       for (genvar i=0;i<VLANE_NUM;i++)
@@ -581,8 +598,29 @@ endgenerate;
 		  );
 	 // ALU output needed for reduction
 	 assign ALU_output[i] = alu_res[i];
-      end
+      end      
    endgenerate
+
+   always_comb
+   begin
+
+
+
+      for (int lane=0; lane<VLANE_NUM; lane+=4)
+      begin
+	   for (int port=0; port<W_PORTS_NUM; port++)
+	   begin	      
+	      alu_res_reordered[lane+0][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][7:0], alu_res[VLANE_NUM/4*2+lane/4][port][7:0],
+					   alu_res[VLANE_NUM/4+lane/4][port][7:0], alu_res[0+lane/4][port][7:0]};
+	      alu_res_reordered[lane+1][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][15:8], alu_res[VLANE_NUM/4*2+lane/4][port][15:8],
+					   alu_res[VLANE_NUM/4+lane/4][port][15:8], alu_res[0+lane/4][port][15:8]};
+	      alu_res_reordered[lane+2][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][23:16], alu_res[VLANE_NUM/4*2+lane/4][port][23:16],
+					   alu_res[VLANE_NUM/4+lane/4][port][23:16], alu_res[0+lane/4][port][23:16]};
+	      alu_res_reordered[lane+3][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][31:24], alu_res[VLANE_NUM/4*2+lane/4][port][31:24],
+					   alu_res[VLANE_NUM/4+lane/4][port][31:24], alu_res[0+lane/4][port][31:24]};
+	   end 
+      end            
+   end
    
 
 

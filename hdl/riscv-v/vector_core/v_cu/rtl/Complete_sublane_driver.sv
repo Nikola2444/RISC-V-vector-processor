@@ -753,7 +753,7 @@ always_comb begin
             shift_data_validation = 1;
             
             raddr_cnt_en = 1;
-            if(main_cnt == dp0_reg.inst_delay) begin
+            if(main_cnt == dp0_reg.inst_delay-1) begin
                 dp0_next.en_write = 1;
                 dp0_next.waddr_cnt_en = 1;
                 dp0_next.vmrf_wen = 1;

@@ -119,8 +119,8 @@ module buff_array #(
   logic [31:0]                              sbuff_rptr_ext;
   // Read all VLANE buffers -> select one with mux -> rotate to fit address position
   logic [31:0]                              sbuff_rdata_mux;
-  logic [$clog2(VLANE_NUM)-1:0]             sbuff_rdata_mux_amt;
-  logic [$clog2(VLANE_NUM)-1:0]             sbuff_rdata_mux_amt_d [1:0];
+  logic [$clog2(VLANE_NUM)+1:0]             sbuff_read_cntr_low;
+  logic [$clog2(VLANE_NUM)+1:0]             sbuff_read_cntr_low_d [1:0];
   logic [1:0]                               sbuff_rdata_rol_amt;
   logic [31:0]                              sbuff_rdata_rol;
   // Strobing to write only SEW bytes via AXI master
@@ -165,7 +165,7 @@ module buff_array #(
   // Store Data Buffer Signals
   logic [31:0]                              sdbuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]                sdbuff_wen;
+  logic [3:0]                               sdbuff_wen;
   logic [31:0]                              sdbuff_rdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr_curr;
   logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr_nnext;
@@ -177,7 +177,7 @@ module buff_array #(
   // Store Index Buffer Signals
   logic [31:0]                              sibuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]                sibuff_wen;
+  logic [3:0]                               sibuff_wen;
   logic [31:0]                              sibuff_rdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr;
   logic [31:0]                              sibuff_rptr  [0:VLANE_NUM-1];
@@ -245,7 +245,7 @@ module buff_array #(
   end
   assign single_word_store   = !store_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
 
-  assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit TODO:DOUBLECHECK
+  assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit TODO: double-check this
   assign ctrl_wxfer_size_o   = store_type_i[2] ? (sdbuff_byte_cnt) : 4;
 
   // Number of expected stores
@@ -313,7 +313,7 @@ module buff_array #(
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
-  assign sbuff_rdata_rol_amt = store_baseaddr_reg[1:0];
+  assign sbuff_rdata_rol_amt = store_baseaddr_reg[1:0] - sbuff_read_cntr_low_d[1][1:0];
   always_comb begin
     case (sbuff_rdata_rol_amt)
       3:
@@ -363,15 +363,15 @@ module buff_array #(
 
   always_ff @(posedge clk) begin
     if (!rstn) begin
-       sbuff_rdata_mux_amt_d[1] <= 0;
-       sbuff_rdata_mux_amt_d[0] <= 0;
+       sbuff_read_cntr_low_d[1] <= 0;
+       sbuff_read_cntr_low_d[0] <= 0;
     end
     else if (!sdbuff_read_stall_i) begin
-      sbuff_rdata_mux_amt_d[1] <= sbuff_rdata_mux_amt_d[0];
-      sbuff_rdata_mux_amt_d[0] <= sbuff_rdata_mux_amt;
+      sbuff_read_cntr_low_d[1] <= sbuff_read_cntr_low_d[0];
+      sbuff_read_cntr_low_d[0] <= sbuff_read_cntr_low;
     end
   end
-  assign sbuff_rdata_mux = sdbuff_rdata[(sbuff_rdata_mux_amt_d[1])];
+  assign sbuff_rdata_mux = sdbuff_rdata[(sbuff_read_cntr_low_d[1][2+:$clog2(VLANE_NUM)])];
 
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of VLANE_NUM buffers to output 
@@ -380,7 +380,7 @@ module buff_array #(
   assign sdbuff_raddr_nnext  = sdbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
   assign sibuff_raddr_curr   = sibuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
   assign sibuff_raddr_nnext  = sibuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
-  assign sbuff_rdata_mux_amt = sdbuff_read_cntr[2+:$clog2(VLANE_NUM)];
+  assign sbuff_read_cntr_low = sdbuff_read_cntr[0+:$clog2(VLANE_NUM)];
   assign sdbuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
   assign sibuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
 
@@ -411,6 +411,8 @@ module buff_array #(
       assign sdbuff_raddr[vlane] = (vlane<(VLANE_NUM/2)) ? sdbuff_raddr_nnext : sdbuff_raddr_curr;
       assign sibuff_raddr[vlane] = (vlane<(VLANE_NUM/2)) ? sibuff_raddr_nnext : sibuff_raddr_curr;
 
+      assign sdbuff_wen = {4{sbuff_wen_i}};
+      assign sibuff_wen = {4{sbuff_wen_i}};
       // VFR -> DDR Buffer (STORE)
       // Xilinx Simple Dual Port Single Clock RAM with Byte-write
       sdp_bwe_bram #(
@@ -420,12 +422,12 @@ module buff_array #(
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
       ) store_data_buffer (
-        .clka      (clk),
-        .clkb      (clk),
+        .clka     (clk),
+        .clkb     (clk),
         .addra    (sdbuff_waddr),
         .addrb    (sdbuff_raddr[vlane]),
         .dina     (sdbuff_wdata[vlane]),
-        .wea      ({4{sbuff_wen_i}}),
+        .wea      (sdbuff_wen),
         .enb      (sdbuff_ren),
         .rstb     (sdbuff_rocl),
         .regceb   (sdbuff_roen),
@@ -441,12 +443,12 @@ module buff_array #(
         .RAM_PERFORMANCE("HIGH_PERFORMANCE"), // Select "HIGH_PERFORMANCE" or "LOW_LATENCY" 
         .INIT_FILE("")                        // Specify name/location of RAM initialization file if using one (leave blank if not)
       ) store_index_buffer (
-        .clka      (clk),
-        .clkb      (clk),
+        .clka     (clk),
+        .clkb     (clk),
         .addra    (sibuff_waddr),
         .addrb    (sibuff_raddr),
         .dina     (sibuff_wdata[vlane]),
-        .wea      ({4{sbuff_wen_i}}),
+        .wea      (sibuff_wen),
         .enb      (sibuff_ren),
         .rstb     (sibuff_rocl),
         .regceb   (sibuff_roen),
@@ -458,7 +460,6 @@ module buff_array #(
 
 
   // **************************************** STORE BUFFER OUTPUT LOGIC *****************************************************************
-
   // Changing axi strobe signals for narrower data
   // Storbing necessasry to write narrower data to 32-bit axi bus
   always_ff @(posedge clk) begin
@@ -472,13 +473,13 @@ module buff_array #(
       1: begin      // FOR SEW = 16
       if(store_cfg_update_i)
         sbuff_strobe_reg <= 4'b0011;
-      else if (sdbuff_ren_i)
+      else if (store_baseaddr_update_i)
         sbuff_strobe_reg <= sbuff_strobe_next;
       end
       default: begin // FOR SEW = 8
       if(store_cfg_update_i)
         sbuff_strobe_reg <= 4'b0001;
-      else if (sdbuff_ren_i)
+      else if (store_baseaddr_update_i)//
         sbuff_strobe_reg <= sbuff_strobe_next;
       end
     endcase
@@ -497,6 +498,8 @@ module buff_array #(
       sbuff_strobe_next = sbuff_strobe_reg;
     endcase
   end
+
+  assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0] - sbuff_read_cntr_low_d[1][1:0];
   // ***************************************************************************************************************************************
   // ***********************************************       LOAD BUFFER LOGIC        ********************************************************
   // ***************************************************************************************************************************************
@@ -597,10 +600,10 @@ module buff_array #(
   assign libuff_read_done_o     = (libuff_read_cntr >= lbuff_word_cnt);
 
   // Data coming in from axi full needs to be rotated right so data word is at LSB position
-  // Output barrel shifter after selecting data
+  // Input barrel shifter
   // Narrower data needs to be barrel shifted to fit the position
-  assign lbuff_wdata_ror_amt = ldbuff_write_cntr[1:0];
-  assign lbuff_wdata_rol_amt = ldbuff_write_cntr[$clog2(VLANE_NUM)+:2];
+  assign lbuff_wdata_rol_amt = ldbuff_write_cntr[1:0];
+  assign lbuff_wdata_ror_amt = load_baseaddr_reg[1:0];
   assign lbuff_wdata_total_rol_amt = lbuff_wdata_rol_amt - lbuff_wdata_ror_amt;
   always_comb begin
     case (lbuff_wdata_total_rol_amt)
@@ -645,28 +648,6 @@ module buff_array #(
     endcase
   end
 
-
-  // Selecting current addresses for libuff
-  // Multiplex selecting index from one of VLANE_NUM buffers to output 
-  always_comb  begin
-    case(cfg_load_idx_sew_i[1:0])
-      2: // FOR SEW = 32
-      begin
-        libuff_waddr  = libuff_write_cntr;
-        libuff_raddr  = (libuff_read_cntr[WORD_CNTR_WIDTH-1:$clog2(VLANE_NUM)]);
-      end
-      1: // FOR SEW = 16
-      begin
-        libuff_waddr  = libuff_write_cntr  >>1;
-        libuff_raddr  = libuff_read_cntr   >>($clog2(VLANE_NUM)+1);
-      end
-      default: // FOR SEW = 8
-      begin
-        libuff_waddr  = libuff_write_cntr  >>2;
-        libuff_raddr  = libuff_read_cntr   >>($clog2(VLANE_NUM)+2);
-      end
-    endcase
-  end
 
   // Changing write enable signals for narrow writes [load index buffer]
   // Narrower data is packed into 32-bit buffer
@@ -735,7 +716,7 @@ module buff_array #(
   // When last needs to write less bytes than 4
   always_comb begin
     ldbuff_wen_last_mask = {4{ldbuff_wen_i}};
-    if(ldbuff_wlast_i && (ldbuff_byte_cnt[1:0]!=2'b00))begin
+    if(ldbuff_write_done_o && (ldbuff_byte_cnt[1:0]!=2'b00))begin
       for(int i=0; i<4; i++)begin
         if(i<ldbuff_byte_cnt[1:0])
           ldbuff_wen_last_mask[i] = ldbuff_wen_i;
@@ -747,6 +728,8 @@ module buff_array #(
 
   assign ldbuff_waddr        = ldbuff_write_cntr        >>($clog2(VLANE_NUM)+2);
   assign ldbuff_raddr        = ldbuff_read_cntr         >>($clog2(VLANE_NUM)+2);
+
+  assign libuff_waddr        = libuff_write_cntr        >>($clog2(VLANE_NUM)+2);
   assign libuff_raddr_curr   = libuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
   assign libuff_raddr_nnext  = libuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
 
@@ -766,10 +749,10 @@ module buff_array #(
     assign libuff_raddr[vlane] = (vlane<(VLANE_NUM/2)) ? libuff_raddr_nnext : libuff_raddr_curr;
 
     // New addressing, register byte positions are fixed, (not actually muxed)
-   assign lbuff_wdata_mux[vlane] = {rd_tdata_i[(vlane%4)*8+:8],
-                                    rd_tdata_i[(vlane%4)*8+:8],
-                                    rd_tdata_i[(vlane%4)*8+:8],
-                                    rd_tdata_i[(vlane%4)*8+:8]};
+   assign lbuff_wdata_mux[vlane] = {lbuff_wdata_rol[(vlane%4)*8+:8],
+                                    lbuff_wdata_rol[(vlane%4)*8+:8],
+                                    lbuff_wdata_rol[(vlane%4)*8+:8],
+                                    lbuff_wdata_rol[(vlane%4)*8+:8]};
    assign ldbuff_wen_mux[vlane]  = {ldbuff_wen_masked[(3*VLANE_NUM/4)+vlane/4][vlane%4],
                                     ldbuff_wen_masked[(2*VLANE_NUM/4)+vlane/4][vlane%4],
                                     ldbuff_wen_masked[(1*VLANE_NUM/4)+vlane/4][vlane%4],

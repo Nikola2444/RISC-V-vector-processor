@@ -147,7 +147,7 @@ mem_subsys #(
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   assign mcu_vl = 256;
-  int sew_in_bytes = 4;
+  int sew_in_bytes = 2;
   int store1_load2 = 2;
   int unit1_stride2_index3 = 2;
   // SCHEDULER DRIVER
@@ -207,7 +207,7 @@ mem_subsys #(
     end
     mcu_lmul             =3'b000;
     mcu_base_addr        =32'h40000000;
-    mcu_stride           =0;
+    mcu_stride           =8;
     mcu_idx_ld_st        =1'b0;
     mcu_strided_ld_st    =1'b1;
     mcu_unit_ld_st       =1'b0;
@@ -293,14 +293,12 @@ always begin
     write_word_num = 0;
     @(posedge clk);
     if(ctrl_wstart)begin
+    $display("wstart");
       while(!ctrl_wdone)begin
         wr_tready <= $urandom_range(0,1);
         @(posedge clk);
-        if(wr_tvalid && wr_tready)begin
-            if(unit1_stride2_index3==1)
-                write_word_num+=(4);
-            else
-                write_word_num+=(sew_in_bytes);
+        if(wr_tvalid && wr_tready)begin 
+          write_word_num+=(4);     
         end
         //if(write_word_num==(mcu_vl-(4/sew_in_bytes)))begin
         if(write_word_num>=ctrl_wxfer_size)begin
@@ -308,8 +306,10 @@ always begin
           wait_time = $urandom_range(2,10);
           for(int i=0; i<wait_time; i++) @(negedge clk);
           ctrl_wdone <= 1'b1;
+           $display("wdone");
           @(posedge ctrl_wdone);
         end
+        
       end
       @(negedge clk);
       ctrl_wdone <= 1'b0;
@@ -327,7 +327,7 @@ always begin
     vlane_load_rdy <= 1'b1;
   end
 
-
+   int  iteration = 0;
   // AXIMCTRL READ INTERFACE
   logic [31:0] read_data_word;
   int read_word_num = 0;
@@ -346,18 +346,24 @@ always begin
         //$display("while");
         @(negedge clk);
         rd_tvalid <= $urandom_range(0,1);
-        if((read_word_num+sew_in_bytes)>=(ctrl_rxfer_size))
-          rd_tlast    <= 1'b1;
-        rd_tdata[0+:8]  <= (read_word_num+0);
-        rd_tdata[8+:8]  <= (read_word_num+1);
-        rd_tdata[16+:8] <= (read_word_num+2);
-        rd_tdata[24+:8] <= (read_word_num+3);
+        if((read_word_num+4)>=(ctrl_rxfer_size))
+        rd_tlast        <= 1'b1;
+        rd_tdata[0+:8]  <= (iteration+0);
+        rd_tdata[8+:8]  <= (iteration+1);
+        rd_tdata[16+:8] <= (iteration+2);
+        rd_tdata[24+:8] <= (iteration+3);
+        
         @(posedge clk);
         if(rd_tvalid && rd_tready) begin
-            if(unit1_stride2_index3==1)
-                read_word_num+=(4);
-            else
-                read_word_num+=(sew_in_bytes);
+           read_word_num+=(4); 
+            if(unit1_stride2_index3==1)begin
+               //read_word_num+=(4); 
+                iteration+=4;
+            end
+            else begin
+                //read_word_num+=(sew_in_bytes);
+                iteration+=sew_in_bytes;
+            end
         end
         if(read_word_num>=(ctrl_rxfer_size))begin
           rd_tvalid   <= 1'b0;

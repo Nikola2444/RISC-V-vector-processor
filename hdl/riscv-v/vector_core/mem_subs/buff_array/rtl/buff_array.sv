@@ -122,9 +122,11 @@ module buff_array #(
   logic [$clog2(VLANE_NUM)+1:0]             sbuff_read_cntr_low;
   logic [$clog2(VLANE_NUM)+1:0]             sbuff_read_cntr_low_d [1:0];
   logic [1:0]                               sbuff_rdata_rol_amt;
+  logic [1:0]                               sbuff_rdata_ror_amt;
+  logic [1:0]                               sbuff_rdata_total_rol_amt;
   logic [31:0]                              sbuff_rdata_rol;
   // Strobing to write only SEW bytes via AXI master
-  logic [3:0]                               sbuff_strobe_reg,sbuff_strobe_next; // TODO connect for narrow writes;; Check if AXI mctrl supports it
+  logic [3:0]                               sbuff_strobe_reg,sbuff_strobe_curr; // TODO connect for narrow writes;; Check if AXI mctrl supports it
   logic [1:0]                               sbuff_strobe_rol_amt;
   // Registers for counting data during transactions
   logic [31:0]                              store_baseaddr_reg;
@@ -313,9 +315,11 @@ module buff_array #(
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
-  assign sbuff_rdata_rol_amt = store_baseaddr_reg[1:0] - sbuff_read_cntr_low_d[1][1:0];
+  assign sbuff_rdata_rol_amt = store_baseaddr_reg[1:0];
+  assign sbuff_rdata_ror_amt = sbuff_read_cntr_low_d[1][1:0];
+  assign sbuff_rdata_total_rol_amt = sbuff_rdata_rol_amt + sbuff_rdata_ror_amt;// TODO: doublecheck if not needed
   always_comb begin
-    case (sbuff_rdata_rol_amt)
+    case (sbuff_rdata_total_rol_amt)
       3:
         sbuff_rdata_rol = {sbuff_rdata_mux[7:0],sbuff_rdata_mux[31:8]};
       2:
@@ -380,7 +384,7 @@ module buff_array #(
   assign sdbuff_raddr_nnext  = sdbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
   assign sibuff_raddr_curr   = sibuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
   assign sibuff_raddr_nnext  = sibuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
-  assign sbuff_read_cntr_low = sdbuff_read_cntr[0+:$clog2(VLANE_NUM)];
+  assign sbuff_read_cntr_low = sdbuff_read_cntr[0+:$clog2(VLANE_NUM)+2];
   assign sdbuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
   assign sibuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
 
@@ -473,14 +477,10 @@ module buff_array #(
       1: begin      // FOR SEW = 16
       if(store_cfg_update_i)
         sbuff_strobe_reg <= 4'b0011;
-      else if (store_baseaddr_update_i)
-        sbuff_strobe_reg <= sbuff_strobe_next;
       end
       default: begin // FOR SEW = 8
       if(store_cfg_update_i)
         sbuff_strobe_reg <= 4'b0001;
-      else if (store_baseaddr_update_i)//
-        sbuff_strobe_reg <= sbuff_strobe_next;
       end
     endcase
   end
@@ -489,17 +489,17 @@ module buff_array #(
   always_comb begin
     case(sbuff_strobe_rol_amt)
     3: 
-      sbuff_strobe_next = {sbuff_strobe_reg[0],  sbuff_strobe_reg[3:1]};
+      sbuff_strobe_curr = {sbuff_strobe_reg[0],  sbuff_strobe_reg[3:1]};
     2: 
-      sbuff_strobe_next = {sbuff_strobe_reg[1:0],sbuff_strobe_reg[3:2]};
+      sbuff_strobe_curr = {sbuff_strobe_reg[1:0],sbuff_strobe_reg[3:2]};
     1: 
-      sbuff_strobe_next = {sbuff_strobe_reg[2:0],sbuff_strobe_reg[3]};
+      sbuff_strobe_curr = {sbuff_strobe_reg[2:0],sbuff_strobe_reg[3]};
     default: 
-      sbuff_strobe_next = sbuff_strobe_reg;
+      sbuff_strobe_curr = sbuff_strobe_reg;
     endcase
   end
 
-  assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0] - sbuff_read_cntr_low_d[1][1:0];
+  assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0];// - sbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
   // ***************************************************************************************************************************************
   // ***********************************************       LOAD BUFFER LOGIC        ********************************************************
   // ***************************************************************************************************************************************
@@ -760,7 +760,7 @@ module buff_array #(
 
     assign ldbuff_wen_masked[vlane] = ldbuff_wen_reg[vlane] & ldbuff_wen_narrow_mask & ldbuff_wen_last_mask;
     // Priority write enable - when writing first byte in set, update all valid flags of the set (set being : number of lanes * four bytes)
-    assign ldbuff_pr_wen[vlane] = (ldbuff_wen_reg[0][0])? 4'b1111 : ldbuff_wen_mux[vlane];
+    assign ldbuff_pr_wen[vlane] = (ldbuff_wen_reg[0][0] && ldbuff_wen_narrow_mask[0])? 4'b1111 : ldbuff_wen_mux[vlane];
     // On 9th bit of every word write valid flag
     assign ldbuff_wdata[vlane] = {ldbuff_wen_mux[vlane][3], lbuff_wdata_mux[vlane][31:24],
                                   ldbuff_wen_mux[vlane][2], lbuff_wdata_mux[vlane][23:16],

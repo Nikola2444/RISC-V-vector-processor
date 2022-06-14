@@ -486,6 +486,7 @@ module m_cu #(
           sbuff_read_invalidate   = 1'b1;
         end
       end
+
       store_read_strided_2: begin
         sdbuff_read_stall_o     = 1'b1;
         sdbuff_ren_o            = 1'b0;

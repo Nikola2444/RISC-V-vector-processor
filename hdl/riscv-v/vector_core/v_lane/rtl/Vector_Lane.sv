@@ -172,7 +172,7 @@ module Vector_Lane
 
    // ALU
    ////////////////////////////////////////////////
-   logic [W_PORTS_NUM - 1 : 0][31 : 0] 							    ALU_data_o;
+   logic [W_PORTS_NUM - 1 : 0][31 : 0] 							    ALU_out_data;
    logic [W_PORTS_NUM - 1 : 0] 								    ALU_vector_mask;
    logic [W_PORTS_NUM - 1 : 0][31 : 0] 							    vs1_data, vs2_data, op3;
    logic [W_PORTS_NUM - 1 : 0][1 : 0] 							    op2_sel;
@@ -268,7 +268,7 @@ module Vector_Lane
    assign alu_vld_o = ALU_signals_reg[VRF_DELAY-1].read_data_valid;
    
    assign alu_output_valid_next[0] = alu_vld_i;
-   assign ALU_data_o[W_PORTS_NUM-1:0]= alu_res_i;
+   assign ALU_out_data[W_PORTS_NUM-1:0]= alu_res_i;
    assign ALU_vector_mask=ALU_mask_vector_i;
 
    
@@ -294,7 +294,7 @@ module Vector_Lane
       .sew_i(ALU_signals_reg[VRF_DELAY - 1].sew),
       .alu_vld_i(ALU_signals_reg[VRF_DELAY - 1].read_data_valid),
       .alu_vld_o(alu_output_valid_next[0]),
-      .alu_o(ALU_data_o[W_PORTS_NUM - 1 : 0]),
+      .alu_o(ALU_out_data[W_PORTS_NUM - 1 : 0]),
       .alu_mask_vector_o(ALU_vector_mask),
       .alu_en_32bit_mul_i(1'b0),                                          // Need more details
       .alu_stall_i(1'b0)                                                  // Need more details
@@ -417,7 +417,7 @@ module Vector_Lane
 	    
             
             case(write_data_mux_sel[j_gen])
-               0: vrf_wdata_mux[j_gen] = ALU_data_o[j_gen];
+               0: vrf_wdata_mux[j_gen] = ALU_out_data[j_gen];
                1: vrf_wdata_mux[j_gen] = load_data_i;
                2: vrf_wdata_mux[j_gen] = slide_data_reg[VMRF_DELAY-1];
                3: vrf_wdata_mux[j_gen] = 0; // Should insert an assert
@@ -506,7 +506,7 @@ module Vector_Lane
          assign vmrf_waddr[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE) - 1 : 0];
          assign bwen_mux_sel[j_gen] = vm_reg[VMRF_DELAY - 1][j_gen]; // 
          assign write_data_mux_sel[j_gen] = write_data_sel_i[j_gen];
-         assign ALU_output_o[j_gen] = ALU_data_o[j_gen];
+         assign ALU_output_o[j_gen] = ALU_out_data[j_gen];
 
       end
       

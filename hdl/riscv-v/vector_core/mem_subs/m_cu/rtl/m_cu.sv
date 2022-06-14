@@ -643,19 +643,16 @@ module m_cu #(
         rd_tready_o   = 1'b1;
         ldbuff_wen_o  = rd_tvalid_i;
         if(rd_tlast_i && rd_tvalid_i) begin
+          load_write_state_next = load_write_strided_2;
           if(ldbuff_write_done_i)begin
-            load_write_state_next = load_write_strided_2;
             mcu_ld_buffered_o     = 1'b1;
-          end
-          else begin
-            load_write_state_next = load_write_strided_2;
+            load_write_state_next = load_write_idle;
           end
         end
 
       end
 
       load_write_strided_2: begin
-        mcu_ld_buffered_o       = 1'b1;
         load_baseaddr_update_o  = 1'b1;
         load_write_state_next   = load_write_strided;
       end

@@ -64,7 +64,9 @@ module m_cu #(
   input  logic                                   sibuff_write_done_i     ,
   input  logic                                   sdbuff_read_done_i      ,
   input  logic                                   sibuff_read_done_i      ,
-  input  logic                                   sbuff_read_rdy_i        ,
+  input  logic                                   sdbuff_read_rdy_i       ,
+  input  logic                                   sibuff_read_rdy_i       ,
+  input  logic                                   libuff_read_rdy_i       ,
   // MCU <=> BUFF_ARRAY CONTROL IF [loads]
   output logic                                   load_cfg_update_o       ,
   output logic                                   load_cntr_rst_o         ,
@@ -167,13 +169,15 @@ module m_cu #(
   logic [2:0] load_idx_sew_reg,    load_idx_sew_next;
   logic       mcu_st_vld_reg;
   logic       mcu_ld_vld_reg;
-  logic       wr_tvalid;
+  logic       sibuff_rvalid;
+  logic       sdbuff_rvalid;
   logic       wr_tvalid_out;
-  logic [2:0] wr_tvalid_d;
+  logic [2:0] sdbuff_rvalid_d;
+  logic [2:0] sibuff_rvalid_d;
   logic       ldbuff_rvalid;
   logic       libuff_rvalid;
   logic [2:0] ldbuff_rvalid_d;
-  logic [1:0] libuff_rvalid_d;
+  logic [2:0] libuff_rvalid_d;
   logic       sbuff_read_invalidate;
   logic       ctrl_rstart,ctrl_rstart_d;
   logic       ctrl_wstart,ctrl_wstart_d;
@@ -183,12 +187,12 @@ module m_cu #(
   logic [2:0] store_type_reg,store_type_next;
   typedef enum logic[3:0] {store_write_idle, store_write_idle_buffed, store_write, store_write_wait} write_store_fsm;
   write_store_fsm store_write_state_reg, store_write_state_next;
-  typedef enum logic[3:0] {store_read_idle, store_read_unit, store_read_strided,store_read_strided_2,store_read_strided_3, store_read_indexed} read_store_fsm;
+  typedef enum logic[3:0] {store_read_idle, store_read_unit, store_read_strided,store_read_strided_2, store_read_indexed, store_read_indexed_2, store_read_indexed_3} read_store_fsm;
   read_store_fsm store_read_state_reg, store_read_state_next;
   // LOAD Signals
   typedef enum logic[3:0] {load_read_idle, load_read_idle_buffed, load_read_wait, load_read} read_load_fsm;
   read_load_fsm load_read_state_reg, load_read_state_next;
-  typedef enum logic[3:0] {load_write_idle, load_write_unit, load_write_strided, load_write_strided_2, load_write_strided_3, load_write_indexed} write_load_fsm;
+  typedef enum logic[3:0] {load_write_idle, load_write_unit, load_write_strided, load_write_strided_2, load_write_indexed, load_write_indexed_2, load_write_indexed_3} write_load_fsm;
   write_load_fsm load_write_state_reg, load_write_state_next;
   logic       save_load_type;
   logic [2:0] load_type_reg,load_type_next;
@@ -228,13 +232,21 @@ module m_cu #(
   always_ff @(posedge clk, negedge rstn)
   begin
     if(!rstn)
-      wr_tvalid_d      <= 0;
+      sdbuff_rvalid_d      <= 0;
     else if (!sdbuff_read_stall_o)
-      wr_tvalid_d      <= {wr_tvalid_d[1:0], wr_tvalid};
+      sdbuff_rvalid_d      <= {sdbuff_rvalid_d[1:0], sdbuff_rvalid};
+  end
+
+  always_ff @(posedge clk, negedge rstn)
+  begin
+    if(!rstn)
+      sibuff_rvalid_d      <= 0;
+    else if (!sdbuff_read_stall_o)
+      sibuff_rvalid_d      <= {sibuff_rvalid_d[1:0], sibuff_rvalid};
   end
 
   assign wr_tvalid_o   = !sbuff_read_invalidate ? wr_tvalid_out : 1'b0;
-  assign wr_tvalid_out = sdbuff_read_done_i ? wr_tvalid_d[2] : wr_tvalid_d[1];
+  assign wr_tvalid_out = sdbuff_read_done_i ? sdbuff_rvalid_d[2] : sdbuff_rvalid_d[1];
 
   always_ff @(posedge clk, negedge rstn)
   begin
@@ -249,7 +261,7 @@ module m_cu #(
     if(!rstn)
       libuff_rvalid_d      <= 0;
     else if (!libuff_read_stall_o)
-      libuff_rvalid_d      <= {libuff_rvalid_d[0], libuff_rvalid};
+      libuff_rvalid_d      <= {libuff_rvalid_d[1:0], libuff_rvalid};
   end
 
   assign vlane_load_dvalid_o = ldbuff_read_done_i ? ldbuff_rvalid_d[2] : ldbuff_rvalid_d[1];
@@ -417,8 +429,9 @@ module m_cu #(
     sibuff_read_stall_o     = 1'b0;
     sibuff_read_flush_o     = 1'b0;
     sibuff_ren_o            = 1'b0;
+    sibuff_rvalid           = 1'b0;
     ctrl_wstart             = 1'b0;
-    wr_tvalid               = 1'b0;
+    sdbuff_rvalid               = 1'b0;
     store_read_fsm_done     = 1'b0;
 
     case (store_read_state_reg)
@@ -440,15 +453,15 @@ module m_cu #(
       // UNIT_STORE
       store_read_unit: begin
         ctrl_wstart               = 1'b1;
-        if(sbuff_read_rdy_i)begin
-          wr_tvalid               = 1'b1;
+        if(sdbuff_read_rdy_i)begin
+          sdbuff_rvalid               = 1'b1;
           sdbuff_ren_o            = 1'b1;
           if(ctrl_wdone_i)begin
             store_read_state_next = store_read_idle;
             store_read_fsm_done   = 1'b1;
           end
           if(sdbuff_read_done_i && wr_tready_i) begin
-            wr_tvalid             = 1'b0;
+            sdbuff_rvalid             = 1'b0;
             sdbuff_ren_o          = 1'b0;
           end
           if(!wr_tready_i) begin
@@ -463,15 +476,16 @@ module m_cu #(
         end
       end
 
+      //STRIDED_STORE
       store_read_strided: begin
         ctrl_wstart = 1'b1;
-        if(sbuff_read_rdy_i)begin
-          wr_tvalid               = 1'b1;
+        if(sdbuff_read_rdy_i)begin
+          sdbuff_rvalid               = 1'b1;
           sdbuff_ren_o            = 1'b1;
           if(wr_tvalid_o && wr_tready_i)begin
             store_read_state_next = store_read_strided_2;
             if(sdbuff_read_done_i) begin
-              wr_tvalid             = 1'b0;
+              sdbuff_rvalid             = 1'b0;
               sdbuff_ren_o          = 1'b0;
             end
           end
@@ -493,13 +507,74 @@ module m_cu #(
         if(ctrl_wdone_i)begin
           store_baseaddr_update_o = 1'b1;
           store_read_state_next = store_read_strided;
-          if(wr_tvalid_d==3'b000)begin
+          if(sdbuff_rvalid_d==3'b000)begin
             store_read_state_next = store_read_idle;
             store_read_fsm_done   = 1'b1;
           end
         end
+      end
 
+      //INDEXED_STORE
+      store_read_indexed: begin
+        if(sibuff_read_rdy_i)begin
+          sibuff_rvalid = 1'b1;
+          sibuff_ren_o  = 1'b1;
+        end
+        else begin
+          sibuff_ren_o  = 1'b0;
+          sibuff_read_stall_o = 1'b1;
+        end
+        if(sibuff_rvalid_d[1])begin
+          // Prepare next index
+          sibuff_ren_o            = 1'b1;
+          sibuff_rvalid           = 1'b1;
+          // Update with current index
+          store_baseaddr_update_o = 1'b1;
+          store_read_state_next   = store_read_indexed_2;
+        end
+      end
 
+      store_read_indexed_2: begin
+        sibuff_read_stall_o    = 1'b1;
+        ctrl_wstart = 1'b1;
+        if(sdbuff_read_rdy_i)begin
+          sdbuff_rvalid             = 1'b1;
+          sdbuff_ren_o              = 1'b1;
+          if(wr_tvalid_o && wr_tready_i)begin
+            store_read_state_next = store_read_indexed_3;
+            if(sdbuff_read_done_i) begin
+              sdbuff_rvalid         = 1'b0;
+              sdbuff_ren_o          = 1'b0;
+            end
+          end
+          if(!wr_tready_i) begin
+            sdbuff_read_stall_o   = 1'b1;
+            sdbuff_ren_o          = 1'b0;
+          end
+        end
+        else begin //data not ready in buffer
+          sdbuff_read_stall_o     = 1'b1;
+          sdbuff_ren_o            = 1'b0;
+          sbuff_read_invalidate   = 1'b1;
+        end
+      end
+
+      store_read_indexed_3: begin
+        sdbuff_read_stall_o     = 1'b1;
+        sdbuff_ren_o            = 1'b0;
+        if(ctrl_wdone_i)begin
+          // Prepare next index
+          sibuff_rvalid           = 1'b1;
+          sibuff_ren_o            = 1'b1;
+          sibuff_read_stall_o     = 1'b0;
+          // Update with current index
+          store_baseaddr_update_o = 1'b1;
+          store_read_state_next = store_read_strided;
+          if(sdbuff_rvalid_d==3'b000)begin
+            store_read_state_next = store_read_idle;
+            store_read_fsm_done   = 1'b1;
+          end
+        end
       end
 
       default begin
@@ -629,6 +704,7 @@ module m_cu #(
         end
       end
 
+      // UNIT_LOAD
       load_write_unit: begin
         ctrl_rstart   = 1'b1;
         rd_tready_o   = 1'b1;
@@ -639,6 +715,7 @@ module m_cu #(
         end
       end
 
+      // STRIDED_LOAD
       load_write_strided: begin
         ctrl_rstart   = 1'b1;
         rd_tready_o   = 1'b1;
@@ -650,13 +727,51 @@ module m_cu #(
             load_write_state_next = load_write_idle;
           end
         end
-
       end
-
       load_write_strided_2: begin
         load_baseaddr_update_o  = 1'b1;
         load_write_state_next   = load_write_strided;
       end
+
+      //INDEXED_LOAD
+      load_write_indexed: begin
+        if(libuff_read_rdy_i)begin
+          libuff_rvalid = 1'b1;
+          libuff_ren_o  = 1'b1;
+        end
+        else begin
+          libuff_ren_o  = 1'b0;
+          libuff_read_stall_o = 1'b1;
+        end
+        if(libuff_rvalid_d[1])begin
+          // Prepare next index
+          libuff_ren_o            = 1'b1;
+          libuff_rvalid           = 1'b1;
+          // Update with current index
+          load_baseaddr_update_o = 1'b1;
+          load_write_state_next   = load_write_indexed_2;
+        end
+      end
+      load_write_indexed_2: begin
+        ctrl_rstart   = 1'b1;
+        rd_tready_o   = 1'b1;
+        ldbuff_wen_o  = rd_tvalid_i;
+        if(rd_tlast_i && rd_tvalid_i) begin
+          load_write_state_next = load_write_indexed_3;
+          if(ldbuff_write_done_i)begin
+            mcu_ld_buffered_o     = 1'b1;
+            load_write_state_next = load_write_idle;
+          end
+        end
+      end
+      load_write_indexed_3: begin
+        libuff_ren_o            = 1'b1;
+        libuff_rvalid           = 1'b1;
+        // Update with current index
+        load_baseaddr_update_o  = 1'b1;
+        load_write_state_next   = load_write_indexed;
+      end
+
 
       // DEFAULT
       default begin

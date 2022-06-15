@@ -48,7 +48,8 @@ module buff_array #(
   output logic                                   sibuff_write_done_o     ,
   output logic                                   sdbuff_read_done_o      ,
   output logic                                   sibuff_read_done_o      ,
-  output logic                                   sbuff_read_rdy_o        ,
+  output logic                                   sdbuff_read_rdy_o       ,
+  output logic                                   sibuff_read_rdy_o       ,
   // M_CU <=> BUFF_ARRAY IF [loads]
   input  logic                                   load_cfg_update_i       ,
   input  logic                                   load_cntr_rst_i         ,
@@ -119,8 +120,10 @@ module buff_array #(
   logic [31:0]                              sbuff_rptr_ext;
   // Read all VLANE buffers -> select one with mux -> rotate to fit address position
   logic [31:0]                              sbuff_rdata_mux;
-  logic [$clog2(VLANE_NUM)+1:0]             sbuff_read_cntr_low;
-  logic [$clog2(VLANE_NUM)+1:0]             sbuff_read_cntr_low_d [1:0];
+  logic [$clog2(VLANE_NUM)+1:0]             sdbuff_read_cntr_low;
+  logic [$clog2(VLANE_NUM)+1:0]             sdbuff_read_cntr_low_d [1:0];
+  logic [$clog2(VLANE_NUM)+1:0]             sibuff_read_cntr_low;
+  logic [$clog2(VLANE_NUM)+1:0]             sibuff_read_cntr_low_d [1:0];
   logic [1:0]                               sbuff_rdata_rol_amt;
   logic [1:0]                               sbuff_rdata_ror_amt;
   logic [1:0]                               sbuff_rdata_total_rol_amt;
@@ -156,6 +159,8 @@ module buff_array #(
   logic [31:0]                              load_baseaddr_reg;
   logic [$clog2(VLMAX):0]                   lbuff_word_cnt; 
   logic [$clog2(VLMAX):0]                   ldbuff_byte_cnt; 
+  logic [$clog2(VLANE_NUM)+1:0]             libuff_read_cntr_low;
+  logic [$clog2(VLANE_NUM)+1:0]             libuff_read_cntr_low_d [1:0];
   logic [$clog2(VLMAX):0]                   libuff_byte_cnt; 
   logic [$clog2(VLMAX):0]                   libuff_read_cntr,libuff_read_cntr_next, libuff_read_cntr_nnext;
   logic [$clog2(VLMAX):0]                   libuff_read_cntr_incr,libuff_read_cntr_iincr;
@@ -277,7 +282,8 @@ module buff_array #(
   assign sdbuff_read_cntr_iincr = 4*(VLANE_NUM/2);
   assign sdbuff_read_cntr_nnext = sdbuff_read_cntr + sdbuff_read_cntr_iincr;
   assign sdbuff_read_done_o     = (sdbuff_read_cntr_next >= sdbuff_byte_cnt);
-  assign sbuff_read_rdy_o       = (sbuff_write_cntr > sdbuff_read_cntr);
+  assign sdbuff_read_rdy_o      = (sbuff_write_cntr > sdbuff_read_cntr);
+  assign sibuff_read_rdy_o      = (sbuff_write_cntr > sibuff_read_cntr);
   // NNEXT: Needed to prepare data on time when addressing high performance BRAMs
   // When read cntr passes the treshold of VLANE_NUM/2 this counter will increment setting the next address for
   // first VLANE/2 BRAMS. Thus, the data will be ready in time
@@ -316,7 +322,7 @@ module buff_array #(
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
   assign sbuff_rdata_rol_amt = store_baseaddr_reg[1:0];
-  assign sbuff_rdata_ror_amt = sbuff_read_cntr_low_d[1][1:0];
+  assign sbuff_rdata_ror_amt = sdbuff_read_cntr_low_d[1][1:0];
   assign sbuff_rdata_total_rol_amt = sbuff_rdata_rol_amt + sbuff_rdata_ror_amt;// TODO: doublecheck if not needed
   always_comb begin
     case (sbuff_rdata_total_rol_amt)
@@ -334,7 +340,7 @@ module buff_array #(
 
   // Output barrel shifter after selecting pointer
   // Narrower data needs to be barrel shifted and extended to fit the position
-  assign sbuff_rptr_rol_amt = store_baseaddr_reg[1:0];
+  assign sbuff_rptr_rol_amt = (2'b00-sibuff_read_cntr_low_d[1][1:0]);
   always_comb begin
     case (sbuff_rptr_rol_amt)
       3:
@@ -367,15 +373,27 @@ module buff_array #(
 
   always_ff @(posedge clk) begin
     if (!rstn) begin
-       sbuff_read_cntr_low_d[1] <= 0;
-       sbuff_read_cntr_low_d[0] <= 0;
+      sdbuff_read_cntr_low_d[1] <= 0;
+      sdbuff_read_cntr_low_d[0] <= 0;
     end
     else if (!sdbuff_read_stall_i) begin
-      sbuff_read_cntr_low_d[1] <= sbuff_read_cntr_low_d[0];
-      sbuff_read_cntr_low_d[0] <= sbuff_read_cntr_low;
+      sdbuff_read_cntr_low_d[1] <= sdbuff_read_cntr_low_d[0];
+      sdbuff_read_cntr_low_d[0] <= sdbuff_read_cntr_low;
     end
   end
-  assign sbuff_rdata_mux = sdbuff_rdata[(sbuff_read_cntr_low_d[1][2+:$clog2(VLANE_NUM)])];
+  assign sbuff_rdata_mux = sdbuff_rdata[(sdbuff_read_cntr_low_d[1][2+:$clog2(VLANE_NUM)])];
+
+  always_ff @(posedge clk) begin
+    if (!rstn) begin
+      sibuff_read_cntr_low_d[1] <= 0;
+      sibuff_read_cntr_low_d[0] <= 0;
+    end
+    else if (!sibuff_read_stall_i) begin
+      sibuff_read_cntr_low_d[1] <= sibuff_read_cntr_low_d[0];
+      sibuff_read_cntr_low_d[0] <= sibuff_read_cntr_low;
+    end
+  end
+  assign sbuff_rptr_mux = sibuff_rdata[(sibuff_read_cntr_low_d[1][2+:$clog2(VLANE_NUM)])];
 
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of VLANE_NUM buffers to output 
@@ -384,7 +402,7 @@ module buff_array #(
   assign sdbuff_raddr_nnext  = sdbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
   assign sibuff_raddr_curr   = sibuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
   assign sibuff_raddr_nnext  = sibuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
-  assign sbuff_read_cntr_low = sdbuff_read_cntr[0+:$clog2(VLANE_NUM)+2];
+  assign sdbuff_read_cntr_low = sdbuff_read_cntr[0+:$clog2(VLANE_NUM)+2];
   assign sdbuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
   assign sibuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
 
@@ -499,7 +517,7 @@ module buff_array #(
     endcase
   end
 
-  assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0];// - sbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
+  assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0];// - sdbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
   // ***************************************************************************************************************************************
   // ***********************************************       LOAD BUFFER LOGIC        ********************************************************
   // ***************************************************************************************************************************************
@@ -582,6 +600,7 @@ module buff_array #(
   assign libuff_write_cntr_next = libuff_write_cntr + (VLANE_NUM)*4;
   assign libuff_write_done      = (libuff_write_cntr_next >= libuff_byte_cnt);
   assign libuff_not_empty_o     = (libuff_write_cntr != 0);
+  assign libuff_read_rdy_o      = (libuff_write_cntr > libuff_read_cntr);
   
   // Counter selects data from one load buffer to forward to axi
   always_ff @(posedge clk) begin
@@ -598,6 +617,18 @@ module buff_array #(
   //assign libuff_read_cntr_iincr = ((VLANE_NUM/2)<<cfg_load_idx_sew_i[1:0]);
   assign libuff_read_cntr_iincr = 4*(VLANE_NUM/2);
   assign libuff_read_done_o     = (libuff_read_cntr >= lbuff_word_cnt);
+
+  always_ff @(posedge clk) begin
+    if (!rstn) begin
+      libuff_read_cntr_low_d[1] <= 0;
+      libuff_read_cntr_low_d[0] <= 0;
+    end
+    else if (!libuff_read_stall_i) begin
+      libuff_read_cntr_low_d[1] <= libuff_read_cntr_low_d[0];
+      libuff_read_cntr_low_d[0] <= libuff_read_cntr_low;
+    end
+  end
+  assign lbuff_rptr_mux = libuff_rdata[(libuff_read_cntr_low_d[1][2+:$clog2(VLANE_NUM)])];
 
   // Data coming in from axi full needs to be rotated right so data word is at LSB position
   // Input barrel shifter
@@ -618,11 +649,9 @@ module buff_array #(
     endcase
   end
   
-
-
   // Output barrel shifter after selecting pointer
   // Narrower data needs to be barrel shifted and extended to fit the position
-  assign lbuff_rptr_rol_amt = load_baseaddr_reg[1:0];
+  assign lbuff_rptr_rol_amt = (2'b00 - libuff_read_cntr_low_d[1][1:0]);
   always_comb begin
     case (lbuff_rptr_rol_amt)
       3:

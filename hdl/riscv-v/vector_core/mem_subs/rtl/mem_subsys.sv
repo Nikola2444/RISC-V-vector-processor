@@ -103,7 +103,9 @@ module mem_subsys #(
   logic                                   sibuff_write_done    ;
   logic                                   sdbuff_read_done     ;
   logic                                   sibuff_read_done     ;
-  logic                                   sbuff_read_rdy       ;
+  logic                                   sdbuff_read_rdy      ;
+  logic                                   sibuff_read_rdy      ;
+  logic                                   libuff_read_rdy      ;
   // MCU <=> BUFF_ARRAY CONTROL IF [loads]
   logic                                   load_cfg_update      ;
   logic                                   load_cntr_rst        ;
@@ -184,7 +186,9 @@ module mem_subsys #(
  .sibuff_write_done_i     (sibuff_write_done      ),
  .sdbuff_read_done_i      (sdbuff_read_done       ),
  .sibuff_read_done_i      (sibuff_read_done       ),
- .sbuff_read_rdy_i        (sbuff_read_rdy         ),
+ .sdbuff_read_rdy_i       (sdbuff_read_rdy        ),
+ .sibuff_read_rdy_i       (sibuff_read_rdy        ),
+ .libuff_read_rdy_i       (libuff_read_rdy        ),
  .load_cfg_update_o       (load_cfg_update        ),
  .load_cntr_rst_o         (load_cntr_rst          ),
  .load_type_o             (load_type              ),
@@ -268,7 +272,9 @@ module mem_subsys #(
  .sibuff_write_done_o     (sibuff_write_done      ),
  .sdbuff_read_done_o      (sdbuff_read_done       ),
  .sibuff_read_done_o      (sibuff_read_done       ),
- .sbuff_read_rdy_o        (sbuff_read_rdy         ),
+ .sdbuff_read_rdy_o       (sdbuff_read_rdy        ),
+ .sibuff_read_rdy_o       (sibuff_read_rdy        ),
+ .libuff_read_rdy_o       (libuff_read_rdy        ),
  .load_cfg_update_i       (load_cfg_update        ),
  .load_cntr_rst_i         (load_cntr_rst          ),
  .load_type_i             (load_type              ),

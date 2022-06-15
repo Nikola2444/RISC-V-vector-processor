@@ -67,6 +67,7 @@ module buff_array #(
   input  logic                                   ldbuff_ren_i            ,
   input  logic                                   libuff_wen_i            ,
   input  logic                                   libuff_ren_i            ,
+  output logic                                   libuff_read_rdy_o       ,
   output logic                                   ldbuff_not_empty_o      ,
   output logic                                   ldbuff_write_done_o     ,
   output logic                                   ldbuff_read_done_o      ,
@@ -186,9 +187,11 @@ module buff_array #(
   // Store Index Buffer Signals
   logic [31:0]                              sibuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_waddr;
+  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr_curr;
+  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr_nnext;
   logic [3:0]                               sibuff_wen;
   logic [31:0]                              sibuff_rdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr;
+  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr [0:VLANE_NUM-1];
   logic [31:0]                              sibuff_rptr  [0:VLANE_NUM-1];
   logic                                     sibuff_ren;
   logic                                     sibuff_roen;
@@ -210,10 +213,12 @@ module buff_array #(
   // Load Index Buffer Signals
   logic [31:0]                              libuff_wdata [0:VLANE_NUM-1];
   logic [$clog2(BUFF_DEPTH)-1:0]            libuff_waddr;
+  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr_curr;
+  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr_nnext;
   logic [VLANE_NUM-1:0][3:0]                libuff_wen;
   logic [31:0]                              libuff_wptr  [0:VLANE_NUM-1];
   logic [31:0]                              libuff_rdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr;
+  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr [0:VLANE_NUM-1];
   logic [31:0]                              libuff_rptr  [0:VLANE_NUM-1];
   logic                                     libuff_roen;
   logic                                     libuff_ren;
@@ -221,6 +226,7 @@ module buff_array #(
   // Misc
   logic [ 3:0]                              ldbuff_wen_last_mask;
   logic                                     single_word_load;
+  logic                                     single_word_store;
   logic [ 3:0]                              ldbuff_wen_narrow_mask;
   logic [ 3:0]                              ldbuff_wen_mux [0:VLANE_NUM-1];
   logic [ 3:0]                              ldbuff_wen_masked [0:VLANE_NUM-1];
@@ -253,6 +259,7 @@ module buff_array #(
     end
   end
   assign single_word_store   = !store_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
+  assign ctrl_wstrb_msk_en_o = single_word_store;
 
   assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit TODO: double-check this
   assign ctrl_wxfer_size_o   = store_type_i[2] ? (sdbuff_byte_cnt) : 4;
@@ -305,6 +312,7 @@ module buff_array #(
   assign sibuff_read_cntr_iincr = 4*(VLANE_NUM/2);
   assign sibuff_read_cntr_nnext = sibuff_read_cntr + sibuff_read_cntr_iincr;
   assign sibuff_read_done_o     = (sibuff_read_cntr_next >= sibuff_byte_cnt);
+  assign sibuff_read_cntr_low = sibuff_read_cntr[0+:$clog2(VLANE_NUM)+2];
 
   // Write counter addresses write ports of all store buffers
   // All data is from vlane is used, so 32-bits * VLANE_NUM
@@ -400,13 +408,13 @@ module buff_array #(
   // Selecting current addresses for sdbuff
   // Multiplex selecting data from one of VLANE_NUM buffers to output 
   // READ ADDRESS SELECT
-  assign sdbuff_raddr_curr   = sdbuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
-  assign sdbuff_raddr_nnext  = sdbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
-  assign sibuff_raddr_curr   = sibuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
-  assign sibuff_raddr_nnext  = sibuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
+  assign sdbuff_raddr_curr    = sdbuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
+  assign sdbuff_raddr_nnext   = sdbuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
+  assign sibuff_raddr_curr    = sibuff_read_cntr         >>($clog2(VLANE_NUM)+2); 
+  assign sibuff_raddr_nnext   = sibuff_read_cntr_nnext   >>($clog2(VLANE_NUM)+2);
   assign sdbuff_read_cntr_low = sdbuff_read_cntr[0+:$clog2(VLANE_NUM)+2];
-  assign sdbuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
-  assign sibuff_waddr        = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
+  assign sdbuff_waddr         = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
+  assign sibuff_waddr         = sbuff_write_cntr        >> ($clog2(VLANE_NUM)+2);
 
   assign sdbuff_ren  = !sdbuff_read_stall_i;
   assign sdbuff_roen = !sdbuff_read_stall_i;
@@ -470,7 +478,7 @@ module buff_array #(
         .clka     (clk),
         .clkb     (clk),
         .addra    (sibuff_waddr),
-        .addrb    (sibuff_raddr),
+        .addrb    (sibuff_raddr[vlane]),
         .dina     (sibuff_wdata[vlane]),
         .wea      (sibuff_wen),
         .enb      (sibuff_ren),
@@ -518,7 +526,7 @@ module buff_array #(
       sbuff_strobe_curr = sbuff_strobe_reg;
     endcase
   end
-  assign wr_tstrb_msk_o = sbuff_wstrobe_curr;
+  assign wr_tstrb_msk_o = sbuff_strobe_curr;
 
   assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0];// - sdbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
   // ***************************************************************************************************************************************
@@ -547,7 +555,6 @@ module buff_array #(
     end
   end
   assign single_word_load = !load_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
-  assign ctrl_wstrb_msk_en_o = single_word_load;
 
   // AXI INTERFACE
   assign ctrl_raddr_offset_o = {load_baseaddr_reg[31:2],2'b00}; // align per 32-bit address space
@@ -602,7 +609,7 @@ module buff_array #(
     end
   end
   assign libuff_write_cntr_next = libuff_write_cntr + (VLANE_NUM)*4;
-  assign libuff_write_done      = (libuff_write_cntr_next >= libuff_byte_cnt);
+  assign libuff_write_done_o    = (libuff_write_cntr_next >= libuff_byte_cnt);
   assign libuff_not_empty_o     = (libuff_write_cntr != 0);
   assign libuff_read_rdy_o      = (libuff_write_cntr > libuff_read_cntr);
   
@@ -618,6 +625,7 @@ module buff_array #(
   assign libuff_read_cntr_next  = libuff_read_cntr + libuff_read_cntr_incr;
   assign libuff_read_cntr_incr  = (1<<cfg_load_idx_sew_i[1:0]);
   assign libuff_read_cntr_nnext = libuff_read_cntr + libuff_read_cntr_iincr;
+  assign libuff_read_cntr_low   = libuff_read_cntr[0+:$clog2(VLANE_NUM)+2];
   //assign libuff_read_cntr_iincr = ((VLANE_NUM/2)<<cfg_load_idx_sew_i[1:0]);
   assign libuff_read_cntr_iincr = 4*(VLANE_NUM/2);
   assign libuff_read_done_o     = (libuff_read_cntr >= lbuff_word_cnt);
@@ -855,7 +863,7 @@ module buff_array #(
         .clka     (clk),
         .clkb     (clk),
         .addra    (libuff_waddr),
-        .addrb    (libuff_raddr),
+        .addrb    (libuff_raddr[vlane]),
         .dina     (libuff_wdata[vlane]),
         .wea      ({4{libuff_wen_i}} & libuff_wen[vlane]),
         .enb      (libuff_ren),

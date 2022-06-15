@@ -147,9 +147,9 @@ mem_subsys #(
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   assign mcu_vl = 256;
-  int sew_in_bytes = 2;
+  int sew_in_bytes = 4;
   int store1_load2 = 2;
-  int unit1_stride2_index3 = 2;
+  int unit1_stride2_index3 = 3;
   // SCHEDULER DRIVER
   initial
   begin
@@ -199,18 +199,16 @@ mem_subsys #(
         mcu_strided_ld_st    =1'b1;
         mcu_idx_ld_st        =1'b0;
     end
-    else
+    else begin
         mcu_unit_ld_st       =1'b0;
         mcu_strided_ld_st    =1'b0;
         mcu_idx_ld_st        =1'b1;
-    begin
+    
     end
     mcu_lmul             =3'b000;
     mcu_base_addr        =32'h40000000;
     mcu_stride           =8;
-    mcu_idx_ld_st        =1'b0;
-    mcu_strided_ld_st    =1'b1;
-    mcu_unit_ld_st       =1'b0;
+
 
     @(negedge clk);
     mcu_sew              =0;
@@ -237,11 +235,19 @@ mem_subsys #(
       vlane_store_data[i][8+:8]  <= (iter+1*VLANE_NUM+i);
       vlane_store_data[i][16+:8] <= (iter+2*VLANE_NUM+i);
       vlane_store_data[i][24+:8] <= (iter+3*VLANE_NUM+i);
-      
-      vlane_store_idx[i][0+:8]  <= (iter+0*VLANE_NUM+0);
-      vlane_store_idx[i][8+:8]  <= (iter+1*VLANE_NUM+1);
-      vlane_store_idx[i][16+:8] <= (iter+2*VLANE_NUM+2);
-      vlane_store_idx[i][24+:8] <= (iter+3*VLANE_NUM+3);
+      if(i==0)begin
+      vlane_store_idx[i][0+:8]  <= (iter*4+4);
+      vlane_store_idx[i][8+:8]  <= (iter*4+8);
+      vlane_store_idx[i][16+:8] <= (iter*4+12);
+      vlane_store_idx[i][24+:8] <= (iter*4+16);
+      end
+      else
+      begin
+      vlane_store_idx[i][0+:8]  <= (0);
+      vlane_store_idx[i][8+:8]  <= (0);
+      vlane_store_idx[i][16+:8] <= (0);
+      vlane_store_idx[i][24+:8] <= (0);
+      end
       vlane_load_idx [i]<=iter+i;
     end
     @(negedge clk);

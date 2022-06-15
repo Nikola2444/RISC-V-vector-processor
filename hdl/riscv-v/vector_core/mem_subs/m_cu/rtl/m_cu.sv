@@ -106,7 +106,6 @@ module m_cu #(
   input  logic                                   rd_tlast_i              ,
   // MCU <=> AXIM CONTROL IF [write channel]
   output logic                                   ctrl_wstart_o           ,
-  output logic                                   ctrl_wstart_o           ,
   input  logic                                   ctrl_wdone_i            ,
   output logic                                   wr_tvalid_o             ,
   input  logic                                   wr_tready_i             
@@ -537,6 +536,7 @@ module m_cu #(
 
       store_read_indexed_2: begin
         sibuff_read_stall_o    = 1'b1;
+        sibuff_ren_o           = 1'b0;
         ctrl_wstart = 1'b1;
         if(sdbuff_read_rdy_i)begin
           sdbuff_rvalid             = 1'b1;
@@ -563,6 +563,8 @@ module m_cu #(
       store_read_indexed_3: begin
         sdbuff_read_stall_o     = 1'b1;
         sdbuff_ren_o            = 1'b0;
+        sibuff_read_stall_o     = 1'b1;
+        sibuff_ren_o            = 1'b0;
         if(ctrl_wdone_i)begin
           // Prepare next index
           sibuff_rvalid           = 1'b1;
@@ -570,7 +572,7 @@ module m_cu #(
           sibuff_read_stall_o     = 1'b0;
           // Update with current index
           store_baseaddr_update_o = 1'b1;
-          store_read_state_next = store_read_strided;
+          store_read_state_next = store_read_indexed_2;
           if(sdbuff_rvalid_d==3'b000)begin
             store_read_state_next = store_read_idle;
             store_read_fsm_done   = 1'b1;
@@ -741,7 +743,7 @@ module m_cu #(
           libuff_ren_o  = 1'b1;
         end
         else begin
-          libuff_ren_o  = 1'b0;
+          libuff_ren_o        = 1'b0;
           libuff_read_stall_o = 1'b1;
         end
         if(libuff_rvalid_d[1])begin
@@ -749,14 +751,16 @@ module m_cu #(
           libuff_ren_o            = 1'b1;
           libuff_rvalid           = 1'b1;
           // Update with current index
-          load_baseaddr_update_o = 1'b1;
+          load_baseaddr_update_o  = 1'b1;
           load_write_state_next   = load_write_indexed_2;
         end
       end
       load_write_indexed_2: begin
-        ctrl_rstart   = 1'b1;
-        rd_tready_o   = 1'b1;
-        ldbuff_wen_o  = rd_tvalid_i;
+        ctrl_rstart         = 1'b1;
+        rd_tready_o         = 1'b1;
+        ldbuff_wen_o        = rd_tvalid_i;
+        libuff_ren_o        = 1'b0;
+        libuff_read_stall_o = 1'b1;
         if(rd_tlast_i && rd_tvalid_i) begin
           load_write_state_next = load_write_indexed_3;
           if(ldbuff_write_done_i)begin
@@ -770,7 +774,7 @@ module m_cu #(
         libuff_rvalid           = 1'b1;
         // Update with current index
         load_baseaddr_update_o  = 1'b1;
-        load_write_state_next   = load_write_indexed;
+        load_write_state_next   = load_write_indexed_2;
       end
 
 

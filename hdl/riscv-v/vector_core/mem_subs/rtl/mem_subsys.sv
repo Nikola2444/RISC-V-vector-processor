@@ -47,9 +47,11 @@ module mem_subsys #(
   output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size_o       ,
   output logic                                   ctrl_wstart_o           ,
   input  logic                                   ctrl_wdone_i            ,
+  output logic                                   ctrl_wstrb_msk_en_o  ,
   output logic [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_o              ,
   output logic                                   wr_tvalid_o             ,
   input  logic                                   wr_tready_i             ,
+  output logic [3:0]                             wr_tstrb_msk_o        ,
   // V_LANE <=> BUFF_ARRAY IF [store interface]
   input  logic [31:0]                            vlane_store_data_i [0:VLANE_NUM-1],
   input  logic [31:0]                            vlane_store_idx_i  [0:VLANE_NUM-1],
@@ -307,6 +309,8 @@ module mem_subsys #(
  .rd_tdata_i              (rd_tdata_i             ),
  .ctrl_waddr_offset_o     (ctrl_waddr_offset_o    ),
  .ctrl_wxfer_size_o       (ctrl_wxfer_size_o      ),
+ .ctrl_wstrb_msk_en_o     (ctrl_wstrb_msk_en_o    ),
+ .wr_tstrb_msk_o          (wr_tstrb_msk_o         ),
  .wr_tdata_o              (wr_tdata_o             ));
 
 

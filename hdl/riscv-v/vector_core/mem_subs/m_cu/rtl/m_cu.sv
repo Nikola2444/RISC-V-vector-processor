@@ -25,11 +25,11 @@ module m_cu #(
   input  logic                                   mcu_strided_ld_st_i     ,
   input  logic                                   mcu_unit_ld_st_i        ,
   // SHEDULER <=> M_CU CONFIG IF [stores]
-  output logic 	                                 mcu_st_rdy_o            ,
+  output logic                                   mcu_st_rdy_o            ,
   input  logic                                   mcu_st_vld_i            ,
   // SHEDULER <=> M_CU CONFIG IF [loads]
-  output logic 	                                 mcu_ld_rdy_o            ,
-  output logic 	                                 mcu_ld_buffered_o       ,
+  output logic                                   mcu_ld_rdy_o            ,
+  output logic                                   mcu_ld_buffered_o       ,
   input  logic                                   mcu_ld_vld_i            ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
   input  logic [31:0]                            mcu_vl_i                ,
@@ -105,6 +105,7 @@ module m_cu #(
   output logic                                   rd_tready_o             ,
   input  logic                                   rd_tlast_i              ,
   // MCU <=> AXIM CONTROL IF [write channel]
+  output logic                                   ctrl_wstart_o           ,
   output logic                                   ctrl_wstart_o           ,
   input  logic                                   ctrl_wdone_i            ,
   output logic                                   wr_tvalid_o             ,

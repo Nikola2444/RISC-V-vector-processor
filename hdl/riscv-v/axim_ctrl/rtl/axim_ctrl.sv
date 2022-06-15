@@ -46,9 +46,10 @@ module axim_ctrl #(
   output wire                                   ctrl_wdone         ,
   input  wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_waddr_offset  ,
   input  wire [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size    ,
+  input  wire                                   ctrl_wstrb_msk_en  ,
   input  wire                                   wr_tvalid          ,
   output wire                                   wr_tready          ,
-  input  wire [C_M_AXI_DATA_WIDTH/8-1:0]        wr_tstrb           ,
+  input  wire [C_M_AXI_DATA_WIDTH/8-1:0]        wr_tstrb_msk       ,
   input  wire [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata
 );
 
@@ -62,6 +63,9 @@ localparam integer LP_LOG_BURST_LEN        = $clog2(LP_AXI_BURST_LEN);
 localparam integer LP_BRAM_DEPTH           = 512;
 localparam integer LP_RD_MAX_OUTSTANDING   = LP_BRAM_DEPTH / LP_AXI_BURST_LEN;
 localparam integer LP_WR_MAX_OUTSTANDING   = 32;
+
+wire [C_M_AXI_DATA_WIDTH/8-1:0]        m_axi_wstrb_s;
+assign m_axi_wstrb = (ctrl_wstrb_msk_en) ? (m_axi_wstrb_s & wr_tstrb_msk) : (m_axi_wstrb_s);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -122,7 +126,7 @@ inst_axi_write_master (
   .m_axi_wvalid            ( m_axi_wvalid            ) ,
   .m_axi_wready            ( m_axi_wready            ) ,
   .m_axi_wdata             ( m_axi_wdata             ) ,
-  .m_axi_wstrb             ( m_axi_wstrb             ) ,
+  .m_axi_wstrb             ( m_axi_wstrb_s           ) ,
   .m_axi_wlast             ( m_axi_wlast             ) ,
   .m_axi_bvalid            ( m_axi_bvalid            ) ,
   .m_axi_bready            ( m_axi_bready            ) ,

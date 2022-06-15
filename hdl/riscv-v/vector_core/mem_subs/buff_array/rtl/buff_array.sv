@@ -5,7 +5,7 @@
 
 module buff_array #(
   parameter integer VLEN                     = 8192,
-  parameter integer VLANE_NUM               = 8 ,
+  parameter integer VLANE_NUM                = 8 ,
   parameter integer MAX_VECTORS_BUFFD        = 1 ,
   parameter integer C_M_AXI_ADDR_WIDTH       = 32,
   parameter integer C_M_AXI_DATA_WIDTH       = 32,
@@ -86,6 +86,8 @@ module buff_array #(
   // AXIM_CTRL <=> BUFF_ARRAY IF [read channel]
   output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_waddr_offset_o     ,
   output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_wxfer_size_o       ,
+  output logic                                   ctrl_wstrb_msk_en_o     ,
+  output logic [3:0]                             wr_tstrb_msk_o          ,
   output logic [C_M_AXI_DATA_WIDTH-1:0]          wr_tdata_o              
 );
   ///////////////////////////////////////////////////////////////////////////////
@@ -516,6 +518,7 @@ module buff_array #(
       sbuff_strobe_curr = sbuff_strobe_reg;
     endcase
   end
+  assign wr_tstrb_msk_o = sbuff_wstrobe_curr;
 
   assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0];// - sdbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
   // ***************************************************************************************************************************************
@@ -544,6 +547,7 @@ module buff_array #(
     end
   end
   assign single_word_load = !load_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
+  assign ctrl_wstrb_msk_en_o = single_word_load;
 
   // AXI INTERFACE
   assign ctrl_raddr_offset_o = {load_baseaddr_reg[31:2],2'b00}; // align per 32-bit address space

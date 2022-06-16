@@ -41,6 +41,7 @@ add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/v_cu.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Address_counter.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Column_offset_register.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Complete_sublane_driver.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Complete_sublane_driver_new.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Data_validation.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Driver_vlane_interconnect.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Partial_sublane_driver.sv

@@ -5,17 +5,19 @@ assembly.o:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 <.text>:
-   0:	022180d7          	vadd.vv	v1,v2,v3
-   4:	0a630257          	vsub.vv	v4,v6,v6
-   8:	027402d7          	vadd.vv	v5,v7,v8
-   c:	02520357          	vadd.vv	v6,v5,v4
-  10:	00110093          	addi	ra,sp,1
-  14:	3aa0c557          	vslideup.vx	v10,v10,ra
-  18:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
-  1c:	2a518157          	vor.vv	v2,v5,v3
-  20:	262182d7          	vand.vv	v5,v2,v3
+   0:	00810093          	addi	ra,sp,8
+   4:	3a20c0d7          	vslideup.vx	v1,v2,ra
+   8:	022180d7          	vadd.vv	v1,v2,v3
+   c:	0a630257          	vsub.vv	v4,v6,v6
+  10:	027402d7          	vadd.vv	v5,v7,v8
+  14:	02520357          	vadd.vv	v6,v5,v4
+  18:	00110093          	addi	ra,sp,1
+  1c:	3aa0c557          	vslideup.vx	v10,v10,ra
+  20:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
   24:	2a518157          	vor.vv	v2,v5,v3
   28:	262182d7          	vand.vv	v5,v2,v3
-  2c:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
-  30:	02838357          	vadd.vv	v6,v8,v7
-  34:	0a520157          	vsub.vv	v2,v5,v4
+  2c:	2a518157          	vor.vv	v2,v5,v3
+  30:	262182d7          	vand.vv	v5,v2,v3
+  34:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
+  38:	02838357          	vadd.vv	v6,v8,v7
+  3c:	0a520157          	vsub.vv	v2,v5,v4

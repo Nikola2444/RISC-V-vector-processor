@@ -88,6 +88,7 @@ module Complete_sublane_driver
     output logic alu_en_32bit_mul_o,                               
     
     // Slides
+    input logic slide_type_i,
     input logic up_down_slide_i,                                                // 0 for down, 1 for up
     input logic [31 : 0] slide_amount_i,
     output logic up_down_slide_o,
@@ -103,6 +104,8 @@ module Complete_sublane_driver
 
 /////////////////////////////////////////////////////////////////////////////////
 // Useful parameters //
+localparam LP_FAST_SLIDE = 1;
+localparam LP_SLOW_SLIDE = 1;
 localparam logic [$clog2(INST_TYPE_NUM) - 1 : 0] NORMAL = 0;
 localparam logic [$clog2(INST_TYPE_NUM) - 1 : 0] REDUCTION = 1;
 localparam logic [$clog2(INST_TYPE_NUM) - 1 : 0] STORE = 2;
@@ -187,6 +190,7 @@ logic rst_main_cnt;
 logic [$clog2(MAX_VL_PER_LANE) : 0] limit_adder;
 // Write address generation //
 logic [1 : 0] element_width_write;
+logic [1 : 0] element_width_read;
 // VMRF //
 logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_cnt;
 logic rst_vmrf_cnt;
@@ -307,6 +311,8 @@ always_comb begin
     endcase
 end
 
+
+
 /////////////////////////////////////////////////////////////////////////////////
 always_comb begin
     if(current_state == REDUCTION_WRITE_MODE) begin
@@ -425,10 +431,10 @@ always_ff@(posedge clk_i) begin
         end 
     end
 end
-
+logic [3 : 0] bwen_selcetion;
 always_comb begin
     
-    logic [3 : 0] bwen_selcetion;
+    
 
     shift4_next = 4'b0001;
     shift2_next = 2'b01; 
@@ -482,7 +488,7 @@ generate
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(dp0_reg.up_down_slide),
-            .element_width_i(2'(vsew_i[1 : 0])),
+            .element_width_i(2'(element_width_read)),
             .rst_cnt_i(raddr_cnt_rst),
             .en_i(raddr_cnt_en),
             .secondary_en_i(1'b1),
@@ -631,6 +637,7 @@ always_comb begin
     dp0_next.slide_enable_buffering = dp0_reg.slide_enable_buffering;
     // 32-bit multiply
     dp0_next.alu_en_32bit_mul = dp0_reg.alu_en_32bit_mul;
+   element_width_read = vsew_i;
    
     
     case(current_state)
@@ -784,7 +791,8 @@ always_comb begin
                     end                                   
                 end
                 4'b0010 : begin                                            // STORE
-                    if(read_limit_comp) begin                               
+                    if(read_limit_comp) begin
+                       element_width_read=2'b10; // 
                         next_state = IDLE;
                         dp0_next.store_data_valid = 0;
                     end

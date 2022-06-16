@@ -419,7 +419,8 @@ module Vector_Lane
             case(write_data_mux_sel[j_gen])
                0: vrf_wdata_mux[j_gen] = ALU_out_data[j_gen];
                1: vrf_wdata_mux[j_gen] = load_data_i;
-               2: vrf_wdata_mux[j_gen] = slide_data_reg[VMRF_DELAY-1];
+               //2: vrf_wdata_mux[j_gen] = slide_data_reg[VMRF_DELAY-1];
+               2: vrf_wdata_mux[j_gen] = slide_data_i;
                3: vrf_wdata_mux[j_gen] = 0; // Should insert an assert
                default: vrf_wdata_mux[j_gen] = 0;
             endcase
@@ -447,7 +448,7 @@ module Vector_Lane
             
             // Store data mux
             for(int i = 0; i < R_PORTS_NUM; i++) begin
-               store_data_mux[j_gen][i] = read_data_mux[i]; 
+               store_data_mux[j_gen][i] = read_data_mux[i];
             end
             store_data_o[j_gen] = store_data_mux[j_gen][store_data_mux_sel[j_gen]];
 
@@ -497,7 +498,9 @@ module Vector_Lane
          end
          
          // Generate VRF read assignments
-         assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_reg[VMRF_DELAY - 1][j_gen])}};
+
+	 assign vrf_bwen[j_gen] = bwen_mux[j_gen] & {4{(alu_output_valid_reg[VMRF_DELAY - 1][j_gen] | request_control_reg[VMRF_DELAY - 1][j_gen])}};
+				  
          assign vrf_waddr[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][4 + 32 +: $clog2(MEM_DEPTH)]; 
          assign vrf_wdata[j_gen] = vrf_write_reg[VMRF_DELAY - 1][j_gen][32 + 4 - 1 : 4];
          assign vmrf_wen[j_gen] = vmrf_write_reg[VMRF_DELAY - 1][j_gen][$clog2(MAX_VL_PER_LANE) + 1 + 1 - 1] & 
@@ -511,5 +514,6 @@ module Vector_Lane
       end
       
    endgenerate;
+
 
 endmodule

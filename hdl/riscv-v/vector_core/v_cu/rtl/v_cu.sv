@@ -7,8 +7,8 @@ module v_cu #
 
    (/*AUTOARG*/
    // Outputs
-   instr_rdy_o, sew_o, lmul_o, store_driver_o, vl_o, inst_type_o,
-   start_o, inst_delay_o, vrf_ren_o, vrf_oreg_ren_o,
+   instr_rdy_o, sew_o, lmul_o, store_driver_o, slide_type_o, vl_o,
+   inst_type_o, start_o, inst_delay_o, vrf_ren_o, vrf_oreg_ren_o,
    vrf_starting_waddr_o, vrf_starting_raddr_vs1_o,
    vrf_starting_raddr_vs2_o, wdata_width_o, reduction_op_o,
    store_data_mux_sel_o, store_load_index_mux_sel_o, op2_sel_o,
@@ -20,11 +20,13 @@ module v_cu #
    vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
    );
 
-   
+   localparam LP_VRF_DELAY=2;
    localparam LP_VECTOR_REGISTER_NUM=32;
    localparam LP_MAX_LMUL=8;
    localparam MEM_DEPTH=VLEN/VLANE_NUM;
    localparam ALU_OPMODE_WIDTH=9;
+   localparam LP_FAST_SLIDE = 1;
+   localparam LP_SLOW_SLIDE = 1;
    // Number of bytes in VRF
    localparam LP_LANE_VRF_EL_NUM=VLEN*LP_VECTOR_REGISTER_NUM/8/VLANE_NUM;
    localparam LP_MAX_VL_PER_LANE=VLEN/8/VLANE_NUM*LP_MAX_LMUL;
@@ -41,6 +43,7 @@ module v_cu #
    output [2:0]  sew_o;
    output [2:0]  lmul_o;
    output [1:0]  store_driver_o;
+   output 	 slide_type_o;
    //interface with renaming unit
    input logic 	 vrf_starting_addr_vld_i;
    (* dont_touch = "yes" *)input logic [8*$clog2(MEM_DEPTH)-1:0]  vrf_starting_waddr_i;
@@ -222,6 +225,12 @@ module v_cu #
 
 
    // Calculating vector length
+/* -----\/----- EXCLUDED -----\/-----
+   assign vlmax=(slide_instr_check && slide_type_o==LP_SLOW_SLIDE) ? vlmax_array[vtype_next[2:0]][3'b000] :
+		slide_instr_check && slide_type_o==LP_FAST_SLIDE ? vlmax_array[vtype_next[2:0]][3'b010] : 
+		vlmax_array[vtype_next[2:0]][vtype_next[5:3]];
+ -----/\----- EXCLUDED -----/\----- */
+
    assign vlmax=vlmax_array[vtype_next[2:0]][vtype_next[5:3]];
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
 		    v_instr_vd != 0 ? vlmax : vl_reg;
@@ -242,6 +251,10 @@ module v_cu #
 				  instr_vld_reg[8] && v_instr_funct6_upper == 3'b110;
    assign reduction_op_o = reduction_instr_check;
    assign slide_instr_check     = !instr_vld_reg[11] && (v_instr_funct6 == 6'b001111 || v_instr_funct6 == 6'b001110);
+   assign slide_type_o = (sew_o == 2'b00 && (scalar_rs1_i == VLANE_NUM*4)) || 
+			 (sew_o == 2'b01 && (scalar_rs1_i == VLANE_NUM*2)) || 
+			 (sew_o == 2'b10 && (scalar_rs1_i == VLANE_NUM)) ? LP_FAST_SLIDE : LP_SLOW_SLIDE;
+		       
    assign widening_instr_check  = v_instr_funct6_upper == 3'b111 || v_instr_funct6_upper == 3'b110;
    
    
@@ -257,13 +270,15 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 4'h8 : 4'h7;
+   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 4'h8 : 
+			 slide_instr_check ? LP_VRF_DELAY : 4'h7;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    assign vrf_oreg_ren = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
-   assign wdata_width_o  = widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
+   assign wdata_width_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b01 :
+			   widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
                                                                        // TODO: take into account narrowing instructions
 
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic

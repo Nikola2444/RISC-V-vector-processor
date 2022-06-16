@@ -101,6 +101,7 @@ module vector_core #
    logic [31:0] 			  rs1_o;			// From scheduler_inst of scheduler.v
    logic [2:0] 				  sew_o;			// From v_cu_inst of v_cu.v
    logic [31:0] 			  slide_amount;		// From v_cu_inst of v_cu.v
+   logic 				  slide_type;		// From v_cu_inst of v_cu.v
 
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel_i;// From v_cu_inst of v_cu.v
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_index_mux_sel_i;// From v_cu_inst of v_cu.v
@@ -235,7 +236,9 @@ module vector_core #
 	     .reduction_op_o               (reduction_op),
 	     .up_down_slide_o		(up_down_slide),
 	     .slide_amount_o		(slide_amount[31:0]),
+	     .slide_type_o              (slide_type),
 	     .vector_mask_o		(vector_mask),
+	     
 	     // Inputs
 	     .clk			(clk),
 	     .rstn			(rstn),
@@ -305,6 +308,7 @@ module vector_core #
       .ALU_opmode_i			(alu_opmode),
       .alu_en_32bit_mul_i		(1'b0),
       .up_down_slide_i			(up_down_slide),
+      .slide_type_i			(slide_type),
       .slide_amount_i			(slide_amount[31:0]),
       .vector_mask_i			(vector_mask),
       .read_port_allocation_i		(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this

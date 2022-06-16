@@ -149,6 +149,7 @@ logic main_cnt_en;
 logic rst_main_cnt;
 // Write address generation //
 logic [1 : 0] element_width_write;
+logic [1 : 0] element_width_read;
 // VMRF //
 logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_cnt;
 logic rst_vmrf_cnt;
@@ -217,6 +218,7 @@ assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 // Write address generation //
 assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
+
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -326,12 +328,14 @@ Address_counter
 #(
     .MEM_DEPTH(MEM_DEPTH),
     .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
+    .VLANE_NUM(VLANE_NUM),
     .STRIDE_ENABLE("NO")
 )
 waddr_cnt
 (
     .clk_i(clk_i),
     .rst_i(rst_i),
+    .slide_offset_i('h0),
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
     .up_down_i(1'b1),
@@ -348,16 +352,18 @@ generate
         #(
             .MEM_DEPTH(MEM_DEPTH),
             .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
+            .VLANE_NUM(VLANE_NUM),
             .STRIDE_ENABLE("NO")
         )
         raddr_cnt
         (
             .clk_i(clk_i),
             .rst_i(rst_i),
+	    .slide_offset_i('h0),
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(1'b1),
-            .element_width_i(2'(vsew_i[1 : 0])),
+            .element_width_i(2'(element_width_read)),
             .rst_cnt_i(raddr_cnt_rst),
             .en_i(raddr_cnt_en),
             .secondary_en_i(1'b1),
@@ -465,7 +471,7 @@ always_comb begin
     dp0_next.reduction_op = dp0_reg.reduction_op;
     // Loads //
     ready_for_load_o = 0;
-    
+    element_width_read = vsew_i;
     case(current_state)
         IDLE : begin
             next_state = IDLE;
@@ -547,7 +553,7 @@ always_comb begin
             shift_data_validation = 1;
             
             raddr_cnt_en = 1;
-            if(main_cnt == dp0_reg.inst_delay) begin
+            if(main_cnt == dp0_reg.inst_delay-1) begin
                 dp0_next.en_write = 1;
                 dp0_next.waddr_cnt_en = 1;
                 dp0_next.vmrf_wen = 1;
@@ -569,7 +575,7 @@ always_comb begin
             shift_data_validation = 1;
             
             raddr_cnt_en = 1;
-            
+           element_width_read = vsew_i[1:0];
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                 4'b0001 : begin                                            // REDUCTION
                    if(main_cnt == (dp0_reg.read_limit - 1 + dp0_reg.inst_delay)) begin                               // Not yet specified                  
@@ -577,9 +583,10 @@ always_comb begin
                         rst_main_cnt = 1;
                     end                                   
                 end
-                4'b0010 : begin                                            // STORE
+                4'b0010 : begin                                           // STORE
                     if(read_limit_comp) begin                               
                         next_state = IDLE;
+		        element_width_read = 2'b10; // we read all bytes no matter the sew
                         dp0_next.store_data_valid = 0;
                     end
                 end

@@ -4,6 +4,7 @@ module Address_counter
 #(
     parameter MEM_DEPTH = 512,
     parameter VREG_LOC_PER_LANE = 8,
+    parameter VLANE_NUM = 8,
     parameter STRIDE_ENABLE = "YES"
 )
 (
@@ -11,6 +12,7 @@ module Address_counter
     input rst_i,
     
     input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] start_addr_i,
+    input logic [31-$clog2(VLANE_NUM):0]                          slide_offset_i,
     input logic load_i,
     input logic rst_cnt_i,
     input logic up_down_i,                                          // UP for 1, DOWN for 0
@@ -86,7 +88,10 @@ generate
             else begin
                 if(load_i) begin
                     for(int i = 0; i < 8; i++)
-                        shift_reg[i] <= start_value[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)];
+                      if (i == 0)
+                        shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)] + slide_offset_i[$clog2(MEM_DEPTH)-1:0];
+		      else
+                        shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)];
                 end
                 else begin
                     if(shift) begin
@@ -156,13 +161,16 @@ generate
             else begin
                 if(load_i) begin
                     for(int i = 0; i < 8; i++)
+		      if (i == 0)
+                        shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)] + slide_offset_i[$clog2(MEM_DEPTH)-1:0];
+		      else
                         shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)];
                 end
                 else begin
                     if(shift) begin
                         for(int i = 1; i < 8; i++)
                             shift_reg[i - 1] <= shift_reg[i];
-                        shift_reg[7] = 0;    
+                        shift_reg[7] <= 0;    
                     end
                 end 
             end

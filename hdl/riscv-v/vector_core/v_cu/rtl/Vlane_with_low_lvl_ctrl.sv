@@ -66,6 +66,7 @@ module Vlane_with_low_lvl_ctrl
     
     // Slide signals - THIS SIGNALS ARE COMING FROM ONLY ONE DRIVER
     input logic up_down_slide_i,
+    input logic slide_type_i,
     input logic [31 : 0] slide_amount_i,
     
     // Misc signals
@@ -138,6 +139,8 @@ logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_di;
 logic [W_PORTS_NUM - 1 : 0] reduction_op_di;
 logic alu_en_32bit_mul_di;                                                                      // UPDATED
 logic up_down_slide_di;
+logic [$clog2(VLANE_NUM)-1:0] slide_data_mux_sel;
+
 logic [W_PORTS_NUM - 1 : 0] request_write_control_di;                                           // UPDATED
 logic [W_PORTS_NUM - 1 : 0][1 : 0] el_extractor_di;
 logic [W_PORTS_NUM - 1 : 0] vector_mask_di;
@@ -194,7 +197,7 @@ assign ready_for_load_o = orTree(ready_for_load);
 generate
     for(genvar i = 0; i < W_PORTS_NUM; i++) begin
         if(i == 0) begin
-            Complete_sublane_driver
+            Complete_sublane_driver_new
             #(
                 .MEM_DEPTH(MEM_DEPTH),
                 .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
@@ -256,6 +259,8 @@ generate
                 .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
                 .alu_en_32bit_mul_o(alu_en_32bit_mul_di),                               
                 .up_down_slide_i(up_down_slide_i),
+	        .slide_data_mux_sel_o  (slide_data_mux_sel),
+	        .slide_type_i   (slide_type),
                 .slide_amount_i(slide_amount_i),
                 .up_down_slide_o(up_down_slide_di),                                         // 1 for left and 0 for right
                 .request_write_control_o(request_write_control_di[0]),
@@ -625,8 +630,16 @@ endgenerate;
 
 
 
-
-
+   logic [$clog2(VLANE_NUM)-1:0] lane_sel;
+   always_comb
+   begin      
+	 for (int lane=0; lane<VLANE_NUM; lane++)
+	 begin
+	    lane_sel = ~slide_data_mux_sel+lane+1;
+	    slide_data_input[lane] = slide_data_output[lane_sel];
+	 end      
+   end
+/* -----\/----- EXCLUDED -----\/-----
 always_comb begin
     // Left shift : 1 -> 0
     if(up_down_slide_il) begin                  
@@ -649,5 +662,6 @@ always_comb begin
         end
     end
 end
+ -----/\----- EXCLUDED -----/\----- */
 
 endmodule

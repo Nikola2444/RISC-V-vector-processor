@@ -139,6 +139,7 @@ logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] ALU_ctrl_di;
 logic [W_PORTS_NUM - 1 : 0] reduction_op_di;
 logic alu_en_32bit_mul_di;                                                                      // UPDATED
 logic up_down_slide_di;
+logic slide_op;
 logic [$clog2(VLANE_NUM)-1:0] slide_data_mux_sel;
 
 logic [W_PORTS_NUM - 1 : 0] request_write_control_di;                                           // UPDATED
@@ -259,6 +260,7 @@ generate
                 .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
                 .alu_en_32bit_mul_o(alu_en_32bit_mul_di),                               
                 .up_down_slide_i(up_down_slide_i),
+	        .slide_op_o (slide_op),
 	        .slide_data_mux_sel_o  (slide_data_mux_sel),
 	        .slide_type_i   (slide_type),
                 .slide_amount_i(slide_amount_i),
@@ -441,6 +443,7 @@ generate
 		   .vrf_waddr_i(vrf_waddr_il[i]), 
 		   .vrf_bwen_i(vrf_bwen_il[i]),
 		   .load_data_i(load_data_il[i]),
+		   .slide_op_i (slide_op),
 		   .slide_data_i(slide_data_input[i]),
 		   .slide_data_o(slide_data_output[i]),
 		   .vmrf_addr_i(vmrf_addr_il[i]),
@@ -487,6 +490,7 @@ endgenerate;
 
    logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
    logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0] op2_sel;
+   logic [VRF_DELAY-1:0][1:0] 			     slide_read_byte_sel_reg;
    always@(posedge clk_i)
    begin
       if (!rst_i)
@@ -503,6 +507,8 @@ endgenerate;
 	    ALU_x_data[i] 	  <= {ALU_x_data[i][VRF_DELAY-2:0],ALU_x_data_il[0][i]};
 	    ALU_reduction_data[i] <= {ALU_reduction_data[i][VRF_DELAY-2:0],ALU_reduction_data_il[0][i]};
 	    op2_sel[i] <= {op2_sel[i][VRF_DELAY-2:0],op2_sel_il[0][i]};
+	    slide_read_byte_sel_reg <= {slide_read_byte_sel_reg[VRF_DELAY-2:0], el_extractor_il[0][1]};//Lane0 R_port1
+	    
 	 end
       end      
    end
@@ -559,7 +565,7 @@ endgenerate;
 		    2: alu_b[lane][i] = alu_b_32bit;
 		 endcase
 	      end
-
+	      
               1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
               2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
               3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
@@ -629,15 +635,17 @@ endgenerate;
    
 
 
-
+   
    logic [$clog2(VLANE_NUM)-1:0] lane_sel;
+   // each lane has mux8_1 for slide_data_input. We replicate byte to be shifted 4 times and with bwe we chose
+   // where to write it.
    always_comb
-   begin      
-	 for (int lane=0; lane<VLANE_NUM; lane++)
-	 begin
-	    lane_sel = ~slide_data_mux_sel+lane+1;
-	    slide_data_input[lane] = slide_data_output[lane_sel];
-	 end      
+   begin            
+      for (int lane=0; lane<VLANE_NUM; lane++)
+      begin
+	 lane_sel = ~slide_data_mux_sel+lane+1;	 
+	 slide_data_input[lane] = {4{slide_data_output[lane_sel][slide_read_byte_sel_reg[VRF_DELAY-2]*8 +: 8]}};  
+      end      
    end
 /* -----\/----- EXCLUDED -----\/-----
 always_comb begin

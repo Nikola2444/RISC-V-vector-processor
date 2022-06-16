@@ -93,8 +93,8 @@ module Complete_sublane_driver_new
     input logic [31 : 0] slide_amount_i,
     output logic[$clog2(VLANE_NUM)-1:0] 	    slide_data_mux_sel_o,
     output logic up_down_slide_o,
+    output logic slide_op_o,
     output logic request_write_control_o,                                       // 0 - ALU generates valid signal, 1 - only bwen is important 
-
     // Misc signals
     input vector_mask_i,
     output logic [1 : 0] el_extractor_o,
@@ -111,6 +111,7 @@ localparam LP_SLOW_SLIDE = 1;
    localparam LP_SKIP_1 = 1;
    localparam LP_SKIP_2 = 2;
    localparam LP_SKIP_3 = 3;
+   localparam LP_SKIP_ALL = 4;
 localparam logic [$clog2(INST_TYPE_NUM) - 1 : 0] NORMAL = 0;
 localparam logic [$clog2(INST_TYPE_NUM) - 1 : 0] REDUCTION = 1;
 localparam logic [$clog2(INST_TYPE_NUM) - 1 : 0] STORE = 2;
@@ -166,6 +167,7 @@ typedef struct packed
     logic [$clog2(VLANE_NUM) - 1 : 0] slide_amount_complete_lane;
     logic slide_complete_lane_up;
 
+
     logic [1 : 0] input_sel;
     logic [1 : 0] adder_input_sel;                                     
     logic en_comp;
@@ -212,9 +214,9 @@ logic load_data_validation;
 logic shift_data_validation;
 logic [VLANE_NUM - 1 : 0] read_data_valid, read_data_valid_slide, read_data_valid_dv;
 logic partial_results_valid;
-logic [VLANE_NUM-1:0][1:0] first_elements_to_skip;  
+logic [VLANE_NUM-1:0][2:0] first_elements_to_skip;  
 logic shift_partial;
-logic [31-$clog2(VLANE_NUM):0] slide_waddr_offset;  
+logic [31-$clog2(VLANE_NUM*4):0] slide_waddr_offset;  
 // signals for slides //
 logic [$clog2(VLANE_NUM) - 1 : 0] slide_complete_lane_adder;
 logic [$clog2(VLANE_NUM) - 1 : 0] SA_complete_lane;
@@ -222,6 +224,7 @@ logic [VLANE_NUM - 1 : 0] valid_data;
 logic [VLANE_NUM - 1 : 0] slide_write_data_pattern;
 logic enable_write_slide;
 logic [$clog2(MAX_VL_PER_LANE) : 0] per_lane_words;
+
 
 
 
@@ -300,6 +303,7 @@ assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 //assign SA_complete_lane = slide_amount_i[$clog2(VLANE_NUM) - 1 : 0];
 assign SA_complete_lane = dp0_reg.slide_amount[$clog2(VLANE_NUM) - 1 : 0];
 assign slide_complete_lane_adder = ~SA_complete_lane + 1;
+assign slide_op_o = current_state == SLIDE;
 
 assign dp1_next[VRF_DELAY - 1].waddr = waddr;
 assign dp0_next.bwen_ff = bwen_mux;
@@ -316,10 +320,10 @@ assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;
 generate
    for (genvar lane=0; lane<VLANE_NUM; lane++)
    begin
-      assign first_elements_to_skip[lane] = dp0_reg.slide_amount[$clog2(VLANE_NUM)-1:0] <= lane ? LP_SKIP_NONE:
-					    dp0_reg.slide_amount[$clog2(VLANE_NUM)-1:0] < VLANE_NUM+lane ? LP_SKIP_1 :
-					    dp0_reg.slide_amount[$clog2(VLANE_NUM)-1:0] < 2*VLANE_NUM+lane ? LP_SKIP_2 :
-					    dp0_reg.slide_amount[$clog2(VLANE_NUM)-1:0] < 3*VLANE_NUM+lane ? LP_SKIP_3 : LP_SKIP_NONE;
+      assign first_elements_to_skip[lane] = dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= lane ? LP_SKIP_NONE:
+					    dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= VLANE_NUM+lane ? LP_SKIP_1 :
+					    dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 2*VLANE_NUM+lane ? LP_SKIP_2 :
+					    dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 3*VLANE_NUM+lane ? LP_SKIP_3 : LP_SKIP_ALL;
       
       
    end
@@ -409,8 +413,8 @@ generate
        //assign slide_waddr[i] = (slide_write_data_pattern[i] == 0) ? dp0_reg.waddr_ff : waddr;
         assign slide_waddr[i] = (first_elements_to_skip[i]==1 && slide_bwen_skip1_reg[0]) ? waddr+1 : 
 				(first_elements_to_skip[i]==2 && (slide_bwen_skip2_reg[0] || slide_bwen_skip2_reg[1])) ? waddr+1 : 
-				(first_elements_to_skip[i]==2 && (slide_bwen_skip3_reg[0] || slide_bwen_skip3_reg[1] || slide_bwen_skip3_reg[2])) ? waddr+1 : 
-				 waddr;
+				(first_elements_to_skip[i]==3 && (slide_bwen_skip3_reg[0] || slide_bwen_skip3_reg[1] || slide_bwen_skip3_reg[2])) ? waddr+1 :
+				(first_elements_to_skip[i]==4) ? waddr+1 : waddr;
         
         assign normal_waddr[i] = (dp0_reg.delay_addr == 1) ? dp1_reg[0].waddr : waddr; 
         assign normal_bwen[i] = ((current_state == LOAD_MODE) & (dp0_reg.waddr_cnt_en == 1)) ? load_bwen_i[i] : 
@@ -523,7 +527,8 @@ always_comb begin
         default: bwen_selcetion = {{4{1'b0}}};
     endcase
     
-    bwen_mux = (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
+    bwen_mux = main_cnt > dp0_reg.read_limit ? 'h0 : 
+	       (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
                                               bwen_selcetion;
 end
 /////////////////////////////////////////////////////////////////////////////////
@@ -532,7 +537,7 @@ end
 // Address counters - instantiation //
    
 //If slide offset waddt
-assign slide_waddr_offset = dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM) +: 31] : 'h0;
+assign slide_waddr_offset = dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM*4) +: 31] : 'h0;
 
 Address_counter
 #(
@@ -934,7 +939,7 @@ always_comb begin
         end        
         SLIDE : begin
             next_state = SLIDE;
-            dp0_next.read_limit = read_limit_add - dp0_reg.slide_amount;
+            dp0_next.read_limit = read_limit_add - dp0_reg.slide_amount[31:2];
             // starting the main counter
             main_cnt_en = 1;            
             // read address generator

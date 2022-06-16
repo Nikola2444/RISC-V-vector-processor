@@ -60,6 +60,7 @@ module Vector_Lane
     input logic [W_PORTS_NUM - 1 : 0][4 : 0] 			       ALU_imm_i,
     input logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       ALU_reduction_data_i,
     input logic [W_PORTS_NUM - 1 : 0] 				       reduction_op_i,
+    input logic 						       slide_op_i,
     input logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] 	       ALU_ctrl_i,
     input logic [W_PORTS_NUM - 1 : 0] 				       read_data_valid_i,
     output logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       ALU_output_o,
@@ -405,8 +406,11 @@ module Vector_Lane
          assign read_data_prep_next[i_gen] = {vrf_rdata[i_gen], {{16{1'b0}}, read_data_hw_mux[i_gen]}, {{24{1'b0}}, read_data_byte_mux[i_gen]}};
          assign read_data_byte_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2];
          assign read_data_hw_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2][0];
-         assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 1].sew;
-         
+	 
+	 if (i_gen == SLIDE_PORT_ID)
+           assign read_data_mux_sel[SLIDE_PORT_ID] = slide_op_i ? 2'b10 : ALU_signals_reg[VRF_DELAY - 1].sew;
+	 else
+           assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 1].sew;
       end
       
       for(j_gen = 0; j_gen < W_PORTS_NUM; j_gen++) begin

@@ -17,9 +17,15 @@ class test_simple extends test_base;
    endfunction : build_phase
 
    task main_phase(uvm_phase phase);
-      phase.raise_objection(this);
-      simple_seq.start(env.bd_instr_agent.seqr);
-      phase.drop_objection(this);
+      if (cfg.use_s_instr_backdoor)
+      begin
+	 phase.raise_objection(this);
+
+	 simple_seq.start(env.bd_instr_agent.seqr);
+	 phase.drop_objection(this);
+      end      
+      else
+	phase.raise_objection(this);
    endtask : main_phase
 
 endclass

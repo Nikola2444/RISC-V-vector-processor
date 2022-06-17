@@ -6,7 +6,7 @@ module riscv_v_w_mem_subsystem #
      parameter integer V_LANES = 8,
      parameter integer CHAINING = 4)
    (input clk,
-    input clk2,
+    input 				    clk2,
     input 				    rstn,
     // AXI FULL VECTOR CORE IF
     output logic 			    v_m_axi_awvalid ,
@@ -27,7 +27,27 @@ module riscv_v_w_mem_subsystem #
     input logic [C_M_AXI_DATA_WIDTH-1:0]    v_m_axi_rdata ,
     input logic 			    v_m_axi_rlast ,
     input logic 			    v_m_axi_bvalid ,
-    output logic 			    v_m_axi_bready
+    output logic 			    v_m_axi_bready,
+    //AXI FULL SCALAR CORE IF
+    output logic 			    s_m_axi_awvalid ,
+    input logic 			    s_m_axi_awready ,
+    output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_awaddr ,
+    output logic [8-1:0] 		    s_m_axi_awlen ,
+    output logic 			    s_m_axi_wvalid ,
+    input logic 			    s_m_axi_wready ,
+    output logic [C_M_AXI_DATA_WIDTH-1:0]   s_m_axi_wdata ,
+    output logic [C_M_AXI_DATA_WIDTH/8-1:0] s_m_axi_wstrb ,
+    output logic 			    s_m_axi_wlast ,
+    output logic 			    s_m_axi_arvalid ,
+    input logic 			    s_m_axi_arready ,
+    output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_araddr ,
+    output logic [8-1:0] 		    s_m_axi_arlen ,
+    input logic 			    s_m_axi_rvalid ,
+    output logic 			    s_m_axi_rready ,
+    input logic [C_M_AXI_DATA_WIDTH-1:0]    s_m_axi_rdata ,
+    input logic 			    s_m_axi_rlast ,
+    input logic 			    s_m_axi_bvalid ,
+    output logic 			    s_m_axi_bready
     // AXI LITE IF
    
     );

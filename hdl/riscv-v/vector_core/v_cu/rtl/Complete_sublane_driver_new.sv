@@ -255,7 +255,7 @@ logic raddr_cnt_rst;
 logic [$clog2(MEM_DEPTH) - 1 : 0] waddr;
 logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] raddr;
 logic wsecondary_en;
-logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] slide_waddr, normal_waddr;
+logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] slide_waddr, normal_waddr, slide_down_waddr;
 
 // comparators
 logic [6 : 0] inst_type_comp;
@@ -269,12 +269,16 @@ assign vrf_waddr_o = (current_state == SLIDE) ? slide_waddr : normal_waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
 assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
-   generate
-      for (genvar i=0; i<VLANE_NUM;i++)
+   always_comb
+   begin
+      for (int i=0; i<VLANE_NUM;i++)
       begin
-	 assign vrf_bwen_o[i] = (current_state == SLIDE) ? slide_bwen[i] : normal_bwen[i];
+	 if (dp0_reg.up_down_slide)
+	   vrf_bwen_o[i] = (current_state == SLIDE) ? slide_bwen[i] : normal_bwen[i];
+	 else
+	   vrf_bwen_o[i] = {slide_bwen[i][0], slide_bwen[i][1], slide_bwen[i][2], slide_bwen[i][3]};
       end
-   endgenerate
+   end
 assign vrf_ren_o = dp0_reg.vrf_ren;
 assign vrf_oreg_ren_o = dp0_reg.vrf_oreg_ren;
 assign dp0_next.vrf_ren = vrf_ren_i;
@@ -309,7 +313,7 @@ assign dp1_next[VRF_DELAY - 1].waddr = waddr;
 assign dp0_next.bwen_ff = bwen_mux;
 assign dp0_next.waddr_ff = waddr;
 assign dp1_next[VRF_DELAY - 1].vrf_bwen = (current_state == SLIDE_OFFLANE_MOVE) ? {4{1'b1}} : 0;
-assign up_down_slide_o = dp0_reg.slide_complete_lane_up;
+assign up_down_slide_o = dp0_reg.up_down_slide;
 //assign request_write_control_o = (current_state == SLIDE) | (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 assign read_data_valid_slide = valid_data;
 assign secondary_bwen_en = wsecondary_en;
@@ -317,18 +321,25 @@ assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;
 
 
 // For some instruction, like slide, depending on the slide amount lanes should skip some of the elements
-generate
-   for (genvar lane=0; lane<VLANE_NUM; lane++)
+   always@(posedge clk_i)
    begin
-      assign first_elements_to_skip[lane] = dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= lane ? LP_SKIP_NONE:
-					    dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= VLANE_NUM+lane ? LP_SKIP_1 :
-					    dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 2*VLANE_NUM+lane ? LP_SKIP_2 :
-					    dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 3*VLANE_NUM+lane ? LP_SKIP_3 : LP_SKIP_ALL;
-      
-      
+      if (!rst_i)
+      begin
+	 first_elements_to_skip <= '{default:'0};
+      end
+      else
+      begin
+	 for (int lane=0; lane<VLANE_NUM; lane++)
+	 begin
+	    first_elements_to_skip[lane] <= dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= lane ? LP_SKIP_NONE:
+		       dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= VLANE_NUM+lane ? LP_SKIP_1 :
+		       dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 2*VLANE_NUM+lane ? LP_SKIP_2 :
+		       dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 3*VLANE_NUM+lane ? LP_SKIP_3 : LP_SKIP_ALL;
+	    
+	    
+	 end
+      end
    end
-        
-endgenerate
 assign slide_data_mux_sel_o = dp0_reg.slide_amount[$clog2(VLANE_NUM)-1:0];
 
    
@@ -383,17 +394,17 @@ always_ff@(posedge clk_i) begin
        slide_bwen_skip3_reg <= 4'b1000;
     end
     else begin
-        if(dp0_reg.bwen_en & secondary_bwen_en) begin
-	   
+        if(dp0_reg.bwen_en & secondary_bwen_en) begin	   
            slide_bwen_skip1_reg <= {slide_bwen_skip1_reg[2 : 0], slide_bwen_skip1_reg[3]};
            slide_bwen_skip2_reg <= {slide_bwen_skip2_reg[2 : 0], slide_bwen_skip2_reg[3]};
            slide_bwen_skip3_reg <= {slide_bwen_skip3_reg[2 : 0], slide_bwen_skip3_reg[3]};
         end
-        else begin
+        else 
+	begin
 	   slide_bwen_skip1_reg <= 4'b0010;
 	   slide_bwen_skip2_reg <= 4'b0100;
 	   slide_bwen_skip3_reg <= 4'b1000;
-        end
+	end	
        if (main_cnt >= dp0_reg.read_limit)
        begin
 	  slide_bwen_skip1_reg[0] <= 1'b0;
@@ -403,7 +414,8 @@ always_ff@(posedge clk_i) begin
     end
 end
 
-
+   logic [$clog2(MEM_DEPTH) - 1 : 0] incr_decr;
+   assign incr_decr = dp0_reg.up_down_slide ? 1 : -1;
 generate
     for(genvar i = 0; i < VLANE_NUM; i++) begin
         assign slide_bwen[i] = (first_elements_to_skip[i] == 1) ? (slide_bwen_skip1_reg & {4{dp0_reg.bwen_en}}):
@@ -411,10 +423,16 @@ generate
 			       (first_elements_to_skip[i] == 3) ? (slide_bwen_skip3_reg & {4{dp0_reg.bwen_en}}) : bwen_mux;
 
        //assign slide_waddr[i] = (slide_write_data_pattern[i] == 0) ? dp0_reg.waddr_ff : waddr;
-        assign slide_waddr[i] = (first_elements_to_skip[i]==1 && slide_bwen_skip1_reg[0]) ? waddr+1 : 
-				(first_elements_to_skip[i]==2 && (slide_bwen_skip2_reg[0] || slide_bwen_skip2_reg[1])) ? waddr+1 : 
-				(first_elements_to_skip[i]==3 && (slide_bwen_skip3_reg[0] || slide_bwen_skip3_reg[1] || slide_bwen_skip3_reg[2])) ? waddr+1 :
-				(first_elements_to_skip[i]==4) ? waddr+1 : waddr;
+        assign slide_waddr[i] = (first_elements_to_skip[i]==1 && slide_bwen_skip1_reg[0]) ? waddr+incr_decr : 
+				(first_elements_to_skip[i]==2 && (slide_bwen_skip2_reg[0] || slide_bwen_skip2_reg[1])) ? waddr+incr_decr : 
+				(first_elements_to_skip[i]==3 && (slide_bwen_skip3_reg[0] || slide_bwen_skip3_reg[1] || slide_bwen_skip3_reg[2])) ? waddr+incr_decr :
+				(first_elements_to_skip[i]==4) ? waddr+incr_decr : waddr;
+/* -----\/----- EXCLUDED -----\/-----
+       assign slide_down_waddr[i] = (first_elements_to_skip[i]==3 && slide_bwen_skip1_reg[2]) ? waddr+incr_decr : 
+				  (first_elements_to_skip[i]==2 && (slide_bwen_skip2_reg[2] || slide_bwen_skip2_reg[1])) ? waddr+incr_decr : 
+				  (first_elements_to_skip[i]==1 && (slide_bwen_skip3_reg[0] || slide_bwen_skip3_reg[1] || slide_bwen_skip3_reg[2])) ? waddr+incr_decr :
+				  (first_elements_to_skip[i]==4) ? waddr+incr_decr : waddr;
+ -----/\----- EXCLUDED -----/\----- */
         
         assign normal_waddr[i] = (dp0_reg.delay_addr == 1) ? dp1_reg[0].waddr : waddr; 
         assign normal_bwen[i] = ((current_state == LOAD_MODE) & (dp0_reg.waddr_cnt_en == 1)) ? load_bwen_i[i] : 
@@ -527,7 +545,7 @@ always_comb begin
         default: bwen_selcetion = {{4{1'b0}}};
     endcase
     
-    bwen_mux = main_cnt > dp0_reg.read_limit ? 'h0 : 
+    bwen_mux = main_cnt > dp0_reg.read_limit+1 ? 'h0 : 
 	       (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
                                               bwen_selcetion;
 end
@@ -537,7 +555,8 @@ end
 // Address counters - instantiation //
    
 //If slide offset waddt
-assign slide_waddr_offset = dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM*4) +: 31] : 'h0;
+assign slide_waddr_offset = dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM*4) +: 31] :
+			    !dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM*4) +: 31] : 'h0;
 
 Address_counter
 #(
@@ -782,7 +801,7 @@ always_comb begin
               dp0_next.en_comp = 0;
               dp0_next.delay_addr = 0;
               dp0_next.input_sel = 2'b11;
-              dp0_next.reverse_bwen = 0;
+              dp0_next.reverse_bwen = up_down_slide_i;
               dp0_next.slide_enable_buffering = 0;
               dp0_next.start_decrementor = 0;
 	   end
@@ -818,7 +837,7 @@ always_comb begin
                     end
                     7'b1000000 : begin                                            // SLIDE                        
                         //dp0_next.delay_addr = 1;                                  // Starting from the next cycle bwen is 1111                        
-                        dp0_next.reverse_bwen = !up_down_slide_i;
+                        //dp0_next.reverse_bwen = up_down_slide_i;
                         dp0_next.en_write = 1;
 		        next_state = SLIDE;                            
                         dp0_next.write_data_sel = 2'b10;                        

@@ -636,15 +636,19 @@ endgenerate;
 
 
    
-   logic [$clog2(VLANE_NUM)-1:0] lane_sel;
+   logic [VLANE_NUM-1:0][$clog2(VLANE_NUM)-1:0] lane_sel;
    // each lane has mux8_1 for slide_data_input. We replicate byte to be shifted 4 times and with bwe we chose
    // where to write it.
    always_comb
    begin            
       for (int lane=0; lane<VLANE_NUM; lane++)
       begin
-	 lane_sel = ~slide_data_mux_sel+lane+1;	 
-	 slide_data_input[lane] = {4{slide_data_output[lane_sel][slide_read_byte_sel_reg[VRF_DELAY-2]*8 +: 8]}};  
+	 if(up_down_slide_il)
+	   lane_sel[lane] = ~slide_data_mux_sel+lane+1;
+	 else
+	   lane_sel[lane] = slide_data_mux_sel+lane;
+
+	 slide_data_input[lane] = {4{slide_data_output[lane_sel[lane]][slide_read_byte_sel_reg[VRF_DELAY-2]*8 +: 8]}};  
       end      
    end
 /* -----\/----- EXCLUDED -----\/-----

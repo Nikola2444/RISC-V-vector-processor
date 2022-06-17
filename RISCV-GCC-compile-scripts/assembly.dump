@@ -6,8 +6,8 @@ Disassembly of section .text:
 
 0000000000000000 <.text>:
    0:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
-   4:	00110093          	addi	ra,sp,1
-   8:	3a20c0d7          	vslideup.vx	v1,v2,ra
+   4:	00410093          	addi	ra,sp,4
+   8:	3e20c0d7          	vslidedown.vx	v1,v2,ra
    c:	022180d7          	vadd.vv	v1,v2,v3
   10:	0a630257          	vsub.vv	v4,v6,v6
   14:	027402d7          	vadd.vv	v5,v7,v8

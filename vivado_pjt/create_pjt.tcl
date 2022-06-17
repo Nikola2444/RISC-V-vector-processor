@@ -62,21 +62,23 @@ add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/hazard_unit.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/immediate.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/register_bank.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_core\/rtl\/TOP_RISCV.vhd
-#axim controller
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_counter.sv
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_read_master.sv
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_write_master.sv
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl.sv
+#axim controller for vector core
+add_files -norecurse ..\/hdl\/riscv-v\/vector_axif_m_ctrl\/rtl\/axim_ctrl_counter.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_axif_m_ctrl\/rtl\/axim_ctrl_axi_read_master.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_axif_m_ctrl\/rtl\/axim_ctrl_axi_write_master.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_axif_m_ctrl\/rtl\/axim_ctrl.sv
+
+#axim controller for scalar core
+add_files -norecurse ..\/hdl\/riscv-v\/scalar_axil_s_ctrl/rtl/riscv_axil_s_ctrl.vhd
 
 #mem_subsystem
+add_files -norecurse ..\/hdl\/riscv-v\/scalar_cache\/rtl\/cache_contr_nway_vnv_axi.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/axi_m_controller.v
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/m_cu.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/buff_array\/rtl\/buff_array.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/rtl/mem_subsys.sv
 
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_read_master.sv
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl_axi_write_master.sv
-add_files -norecurse ..\/hdl\/riscv-v\/axim_ctrl\/rtl\/axim_ctrl.sv
+
 #top files
 add_files -norecurse ..\/hdl\/riscv-v\/rtl\/riscv_v.sv
 add_files -norecurse ..\/hdl\/riscv-v\/rtl\/riscv_v_w_mem_subsystem.sv

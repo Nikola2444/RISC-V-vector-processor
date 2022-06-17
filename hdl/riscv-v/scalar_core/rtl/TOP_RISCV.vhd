@@ -18,8 +18,8 @@ entity scalar_core is
     instr_mem_address_o : out std_logic_vector(31 downto 0);
     instr_mem_read_i    : in  std_logic_vector(31 downto 0);
 
-    instr_mem_flush_o : out std_logic;
-    instr_mem_en_o    : out std_logic;
+    --instr_mem_flush_o : out std_logic;
+    --instr_mem_en_o    : out std_logic;
 
     ---------------------------- VECTOR CORE INTERFACE---------------------------
     -- Vector core status signals
@@ -116,9 +116,9 @@ begin
       if_id_en_i         => if_id_en_s);
 
   --flush current instruction
-  instr_mem_flush_o <= '1' when (if_id_flush_s = '1' or instr_ready_i = '0')                     else '0';
+  --instr_mem_flush_o <= '1' when (if_id_flush_s = '1' or instr_ready_i = '0')                     else '0';
   -- stall currnet instruction
-  instr_mem_en_o    <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
+  --instr_mem_en_o    <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
 
 
 

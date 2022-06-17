@@ -126,6 +126,7 @@ module riscv_v_w_mem_subsystem #
 		    .wr_tvalid		(wr_tvalid),
 		    .wr_tdata		(wr_tdata[C_M_AXI_DATA_WIDTH-1:0]));
 
+
    riscv_v #(/*AUTOINST_PARAM*/
 	     // Parameters
 	     .C_M_AXI_ADDR_WIDTH	(C_M_AXI_ADDR_WIDTH),
@@ -137,22 +138,55 @@ module riscv_v_w_mem_subsystem #
    riscv_v_inst(/*AUTO_INST*/
 		// Outputs
 		.instr_mem_address_o	(instr_mem_address[31:0]),
-		//.instr_mem_flush_o	(instr_mem_flush),
-		.instr_mem_en_o		(instr_mem_en),
 		.data_mem_address_o	(data_mem_address[31:0]),
 		.data_mem_we_o		(data_mem_we[3:0]),
+		.fencei_o	(fencei),
+		.data_mem_write_o	(data_mem_write[31:0]),
+		.data_mem_re_o		(data_mem_re)
 		// Inputs
 		.clk			(clk),
 		.clk2			(clk2),
-		.ce			(1'b1),
-		.fencei_o		(),
 		.rstn			(rstn),
+		.ce			  (ce),
 		.instr_ready_i		(instr_ready),
-		.data_ready_i		(data_ready),
+		.data_ready_i		  (data_ready),
 		.instr_mem_read_i	(instr_mem_read[31:0]),
-		.data_mem_read_i	(data_mem_read[31:0]),
-		.data_mem_write_o	(data_mem_write[31:0]),
-		.data_mem_re_o		(data_mem_re));
+		.data_mem_read_i	(data_mem_read[31:0]));
+
+
+    cache_contr_nway_vnv #(
+			.C_PHY_ADDR_WIDTH(32),
+			.C_TS_BRAM_TYPE("HIGH_PERFORMANCE"),
+			.C_BLOCK_SIZE(64),
+			.C_LVL1_CACHE_SIZE(1024*1),
+			.C_LVL2_CACHE_SIZE(1024*4),
+			.C_LVL2C_ASSOCIATIVITY(4),
+    ) cache_inst(
+      .clk(clk),
+      .ce(ce);
+      .reset(rst)
+			.data_ready_o(data_ready),
+			.instr_ready_o(instr_ready)
+			.fencei_i(fencei),
+			.addr_instr_i(instr_mem_address),
+			.dread_instr_o(instr_mem_read),
+			.addr_data_i(data_mem_address),
+			.dread_data_o(data_mem_read),
+			.dwrite_data_i(data_mem_write),
+      .we_data_i(data_mem_we),
+      .re_data_i(data_mem_re),
+			.axi_write_address_o(),
+			.axi_write_init_o(),
+			.axi_write_data_o(),
+			.axi_write_next_i(),
+			.axi_write_done_i(),
+			.axi_read_address_o(),
+			.axi_read_init_o(),
+			.axi_read_data_i(),
+			.axi_read_next_i());
+
+
+
 endmodule
 
 // Local Variables:

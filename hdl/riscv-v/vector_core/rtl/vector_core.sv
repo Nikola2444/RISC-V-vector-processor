@@ -14,7 +14,7 @@ module vector_core #
    // Outputs
    vector_stall_o, ctrl_raddr_offset_o, ctrl_rxfer_size_o,
    ctrl_rstart_o, rd_tready_o, ctrl_waddr_offset_o, ctrl_wxfer_size_o,
-   ctrl_wstart_o, wr_tdata_o, wr_tvalid_o,
+   ctrl_wstart_o, wr_tdata_o, wr_tvalid_o,ctrl_wstrb_msk_en_o, wr_tstrb_msk_o,
    // Inputs
    clk, clk2, rstn, rs1_i, rs2_i, vector_instr_i, ctrl_rdone_i,
    rd_tdata_i, rd_tvalid_i, rd_tlast_i, ctrl_wdone_i, wr_tready_i
@@ -52,6 +52,8 @@ module vector_core #
    output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_wxfer_size_o       ;
    output logic 			 ctrl_wstart_o           ;
    input  logic 			 ctrl_wdone_i            ;
+   output  logic 			 ctrl_wstrb_msk_en_o             ;
+   output  logic 			 wr_tstrb_msk_o             ;
    output logic [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o              ;
    output logic 			 wr_tvalid_o             ;
    input  logic 			 wr_tready_i             ;
@@ -119,21 +121,10 @@ module vector_core #
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_idx_mux_sel;
 
    // SHEDULER-MEM_SUBSYS interconnections
-   logic [31:0] 			  mcu_base_addr        ;
-   logic [31:0] 			  mcu_stride           ;
-   logic [ 2:0] 			  mcu_data_width       ;
-   logic 				  mcu_idx_ld_st        ;
    logic [31:0] 			  mcu_store_data[0:VLANE_NUM-1];
    logic [31:0] 			  mcu_store_load_idx  [0:VLANE_NUM-1];
-   logic [31:0]	                          mcu_load_data[0:VLANE_NUM-1];
+   logic [31:0]	        mcu_load_data[0:VLANE_NUM-1];
    logic [3:0] 				  mcu_load_bwe[0:VLANE_NUM-1];
-   logic 				  mcu_strided_ld_st    ;
-   logic 				  mcu_unit_ld_st       ;
-   logic 				  mcu_st_rdy           ;
-   logic 				  mcu_st_vld           ;
-   logic 				  mcu_ld_rdy           ;
-   logic 				  mcu_ld_buffered      ;
-   logic 				  mcu_ld_vld           ;
    // V_LANE-MEM_SUBSYS interconnections
 
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] vlane_store_data;
@@ -389,11 +380,13 @@ module vector_core #
       .ctrl_wxfer_size_o    (ctrl_wxfer_size_o   ),
       .ctrl_wstart_o        (ctrl_wstart_o       ),
       .ctrl_wdone_i         (ctrl_wdone_i        ),
+      .ctrl_wstrb_msk_en_o  (ctrl_wstrb_msk_en_o ),
       .wr_tdata_o           (wr_tdata_o          ),
       .wr_tvalid_o          (wr_tvalid_o         ),
       .wr_tready_i          (wr_tready_i         ),
-      .vlane_store_data_i   (mcu_store_data    ),
-      .vlane_store_idx_i    (mcu_store_load_idx),
+      .wr_tstrb_msk_o       (wr_tstrb_msk_o),
+      .vlane_store_data_i   (mcu_store_data      ),
+      .vlane_store_idx_i    (mcu_store_load_idx  ),
       .vlane_store_dvalid_i (vlane_mcu_store_dvalid  ),
       .vlane_store_ivalid_i (vlane_store_laod_ivalid),
       .vlane_store_rdy_o    (vlane_store_rdy     ),

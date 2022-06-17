@@ -11,10 +11,11 @@ module riscv_v #
     fencei_o, instr_mem_address_o, instr_mem_en_o, data_mem_address_o,
     data_mem_we_o, ctrl_raddr_offset_o, ctrl_rxfer_size_o,
     ctrl_rstart_o, rd_tready_o, ctrl_waddr_offset_o, ctrl_wxfer_size_o,
-    ctrl_wstart_o, wr_tdata_o, wr_tvalid_o,
+    ctrl_wstart_o, wr_tdata_o, wr_tvalid_o, data_mem_write_o, data_mem_re_o,
+    ctrl_wstrb_msk_en_o, wr_tstrb_msk_o,
     // Inputs
     clk, clk2, ce, rstn, instr_ready_i, data_ready_i, instr_mem_read_i,
-    data_mem_read_i, data_mem_write_o, data_mem_re_o, ctrl_rdone_i,
+    data_mem_read_i,  ctrl_rdone_i,
     rd_tdata_i, rd_tvalid_i, rd_tlast_i, ctrl_wdone_i, wr_tready_i
     );
    input 	     clk;
@@ -36,17 +37,17 @@ module riscv_v #
    output [31:0]     instr_mem_address_o;
    input [31:0]      instr_mem_read_i; 
    //output 	  instr_mem_flush_o;
-   output 	     instr_mem_en_o;
+   //output 	         instr_mem_en_o;
    // Scalar Data memory interface      
    output [31:0]     data_mem_address_o;
    input [31:0]      data_mem_read_i;
-   input [31:0]      data_mem_write_o;
+   output [31:0]     data_mem_write_o;
    output [3:0]      data_mem_we_o;
-   input 	     data_mem_re_o;
+   output 	     data_mem_re_o;
    // MCU <=> AXIM CONTROL IF [read channel]
    output logic [C_M_AXI_ADDR_WIDTH-1:0] ctrl_raddr_offset_o ;
    output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_rxfer_size_o ;
-   output logic 			 ctrl_rstart_o ;
+   output logic 		ctrl_rstart_o ;
    input logic 				 ctrl_rdone_i ;
    input logic [C_M_AXI_DATA_WIDTH-1:0]  rd_tdata_i ;
    input logic 				 rd_tvalid_i ;
@@ -60,6 +61,8 @@ module riscv_v #
    output logic [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o ;
    output logic 			 wr_tvalid_o ;
    input logic 				 wr_tready_i ;
+   output  logic 			 ctrl_wstrb_msk_en_o             ;
+   output  logic 			 wr_tstrb_msk_o             ;
 
 
    //---------------------------- VECTOR CORE INTERFACE---------------------------
@@ -88,7 +91,7 @@ module riscv_v #
       .pc_reg_o                (),
       .instr_mem_read_i        ( instr_mem_read_i),
       //.instr_mem_flush_o       ( instr_mem_flush_o),
-      .instr_mem_en_o          ( instr_mem_en_o),
+      //.instr_mem_en_o          ( instr_mem_en_o),
       // Vector if
       .all_v_stores_executed_i ( all_v_stores_executed),
       .all_v_loads_executed_i  ( all_v_loads_executed),
@@ -120,6 +123,8 @@ module riscv_v #
       .ctrl_waddr_offset_o		(ctrl_waddr_offset_o[C_M_AXI_ADDR_WIDTH-1:0]),
       .ctrl_wxfer_size_o		(ctrl_wxfer_size_o[C_XFER_SIZE_WIDTH-1:0]),
       .ctrl_wstart_o			(ctrl_wstart_o),
+      .ctrl_wstrb_msk_en_o			(ctrl_wstrb_msk_en_o),
+      .wr_tstrb_msk_o			(wr_tstrb_msk_o),
       .wr_tdata_o			(wr_tdata_o[C_M_AXI_DATA_WIDTH-1:0]),
       .wr_tvalid_o			(wr_tvalid_o),
       // Inputs

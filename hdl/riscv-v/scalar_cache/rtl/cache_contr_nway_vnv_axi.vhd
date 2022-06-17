@@ -40,8 +40,8 @@ entity cache_contr_nway_vnv is
 			addr_data_i			: in std_logic_vector(C_PHY_ADDR_WIDTH-1 downto 0);
 			dread_data_o 		: out std_logic_vector(31 downto 0);
 			dwrite_data_i		: in std_logic_vector(31 downto 0);
-         we_data_i			: in std_logic_vector(3 downto 0);
-         re_data_i			: in std_logic
+      we_data_i			: in std_logic_vector(3 downto 0);
+      re_data_i			: in std_logic
 			);
 end entity;
 

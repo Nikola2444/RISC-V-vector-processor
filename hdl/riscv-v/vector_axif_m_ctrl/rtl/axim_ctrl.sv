@@ -34,6 +34,7 @@ module axim_ctrl #(
   input  wire                                   m_axi_rlast        ,
   input  wire                                   m_axi_bvalid       ,
   output wire                                   m_axi_bready       ,
+  input  wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_baseaddr      ,
   input  wire                                   ctrl_rstart        ,
   output wire                                   ctrl_rdone         ,
   input  wire [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset  ,
@@ -64,9 +65,14 @@ localparam integer LP_BRAM_DEPTH           = 512;
 localparam integer LP_RD_MAX_OUTSTANDING   = LP_BRAM_DEPTH / LP_AXI_BURST_LEN;
 localparam integer LP_WR_MAX_OUTSTANDING   = 32;
 
-wire [C_M_AXI_DATA_WIDTH/8-1:0]        m_axi_wstrb_s;
+wire [C_M_AXI_DATA_WIDTH/8-1:0]       m_axi_wstrb_s;
+wire [C_M_AXI_ADDR_WIDTH-1:0]         ctrl_waddr;
+wire [C_M_AXI_ADDR_WIDTH-1:0]         ctrl_raddr;
 assign m_axi_wstrb = (ctrl_wstrb_msk_en) ? (m_axi_wstrb_s & wr_tstrb_msk) : (m_axi_wstrb_s);
 
+
+assign ctrl_waddr = (ctrl_baseaddr + ctrl_waddr_offset);
+assign ctrl_raddr = (ctrl_baseaddr + ctrl_raddr_offset);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Begin RTL
@@ -85,7 +91,7 @@ inst_axi_read_master (
   .areset                  ( rst                     ) ,
   .ctrl_start              ( ctrl_rstart         		 ) ,
   .ctrl_done               ( ctrl_rdone              ) ,
-  .ctrl_addr_offset        ( ctrl_raddr_offset       ) ,
+  .ctrl_addr_offset        ( ctrl_raddr              ) ,
   .ctrl_xfer_size_in_bytes ( ctrl_rxfer_size 		     ) ,
   .m_axi_arvalid           ( m_axi_arvalid           ) ,
   .m_axi_arready           ( m_axi_arready           ) ,
@@ -103,7 +109,6 @@ inst_axi_read_master (
   .m_axis_tdata            ( rd_tdata                )
 );
 
-
 // AXI4 Write Master
 axim_ctrl_axi_write_master #(
   .C_M_AXI_ADDR_WIDTH  ( C_M_AXI_ADDR_WIDTH    ) ,
@@ -117,7 +122,7 @@ inst_axi_write_master (
   .areset                  ( rst                     ) ,
   .ctrl_start              ( ctrl_wstart             ) ,
   .ctrl_done               ( ctrl_wdone              ) ,
-  .ctrl_addr_offset        ( ctrl_waddr_offset       ) ,
+  .ctrl_addr_offset        ( ctrl_waddr              ) ,
   .ctrl_xfer_size_in_bytes ( ctrl_wxfer_size         ) ,
   .m_axi_awvalid           ( m_axi_awvalid           ) ,
   .m_axi_awready           ( m_axi_awready           ) ,

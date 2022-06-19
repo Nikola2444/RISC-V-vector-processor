@@ -6,63 +6,45 @@ module riscv_v #
    parameter VLEN=4096,
    parameter V_LANES=16,
    parameter CHAINING=4)
-   (/*AUTOARG*/
-    // Outputs
-    fencei_o, instr_mem_address_o, instr_mem_en_o, data_mem_address_o,
-    data_mem_we_o, ctrl_raddr_offset_o, ctrl_rxfer_size_o,
-    ctrl_rstart_o, rd_tready_o, ctrl_waddr_offset_o, ctrl_wxfer_size_o,
-    ctrl_wstart_o, wr_tdata_o, wr_tvalid_o, data_mem_write_o, data_mem_re_o,
-    ctrl_wstrb_msk_en_o, wr_tstrb_msk_o,
-    // Inputs
-    clk, clk2, ce, rstn, instr_ready_i, data_ready_i, instr_mem_read_i,
-    data_mem_read_i,  ctrl_rdone_i,
-    rd_tdata_i, rd_tvalid_i, rd_tlast_i, ctrl_wdone_i, wr_tready_i
-    );
-   input 	     clk;
-   input 	     clk2;
-   input 	     ce;
-   input 	     rstn;
-
-   // Instruction interface
-
-   
-   // Vector data interface
-
+   (
+   input 	     clk,
+   input 	     clk2,
+   input 	     ce,
+   input 	     rstn,
    // Scalar core interface
-   output 	     fencei_o;
-   input 	     instr_ready_i;
-   input 	     data_ready_i;
+   output 	     fencei_o,
+   input 	     instr_ready_i,
+   input 	     data_ready_i,
+   output     [31:0] pc_reg_o,
    
    // Instruction memory interface
-   output [31:0]     instr_mem_address_o;
-   input [31:0]      instr_mem_read_i; 
-   //output 	  instr_mem_flush_o;
-   //output 	         instr_mem_en_o;
+   output [31:0]     instr_mem_address_o,
+   input [31:0]      instr_mem_read_i,
    // Scalar Data memory interface      
-   output [31:0]     data_mem_address_o;
-   input [31:0]      data_mem_read_i;
-   output [31:0]     data_mem_write_o;
-   output [3:0]      data_mem_we_o;
-   output 	     data_mem_re_o;
+   output [31:0]     data_mem_address_o,
+   input [31:0]      data_mem_read_i,
+   output [31:0]     data_mem_write_o,
+   output [3:0]      data_mem_we_o,
+   output 	     data_mem_re_o,
    // MCU <=> AXIM CONTROL IF [read channel]
-   output logic [C_M_AXI_ADDR_WIDTH-1:0] ctrl_raddr_offset_o ;
-   output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_rxfer_size_o ;
-   output logic 		ctrl_rstart_o ;
-   input logic 				 ctrl_rdone_i ;
-   input logic [C_M_AXI_DATA_WIDTH-1:0]  rd_tdata_i ;
-   input logic 				 rd_tvalid_i ;
-   output logic 			 rd_tready_o ;
-   input logic 				 rd_tlast_i ;
+   output  [C_M_AXI_ADDR_WIDTH-1:0] ctrl_raddr_offset_o,
+   output  [C_XFER_SIZE_WIDTH-1:0]  ctrl_rxfer_size_o,
+   output  		ctrl_rstart_o,
+   input  				 ctrl_rdone_i ,
+   input  [C_M_AXI_DATA_WIDTH-1:0]  rd_tdata_i ,
+   input  				 rd_tvalid_i ,
+   output  			 rd_tready_o ,
+   input  				 rd_tlast_i ,
    // MCU <=> AXIM CONTROL IF [write channel]
-   output logic [C_M_AXI_ADDR_WIDTH-1:0] ctrl_waddr_offset_o ;
-   output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_wxfer_size_o ;
-   output logic 			 ctrl_wstart_o ;
-   input logic 				 ctrl_wdone_i ;
-   output logic [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o ;
-   output logic 			 wr_tvalid_o ;
-   input logic 				 wr_tready_i ;
-   output  logic 			 ctrl_wstrb_msk_en_o             ;
-   output  logic 			 wr_tstrb_msk_o             ;
+   output  [C_M_AXI_ADDR_WIDTH-1:0] ctrl_waddr_offset_o ,
+   output  [C_XFER_SIZE_WIDTH-1:0]  ctrl_wxfer_size_o ,
+   output  			 ctrl_wstart_o ,
+   input  				 ctrl_wdone_i ,
+   output  [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o ,
+   output  			 wr_tvalid_o ,
+   input  				 wr_tready_i ,
+   output   			 ctrl_wstrb_msk_en_o,
+   output   			 wr_tstrb_msk_o);
 
 
    //---------------------------- VECTOR CORE INTERFACE---------------------------
@@ -88,10 +70,8 @@ module riscv_v #
       .instr_ready_i           ( instr_ready_i),
       .fencei_o                (fencei_o),
       .instr_mem_address_o     ( instr_mem_address_o),
-      .pc_reg_o                (),
+      .pc_reg_o                (pc_reg_o),
       .instr_mem_read_i        ( instr_mem_read_i),
-      //.instr_mem_flush_o       ( instr_mem_flush_o),
-      //.instr_mem_en_o          ( instr_mem_en_o),
       // Vector if
       .all_v_stores_executed_i ( all_v_stores_executed),
       .all_v_loads_executed_i  ( all_v_loads_executed),
@@ -110,12 +90,11 @@ module riscv_v #
       .data_mem_re_o           ( data_mem_re_o));
 
    vector_core # 
-     (.VLEN			(VLEN),
-      .VLANE_NUM		(V_LANES))
+     (.VLEN			 (VLEN),
+      .VLANE_NUM (V_LANES))
    vector_core_inst
      (/*AUTO_INST*/
       // Outputs
-
       .ctrl_raddr_offset_o		(ctrl_raddr_offset_o[C_M_AXI_ADDR_WIDTH-1:0]),
       .ctrl_rxfer_size_o		(ctrl_rxfer_size_o[C_XFER_SIZE_WIDTH-1:0]),
       .ctrl_rstart_o			(ctrl_rstart_o),

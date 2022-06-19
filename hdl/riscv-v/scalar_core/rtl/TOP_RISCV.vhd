@@ -12,8 +12,7 @@ entity scalar_core is
     instr_ready_i       : in  std_logic;
     data_ready_i        : in  std_logic;
     fencei_o            : out std_logic;
-    pc_reg_o            : out std_logic_vector(31 downto 0);  -- TODO: Remove,
-                                                              -- not needed
+    pc_reg_o            : out std_logic_vector(31 downto 0); 
     -- Instruction memory interface
     instr_mem_address_o : out std_logic_vector(31 downto 0);
     instr_mem_read_i    : in  std_logic_vector(31 downto 0);

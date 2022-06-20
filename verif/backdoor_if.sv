@@ -17,15 +17,17 @@ interface backdoor_register_bank_if (input clk, logic rstn);
    logic [31:0]   rs2_data_o;   
    logic [4:0] 	  rd_address_i; 
    logic [31:0]   rd_data_i;
+   logic [0:31][31:0] scalar_reg_bank;
 endinterface:backdoor_register_bank_if
 
 interface backdoor_sc_data_if (input clk, logic rstn);   
    logic 	  data_ready_i;
    logic [31:0]	  data_mem_address_o;
    logic [31:0]	  data_mem_read_i;
-   logic 	  data_mem_write_o;
+   logic [31:0]	  data_mem_write_o;
    logic 	  data_mem_we_o;
    logic 	  data_mem_re_o;
+   
 endinterface:backdoor_sc_data_if
 
 interface backdoor_v_data_if (input clk, logic rstn);   

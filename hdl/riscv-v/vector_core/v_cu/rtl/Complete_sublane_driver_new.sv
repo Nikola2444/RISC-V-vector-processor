@@ -295,7 +295,7 @@ assign op2_sel_o = (current_state == REDUCTION_MODE) ? 2'b11 : dp0_reg.op2_sel;
 assign op3_sel_o = dp0_reg.op3_sel;
 assign ALU_x_data_o = dp0_reg.ALU_x_data;
 assign ALU_imm_o = dp0_reg.ALU_imm;
-assign el_extractor_o = main_cnt[1 : 0];
+assign el_extractor_o = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
 assign vector_mask_o = dp0_reg.vector_mask;
 assign write_data_sel_o = dp0_reg.write_data_sel;
 assign read_data_valid_o = (dp0_reg.delay_addr == 1) ? read_data_valid_slide : read_data_valid;

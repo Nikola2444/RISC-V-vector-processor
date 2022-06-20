@@ -41,7 +41,7 @@ class bd_instr_if_agent extends uvm_agent;
       /*****************************************************************/
       
       mon = bd_instr_if_monitor::type_id::create("mon", this);
-      if(cfg.is_active == UVM_ACTIVE) begin
+      if(cfg.instr_agent_active == 1) begin
          drv = bd_instr_if_driver::type_id::create("drv", this);
          seqr = bd_instr_if_sequencer::type_id::create("seqr", this);
       end

@@ -12,13 +12,14 @@ assign backdoor_instr_vif.instr_mem_flush = DUT.instr_mem_flush;
 assign backdoor_instr_vif.instr_mem_en = DUT.instr_mem_en;
 
 // Register bank backdoor connections
-assign backdoor_register_bank_vif.rd_we_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rd_we_i;
-assign backdoor_register_bank_vif.rs1_address_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rs1_address_i;
-assign backdoor_register_bank_vif.rs2_address_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rs2_address_i;
-assign backdoor_register_bank_vif.rs1_data_o=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rs1_data_o;
-assign backdoor_register_bank_vif.rs2_data_o=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rs2_data_o;
-assign backdoor_register_bank_vif.rd_address_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rd_address_i;
-assign backdoor_register_bank_vif.rd_data_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.white_box_inst.rd_data_i;
+assign backdoor_register_bank_vif.rd_we_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rd_we_i;
+assign backdoor_register_bank_vif.rs1_address_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rs1_address_i;
+assign backdoor_register_bank_vif.rs2_address_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rs2_address_i;
+assign backdoor_register_bank_vif.rs1_data_o=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rs1_data_o;
+assign backdoor_register_bank_vif.rs2_data_o=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rs2_data_o;
+assign backdoor_register_bank_vif.rd_address_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rd_address_i;
+assign backdoor_register_bank_vif.rd_data_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rd_data_i;
+assign backdoor_register_bank_vif.scalar_reg_bank=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.scalar_reg_bank;
 
 // Scalaro core data interface
 

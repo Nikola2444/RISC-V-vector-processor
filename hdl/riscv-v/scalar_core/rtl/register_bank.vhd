@@ -21,12 +21,15 @@ architecture Behavioral of register_bank is
    type reg_bank is array (0 to 31) of std_logic_vector(31 downto 0);
    signal reg_bank_s : reg_bank;
 
+   --DEBUG LOGIC
+   signal rs1_data_s:std_logic_vector (31 downto 0);
+   signal rs2_data_s:std_logic_vector (31 downto 0);
 begin
 
    -- synchronous write, reset
    reg_bank_write : process (clk) is
    begin
-      if (rising_edge(clk))then
+      if (falling_edge(clk))then
          if (reset = '0')then
             reg_bank_s <= (others => (others => '0'));
          elsif (rd_we_i = '1') then
@@ -50,5 +53,21 @@ begin
          rs2_data_o <= reg_bank_s(to_integer(unsigned(rs2_address_i)));
       end if;
    end process;
+
+
+     --***********Debug logic***************************
+
+   rs1_data_s <= reg_bank_s(to_integer(unsigned(rs1_address_i)));
+   rs2_data_s <= reg_bank_s(to_integer(unsigned(rs2_address_i)));
+   white_box_inst: entity work.white_box
+     port map (
+       rd_we_i => rd_we_i,
+       rs1_address_i => rs1_address_i,
+       rs2_address_i => rs2_address_i,
+       rs1_data_o => rs1_data_s,
+       rs2_data_o => rs2_data_s, 
+       rd_address_i => rd_address_i, 
+       rd_data_i => rd_data_i,
+       scalar_reg_bank => reg_bank_s);
 
 end architecture;

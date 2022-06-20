@@ -8,6 +8,7 @@ class riscv_v_env extends uvm_env;
    AXI4_agent v_axi4_agent;
    AXI4_agent s_axi4_agent;
    riscv_v_config cfg;
+   riscv_scoreboard scbd;
    virtual interface axi4_if v_axi4_vif;
    virtual interface axi4_if s_axi4_vif;
    virtual interface backdoor_instr_if backdoor_instr_vif;
@@ -49,19 +50,23 @@ class riscv_v_env extends uvm_env;
       uvm_config_db#(virtual backdoor_register_bank_if)::set(this, "bd_instr_agent", "backdoor_register_bank_if", backdoor_register_bank_vif);
       uvm_config_db#(virtual backdoor_v_data_if)::set(this, "bd_v_data_agent", "backdoor_v_data_if", backdoor_v_data_vif);
       /*****************************************************************/
-
-      if (cfg.use_s_instr_backdoor)
-	bd_instr_agent   =   bd_instr_if_agent::type_id::create("bd_instr_agent", this);
-      else
-	s_axi4_agent     = AXI4_agent::type_id::create("s_axi4_agent", this);
+      
+      bd_instr_agent   =   bd_instr_if_agent::type_id::create("bd_instr_agent", this);      
+      s_axi4_agent     = AXI4_agent::type_id::create("s_axi4_agent", this);
       if (cfg.use_v_data_backdoor)
 	bd_v_data_agent  =   bd_v_data_if_agent::type_id::create("bd_v_data_agent", this);	
       else
 	v_axi4_agent     = AXI4_agent::type_id::create("v_axi4_agent", this);	
 
+      scbd = riscv_scoreboard::type_id::create("scbd", this);
       
 
    endfunction : build_phase
+
+   function void connect_phase(uvm_phase phase);
+      super.connect_phase(phase);
+      bd_instr_agent.mon.item_collected_port.connect(scbd.item_collected_imp);
+   endfunction
 
 endclass : riscv_v_env
 

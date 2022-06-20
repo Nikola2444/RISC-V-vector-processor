@@ -1,142 +1,175 @@
 module riscv_v_w_mem_subsystem #
-  (  parameter integer C_M_AXI_ADDR_WIDTH = 32,
-     parameter integer C_M_AXI_DATA_WIDTH = 32,
-     parameter integer C_XFER_SIZE_WIDTH  = 32,
-     parameter integer VLEN               = 4096,
-     parameter integer V_LANES            = 8,
-     parameter integer CHAINING           = 4,
-		 parameter integer C_LVL1_CACHE_SIZE  = (1024*1),
-		 parameter integer C_LVL2_CACHE_SIZE  = (1024*4),
-     parameter integer C_LVL2_CACHE_NWAY  = 4
-  ) (
-    input clk,
-    input 				    clk2,
-    input 				    rstn,
-    // AXI FULL VECTOR CORE IF
-    output logic 			    v_m_axi_awvalid ,
-    input logic 			    v_m_axi_awready ,
-    output logic [C_M_AXI_ADDR_WIDTH-1:0]   v_m_axi_awaddr ,
-    output logic [8-1:0] 		    v_m_axi_awlen ,
-    output logic 			    v_m_axi_wvalid ,
-    input logic 			    v_m_axi_wready ,
-    output logic [C_M_AXI_DATA_WIDTH-1:0]   v_m_axi_wdata ,
-    output logic [C_M_AXI_DATA_WIDTH/8-1:0] v_m_axi_wstrb ,
-    output logic 			    v_m_axi_wlast ,
-    output logic 			    v_m_axi_arvalid ,
-    input logic 			    v_m_axi_arready ,
-    output logic [C_M_AXI_ADDR_WIDTH-1:0]   v_m_axi_araddr ,
-    output logic [8-1:0] 		    v_m_axi_arlen ,
-    input logic 			    v_m_axi_rvalid ,
-    output logic 			    v_m_axi_rready ,
-    input logic [C_M_AXI_DATA_WIDTH-1:0]    v_m_axi_rdata ,
-    input logic 			    v_m_axi_rlast ,
-    input logic 			    v_m_axi_bvalid ,
-    output logic 			    v_m_axi_bready,
-    //AXI FULL SCALAR CORE IF
-    output logic 			    s_m_axi_awvalid ,
-    input logic 			    s_m_axi_awready ,
-    output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_awaddr ,
-    output logic [8-1:0] 		    s_m_axi_awlen ,
-    output logic 			    s_m_axi_wvalid ,
-    input logic 			    s_m_axi_wready ,
-    output logic [C_M_AXI_DATA_WIDTH-1:0]   s_m_axi_wdata ,
-    output logic [C_M_AXI_DATA_WIDTH/8-1:0] s_m_axi_wstrb ,
-    output logic 			    s_m_axi_wlast ,
-    output logic 			    s_m_axi_arvalid ,
-    input logic 			    s_m_axi_arready ,
-    output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_araddr ,
-    output logic [8-1:0] 		    s_m_axi_arlen ,
-    input logic 			    s_m_axi_rvalid ,
-    output logic 			    s_m_axi_rready ,
-    input logic [C_M_AXI_DATA_WIDTH-1:0]    s_m_axi_rdata ,
-    input logic 			    s_m_axi_rlast ,
-    input logic 			    s_m_axi_bvalid ,
-    output logic 			    s_m_axi_bready,
-		output logic [C_M_AXI_ID_WIDTH-1 : 0]s_m_axi_awid,
-		output logic [2 : 0]s_m_axi_awsize,
-		output logic [1 : 0]s_m_axi_awburst,
-		output logic s_m_axi_awlock,
-		output logic [3 : 0]s_m_axi_awcache,
-		output logic [2 : 0]s_m_axi_awprot,
-		output logic [3 : 0]s_m_axi_awqos,
-		output logic [C_M_AXI_AWUSER_WIDTH-1 : 0] s_m_axi_awuser,
-		output logic [C_M_AXI_WUSER_WIDTH-1 : 0] s_m_axi_wuser,
-		input  logic [C_M_AXI_ID_WIDTH-1 : 0] s_m_axi_bid	,
-		input  logic [1 : 0] s_m_axi_bresp,
-		input  logic [C_M_AXI_BUSER_WIDTH-1 : 0]s_m_axi_buser,
-		output logic [C_M_AXI_ID_WIDTH-1 : 0]s_m_axi_arid,
-		output logic [2 : 0]s_m_axi_arsize,
-		output logic [1 : 0]s_m_axi_arburst,
-		output logic s_m_axi_arlock,
-		output logic [3 : 0] s_m_axi_arcache,
-		output logic [2 : 0]s_m_axi_arprot,
-		output logic [3 : 0] s_m_axi_arqos,
-		output logic [C_M_AXI_ARUSER_WIDTH-1 : 0] s_m_axi_aruser,
-		input  logic [C_M_AXI_ID_WIDTH-1 : 0] s_m_axi_rid,
-		input  logic [1 : 0] s_m_axi_rresp,
-		input  logic [C_M_AXI_RUSER_WIDTH-1 : 0] s_m_axi_ruser,
-    // AXI LITE IF, TO BE INSERTED
-    // THESE WILL BE AXI LITE REGISTERS
-		input logic ce	, // will be clock enable to start/stop processor
-		input logic [31:0] axi_base_address, // will be the starting address in DDR of machine code 
-		output logic [31:0] pc_reg // will be just a way to see from sogtware where the PC is currently
-    );
+  (  
+     parameter integer VLEN = 4096,
+     parameter integer V_LANES = 8,
+     parameter integer CHAINING = 4,
+     parameter integer C_LVL1_CACHE_SIZE = (1024*1),
+     parameter integer C_LVL2_CACHE_SIZE = (1024*4),
+     parameter integer C_LVL2_CACHE_NWAY = 4
+     ) (/*AUTOARG*/
+	// Outputs
+	v_m_axi_awvalid, v_m_axi_awaddr, v_m_axi_awlen, v_m_axi_wvalid,
+	v_m_axi_wdata, v_m_axi_wstrb, v_m_axi_wlast, v_m_axi_arvalid,
+	v_m_axi_araddr, v_m_axi_arlen, v_m_axi_rready, v_m_axi_bready,
+	s_m_axi_awvalid, s_m_axi_awaddr, s_m_axi_awlen, s_m_axi_wvalid,
+	s_m_axi_wdata, s_m_axi_wstrb, s_m_axi_wlast, s_m_axi_arvalid,
+	s_m_axi_araddr, s_m_axi_arlen, s_m_axi_rready, s_m_axi_bready,
+	s_m_axi_awid, s_m_axi_awsize, s_m_axi_awburst, s_m_axi_awlock,
+	s_m_axi_awcache, s_m_axi_awprot, s_m_axi_awqos, s_m_axi_awuser,
+	s_m_axi_wuser, s_m_axi_arid, s_m_axi_arsize, s_m_axi_arburst,
+	s_m_axi_arlock, s_m_axi_arcache, s_m_axi_arprot, s_m_axi_arqos,
+	s_m_axi_aruser, pc_reg,
+	// Inputs
+	clk, clk2, rstn, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
+	v_m_axi_rvalid, v_m_axi_rdata, v_m_axi_rlast, v_m_axi_bvalid,
+	s_m_axi_awready, s_m_axi_wready, s_m_axi_arready, s_m_axi_rvalid,
+	s_m_axi_rdata, s_m_axi_rlast, s_m_axi_bvalid, s_m_axi_bid,
+	s_m_axi_bresp, s_m_axi_buser, s_m_axi_rid, s_m_axi_rresp,
+	s_m_axi_ruser, ce, axi_base_address
+	);
+   localparam C_M_AXI_ADDR_WIDTH = 32;
+   localparam C_M_AXI_DATA_WIDTH = 32;
+   localparam C_M_AXI_ID_WIDTH   = 3;
+   localparam C_XFER_SIZE_WIDTH  = 32;
+   localparam C_M_AXI_AWUSER_WIDTH = 3;
+   // Width of User Write Address Bus
+   localparam C_M_AXI_ARUSER_WIDTH = 3;
+   // Width of User Write Data Bus
+   localparam C_M_AXI_WUSER_WIDTH = 3;
+   //Width of User Read Data Bus
+   localparam C_M_AXI_RUSER_WIDTH = 3;
+   // Width of User Response Bus
+   localparam C_M_AXI_BUSER_WIDTH = 3;
 
-    // SCALAR CACHE <=> SCALAR AXI FULL CONTROLLER
-    logic [31:0] axi_write_address;
-    logic axi_write_init;
-    logic [31:0] axi_write_data;
-    logic axi_write_next;
-    logic axi_write_done;
-    logic [31:0] axi_read_address;
-    logic axi_read_init;
-    logic [31:0] axi_read_data;
-    logic axi_read_next;
+   input 	       clk;
+   input 	       clk2;
+   input 	       rstn;
+   // AXI FULL VECTOR CORE IF
+   output logic        v_m_axi_awvalid ;
+   input logic 	       v_m_axi_awready ;
+   output logic [C_M_AXI_ADDR_WIDTH-1:0] v_m_axi_awaddr ;
+   output logic [8-1:0] 		 v_m_axi_awlen ;
+   output logic 			 v_m_axi_wvalid ;
+   input logic 				 v_m_axi_wready ;
+   output logic [C_M_AXI_DATA_WIDTH-1:0] v_m_axi_wdata ;
+   output logic [C_M_AXI_DATA_WIDTH/8-1:0] v_m_axi_wstrb ;
+   output logic 			   v_m_axi_wlast ;
+   output logic 			   v_m_axi_arvalid ;
+   input logic 				   v_m_axi_arready ;
+   output logic [C_M_AXI_ADDR_WIDTH-1:0]   v_m_axi_araddr ;
+   output logic [8-1:0] 		   v_m_axi_arlen ;
+   input logic 				   v_m_axi_rvalid ;
+   output logic 			   v_m_axi_rready ;
+   input logic [C_M_AXI_DATA_WIDTH-1:0]    v_m_axi_rdata ;
+   input logic 				   v_m_axi_rlast ;
+   input logic 				   v_m_axi_bvalid ;
+   output logic 			   v_m_axi_bready;
+   //AXI FULL SCALAR CORE IF
+   output logic 			   s_m_axi_awvalid ;
+   input logic 				   s_m_axi_awready ;
+   output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_awaddr ;
+   output logic [8-1:0] 		   s_m_axi_awlen ;
+   output logic 			   s_m_axi_wvalid ;
+   input logic 				   s_m_axi_wready ;
+   output logic [C_M_AXI_DATA_WIDTH-1:0]   s_m_axi_wdata ;
+   output logic [C_M_AXI_DATA_WIDTH/8-1:0] s_m_axi_wstrb ;
+   output logic 			   s_m_axi_wlast ;
+   output logic 			   s_m_axi_arvalid ;
+   input logic 				   s_m_axi_arready ;
+   output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_araddr ;
+   output logic [8-1:0] 		   s_m_axi_arlen ;
+   input logic 				   s_m_axi_rvalid ;
+   output logic 			   s_m_axi_rready ;
+   input logic [C_M_AXI_DATA_WIDTH-1:0]    s_m_axi_rdata ;
+   input logic 				   s_m_axi_rlast ;
+   input logic 				   s_m_axi_bvalid ;
+   output logic 			   s_m_axi_bready;
+   output logic [C_M_AXI_ID_WIDTH-1 : 0]   s_m_axi_awid;
+   output logic [2 : 0] 		   s_m_axi_awsize;
+   output logic [1 : 0] 		   s_m_axi_awburst;
+   output logic 			   s_m_axi_awlock;
+   output logic [3 : 0] 		   s_m_axi_awcache;
+   output logic [2 : 0] 		   s_m_axi_awprot;
+   output logic [3 : 0] 		   s_m_axi_awqos;
+   output logic [C_M_AXI_AWUSER_WIDTH-1 : 0] s_m_axi_awuser;
+   output logic [C_M_AXI_WUSER_WIDTH-1 : 0]  s_m_axi_wuser;
+   input logic [C_M_AXI_ID_WIDTH-1 : 0]      s_m_axi_bid ;
+   input logic [1 : 0] 			     s_m_axi_bresp;
+   input logic [C_M_AXI_BUSER_WIDTH-1 : 0]   s_m_axi_buser;
+   output logic [C_M_AXI_ID_WIDTH-1 : 0]     s_m_axi_arid;
+   output logic [2 : 0] 		     s_m_axi_arsize;
+   output logic [1 : 0] 		     s_m_axi_arburst;
+   output logic 			     s_m_axi_arlock;
+   output logic [3 : 0] 		     s_m_axi_arcache;
+   output logic [2 : 0] 		     s_m_axi_arprot;
+   output logic [3 : 0] 		     s_m_axi_arqos;
+   output logic [C_M_AXI_ARUSER_WIDTH-1 : 0] s_m_axi_aruser;
+   input logic [C_M_AXI_ID_WIDTH-1 : 0]      s_m_axi_rid;
+   input logic [1 : 0] 			     s_m_axi_rresp;
+   input logic [C_M_AXI_RUSER_WIDTH-1 : 0]   s_m_axi_ruser;
+   // AXI LITE IF; TO BE INSERTED
+   // THESE WILL BE AXI LITE REGISTERS
+   input logic 				     ce ; // will be clock enable to start/stop processor
+   input logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
+   output logic [31:0] 			     pc_reg; // will be just a way to see from sogtware where the PC is currently
 
-  // SCALAR CORE <=> CACHE
-   logic [31:0] 		instr_mem_address;
-   logic 				    instr_mem_flush; 
-   logic 				    instr_mem_en;
-   logic [31:0] 		data_mem_address;
-   logic [3:0] 			data_mem_we;
-   logic 	          fencei;
-   logic 				    instr_ready;
-   logic 				    data_ready;
-   logic [31:0] 		instr_mem_read;
-   logic [31:0] 		data_mem_read;
-   logic [31:0] 		data_mem_write;
-   logic 				    data_mem_re;
+
+   // SCALAR CACHE <=> SCALAR AXI FULL CONTROLLER
+   logic [31:0] 			     axi_write_address;
+   logic 				     axi_write_init;
+   logic [31:0] 			     axi_write_data;
+   logic 				     axi_write_next;
+   logic 				     axi_write_done;
+   logic [31:0] 			     axi_read_address;
+   logic 				     axi_read_init;
+   logic [31:0] 			     axi_read_data;
+   logic 				     axi_read_next;
+
+   // SCALAR CORE <=> CACHE
+   logic [31:0] 			     instr_mem_address;
+   logic 				     instr_mem_flush; 
+   logic 				     instr_mem_en;
+   logic [31:0] 			     data_mem_address;
+   logic [3:0] 				     data_mem_we;
+   logic 				     fencei;
+   logic 				     instr_ready;
+   logic 				     data_ready;
+   logic [31:0] 			     instr_mem_read;
+   logic [31:0] 			     data_mem_read;
+   logic [31:0] 			     data_mem_write;
+   logic 				     data_mem_re;
 
    // VECTOR CORE <=> AXI FULL CONTROLLER
-   logic 				    ctrl_rdone;
-   logic 				    rd_tvalid;
-   logic 				    rd_tlast;
-   logic [C_M_AXI_DATA_WIDTH-1:0] 	    rd_tdata;
-   logic 				    ctrl_wdone;
-   logic 				    wr_tready;
-   logic 				    ctrl_rstart;
-   logic [C_M_AXI_ADDR_WIDTH-1:0] 	    ctrl_raddr_offset;
-   logic [C_XFER_SIZE_WIDTH-1:0] 	    ctrl_rxfer_size;
-   logic 				    rd_tready;
-   logic 				    ctrl_wstart;
-   logic [C_M_AXI_ADDR_WIDTH-1:0] 	    ctrl_waddr_offset=0;
-   logic [C_XFER_SIZE_WIDTH-1:0] 	    ctrl_wxfer_size=16;
-   logic 				    wr_tvalid=1;
-   logic [C_M_AXI_DATA_WIDTH-1:0] 	    wr_tdata = 10;
-
+   logic 				     ctrl_rdone;
+   logic 				     rd_tvalid;
+   logic 				     rd_tlast;
+   logic [C_M_AXI_DATA_WIDTH-1:0] 	     rd_tdata;
+   logic 				     ctrl_wdone;
+   logic 				     wr_tready;
+   logic 				     ctrl_rstart;
+   logic [C_M_AXI_ADDR_WIDTH-1:0] 	     ctrl_raddr_offset;
+   logic [C_XFER_SIZE_WIDTH-1:0] 	     ctrl_rxfer_size;
+   logic 				     rd_tready;
+   logic 				     ctrl_wstart;
+   logic [C_M_AXI_ADDR_WIDTH-1:0] 	     ctrl_waddr_offset=0;
+   logic [C_XFER_SIZE_WIDTH-1:0] 	     ctrl_wxfer_size=16;
+   logic 				     wr_tvalid=1;
+   logic [C_M_AXI_DATA_WIDTH-1:0] 	     wr_tdata = 10;
+   logic                                     wr_tstrb_msk;
+   logic 				     ctrl_wstrb_msk_en;
    /*******DEBUG logic*******/
-/* -----\/----- EXCLUDED -----\/-----
-   always @(posedge clk)
-   begin
-      if (!rstn)begin
-	 ctrl_wstart <=1;
+   /* -----\/----- EXCLUDED -----\/-----
+    always @(posedge clk)
+    begin
+    if (!rstn)begin
+    ctrl_wstart <=1;
       end
-      else if (ctrl_wstart)
-	ctrl_wstart <=0;
-      else if (v_m_axi_wlast)
-	ctrl_wstart <=1;	
+    else if (ctrl_wstart)
+    ctrl_wstart <=0;
+    else if (v_m_axi_wlast)
+    ctrl_wstart <=1;	
    end
- -----/\----- EXCLUDED -----/\----- */
+    -----/\----- EXCLUDED -----/\----- */
    /*************************/
 
    
@@ -181,161 +214,163 @@ module riscv_v_w_mem_subsystem #
 		    .ctrl_rstart	(ctrl_rstart),
 		    .ctrl_raddr_offset	(ctrl_raddr_offset[C_M_AXI_ADDR_WIDTH-1:0]),
 		    .ctrl_rxfer_size	(ctrl_rxfer_size[C_XFER_SIZE_WIDTH-1:0]),
-		    .ctrl_wstrb_msk_en_o	(ctrl_wstrb_msk_en),
+		    .ctrl_wstrb_msk_en	(ctrl_wstrb_msk_en),
 		    .rd_tready		(rd_tready),
 		    .ctrl_wstart	(ctrl_wstart),
 		    .ctrl_waddr_offset	(ctrl_waddr_offset[C_M_AXI_ADDR_WIDTH-1:0]),
 		    .ctrl_wxfer_size	(ctrl_wxfer_size[C_XFER_SIZE_WIDTH-1:0]),
 		    .wr_tvalid		(wr_tvalid),
-		    .wr_tstrb_msk_o		(wr_tstrb_msk),
+		    .wr_tstrb_msk	(wr_tstrb_msk),
 		    .wr_tdata		(wr_tdata[C_M_AXI_DATA_WIDTH-1:0]));
 
 
-  // RISCV SCALAR + VECTOR CORE
-  riscv_v
-  #(
-   .C_M_AXI_ADDR_WIDTH (C_M_AXI_ADDR_WIDTH),
-   .C_M_AXI_DATA_WIDTH (C_M_AXI_DATA_WIDTH),
-   .C_XFER_SIZE_WIDTH  (C_XFER_SIZE_WIDTH ),
-   .VLEN               (VLEN              ),
-   .V_LANES            (V_LANES           ),
-   .CHAINING           (CHAINING          ))
-   riscv_v_instance
-   (
-    .clk                 (clk                ),
-    .clk2                (clk2               ),
-    .ce                  (ce                 ),
-    .rstn                (rstn               ),
-    .fencei_o            (fencei             ),
-    .pc_reg_o            (pc_reg             ),
-    .instr_ready_i       (instr_ready        ),
-    .data_ready_i        (data_ready         ),
-    .instr_mem_address_o (instr_mem_address  ),
-    .instr_mem_read_i    (instr_mem_read     ),
-    .data_mem_address_o  (data_mem_address   ),
-    .data_mem_read_i     (data_mem_read      ),
-    .data_mem_write_o    (data_mem_write     ),
-    .data_mem_we_o       (data_mem_we        ),
-    .data_mem_re_o       (data_mem_re        ),
-    .ctrl_raddr_offset_o (ctrl_raddr_offset  ),
-    .ctrl_rxfer_size_o   (ctrl_rxfer_size    ),
-    .ctrl_rstart_o       (ctrl_rstart        ),
-    .ctrl_rdone_i        (ctrl_rdone         ),
-    .rd_tdata_i          (rd_tdata           ),
-    .rd_tvalid_i         (rd_tvalid          ),
-    .rd_tready_o         (rd_tready          ),
-    .rd_tlast_i          (rd_tlast           ),
-    .ctrl_waddr_offset_o (ctrl_waddr_offset  ),
-    .ctrl_wxfer_size_o   (ctrl_wxfer_size    ),
-    .ctrl_wstart_o       (ctrl_wstart        ),
-    .ctrl_wdone_i        (ctrl_wdone         ),
-    .wr_tdata_o          (wr_tdata           ),
-    .wr_tvalid_o         (wr_tvalid          ),
-    .wr_tready_i         (wr_tready          ),
-    .ctrl_wstrb_msk_en_o (ctrl_wstrb_msk_en  ),
-    .wr_tstrb_msk_o      (wr_tstrb_msk       ));
+   // RISCV SCALAR + VECTOR CORE
+   riscv_v
+     #(
+       .C_M_AXI_ADDR_WIDTH (C_M_AXI_ADDR_WIDTH),
+       .C_M_AXI_DATA_WIDTH (C_M_AXI_DATA_WIDTH),
+       .C_XFER_SIZE_WIDTH  (C_XFER_SIZE_WIDTH ),
+       .VLEN               (VLEN              ),
+       .V_LANES            (V_LANES           ),
+       .CHAINING           (CHAINING          ))
+   riscv_v_inst
+     (
+      .clk                 (clk                ),
+      .clk2                (clk2               ),
+      .ce                  (ce                 ),
+      .rstn                (rstn               ),
+      .fencei_o            (fencei             ),
+      .pc_reg_o            (pc_reg             ),
+      .instr_ready_i       (instr_ready        ),
+      .data_ready_i        (data_ready         ),
+      .instr_mem_address_o (instr_mem_address  ),
+      .instr_mem_read_i    (instr_mem_read     ),
+      .data_mem_address_o  (data_mem_address   ),
+      .data_mem_read_i     (data_mem_read      ),
+      .data_mem_write_o    (data_mem_write     ),
+      .data_mem_we_o       (data_mem_we        ),
+      .data_mem_re_o       (data_mem_re        ),
+      .ctrl_raddr_offset_o (ctrl_raddr_offset  ),
+      .ctrl_rxfer_size_o   (ctrl_rxfer_size    ),
+      .ctrl_rstart_o       (ctrl_rstart        ),
+      .ctrl_rdone_i        (ctrl_rdone         ),
+      .rd_tdata_i          (rd_tdata           ),
+      .rd_tvalid_i         (rd_tvalid          ),
+      .rd_tready_o         (rd_tready          ),
+      .rd_tlast_i          (rd_tlast           ),
+      .ctrl_waddr_offset_o (ctrl_waddr_offset  ),
+      .ctrl_wxfer_size_o   (ctrl_wxfer_size    ),
+      .ctrl_wstart_o       (ctrl_wstart        ),
+      .ctrl_wdone_i        (ctrl_wdone         ),
+      .wr_tdata_o          (wr_tdata           ),
+      .wr_tvalid_o         (wr_tvalid          ),
+      .wr_tready_i         (wr_tready          ),
+      .ctrl_wstrb_msk_en_o (ctrl_wstrb_msk_en  ),
+      .wr_tstrb_msk_o      (wr_tstrb_msk       ));
 
 
-    // SCALAR CACHE CONTROLLER
-    cache_contr_nway_vnv #(
-			.C_PHY_ADDR_WIDTH       (32),
-			.C_TS_BRAM_TYPE         ("HIGH_PERFORMANCE"),
-			.C_BLOCK_SIZE           (64),
-			.C_LVL1_CACHE_SIZE      (C_LVL1_CACHE_SIZE),
-			.C_LVL2_CACHE_SIZE      (C_LVL2_CACHE_SIZE),
-			.C_LVL2C_ASSOCIATIVITY  (C_LVL2_CACHE_NWAY),
-    ) cache_inst(
-      .clk(clk),
-      .ce(ce),
-      .reset(rst),
-			.data_ready_o(data_ready),
-			.instr_ready_o(instr_ready),
-			.fencei_i(fencei),
-			.addr_instr_i(instr_mem_address),
-			.dread_instr_o(instr_mem_read),
-			.addr_data_i(data_mem_address),
-			.dread_data_o(data_mem_read),
-			.dwrite_data_i(data_mem_write),
-      .we_data_i(data_mem_we),
-      .re_data_i(data_mem_re),
-			.axi_write_address_o(axi_write_address),
-			.axi_write_init_o(axi_write_init),
-			.axi_write_data_o(axi_write_data),
-			.axi_write_next_i(axi_write_next),
-			.axi_write_done_i(axi_write_done),
-			.axi_read_address_o(axi_read_address),
-			.axi_read_init_o(axi_read_init),
-			.axi_read_data_i(axi_read_data),
-			.axi_read_next_i(axi_read_next));
+   // SCALAR CACHE CONTROLLER
+   cache_contr_nway_vnv #(
+			  .C_PHY_ADDR_WIDTH       (32),
+			  .C_TS_BRAM_TYPE         ("HIGH_PERFORMANCE"),
+			  .C_BLOCK_SIZE           (64),
+			  .C_LVL1_CACHE_SIZE      (C_LVL1_CACHE_SIZE),
+			  .C_LVL2_CACHE_SIZE      (C_LVL2_CACHE_SIZE),
+			  .C_LVL2C_ASSOCIATIVITY  (C_LVL2_CACHE_NWAY)
+			  ) cache_inst(
+				       .clk(clk),
+				       .ce(ce),
+				       .reset(rst),
+				       .data_ready_o(data_ready),
+				       .instr_ready_o(instr_ready),
+				       .fencei_i(fencei),
+				       .addr_instr_i(instr_mem_address),
+				       .dread_instr_o(instr_mem_read),
+				       .addr_data_i(data_mem_address),
+				       .dread_data_o(data_mem_read),
+				       .dwrite_data_i(data_mem_write),
+				       .we_data_i(data_mem_we),
+				       .re_data_i(data_mem_re),
+				       .axi_write_address_o(axi_write_address),
+				       .axi_write_init_o(axi_write_init),
+				       .axi_write_data_o(axi_write_data),
+				       .axi_write_next_i(axi_write_next),
+				       .axi_write_done_i(axi_write_done),
+				       .axi_read_address_o(axi_read_address),
+				       .axi_read_init_o(axi_read_init),
+				       .axi_read_data_i(axi_read_data),
+				       .axi_read_next_i(axi_read_next));
 
-  // SCALAR AXI FULL CONTROLLER
-  scalar_axif_m_ctrl #(
-		.C_M_AXI_BURST_LEN	  (8),
-		.C_M_AXI_ID_WIDTH	    (1),
-		.C_M_AXI_ADDR_WIDTH	  (32),
-		.C_M_AXI_DATA_WIDTH	  (32),
-		.C_M_AXI_AWUSER_WIDTH	(0),
-		.C_M_AXI_ARUSER_WIDTH	(0),
-		.C_M_AXI_WUSER_WIDTH	(0),
-		.C_M_AXI_RUSER_WIDTH	(0),
-		.C_M_AXI_BUSER_WIDTH	(0),
-	) scalar_axif_m_ctrl_inst (
-		.axi_base_address_i   (axi_base_address),
-		.axi_write_address_i  (axi_write_address),
-		.axi_write_init_i	    (axi_write_init),
-		.axi_write_data_i	    (axi_write_data),
-		.axi_write_next_o     (axi_write_next),
-		.axi_write_done_o     (axi_write_done),
-		.axi_read_address_i   (axi_read_address),
-		.axi_read_init_i	    (axi_read_init),
-		.axi_read_data_o	    (axi_read_data),
-		.axi_read_next_o      (axi_read_next),
-		.M_AXI_ACLK	          (clk),
-		.M_AXI_ARESETN	      (rstn),
-		.M_AXI_AWID	          (s_m_axi_awid),
-    .M_AXI_AWADDR	        (s_m_axi_awaddr),
-    .M_AXI_AWLEN	        (s_m_axi_awlen),
-		.M_AXI_AWSIZE	        (s_m_axi_awsize),
-		.M_AXI_AWBURST	      (s_m_axi_awburst),
-		.M_AXI_AWLOCK	        (s_m_axi_awlock),
-		.M_AXI_AWCACHE	      (s_m_axi_awcache),
-		.M_AXI_AWPROT	        (s_m_axi_awprot),
-		.M_AXI_AWQOS	        (s_m_axi_awqos),
-		.M_AXI_AWUSER	        (s_m_axi_awuser),
-		.M_AXI_AWVALID	      (s_m_axi_awvalid),
-		.M_AXI_AWREADY	      (s_m_axi_awready),
-		.M_AXI_WDATA	        (s_m_axi_wdata),
-		.M_AXI_WSTRB	        (s_m_axi_wstrb),
-		.M_AXI_WLAST	        (s_m_axi_wlast),
-		.M_AXI_WUSER	        (s_m_axi_wuser),
-		.M_AXI_WVALID	        (s_m_axi_wvalid),
-		.M_AXI_WREADY	        (s_m_axi_wready),
-		.M_AXI_BID	          (s_m_axi_bid),
-		.M_AXI_BRESP	        (s_m_axi_bresp),
-		.M_AXI_BUSER	        (s_m_axi_buser),
-		.M_AXI_BVALID	        (s_m_axi_bvalid),
-		.M_AXI_BREADY	        (s_m_axi_bready),
-		.M_AXI_ARID	          (s_m_axi_arid),
-		.M_AXI_ARADDR	        (s_m_axi_araddr),
-		.M_AXI_ARLEN	        (s_m_axi_arlen),
-		.M_AXI_ARSIZE	        (s_m_axi_arsize),
-		.M_AXI_ARBURST	      (s_m_axi_arburst),
-		.M_AXI_ARLOCK	        (s_m_axi_arlock),
-		.M_AXI_ARCACHE	      (s_m_axi_arcache),
-		.M_AXI_ARPROT	        (s_m_axi_arprot),
-		.M_AXI_ARQOS	        (s_m_axi_arqos),
-		.M_AXI_ARUSER	        (s_m_axi_aruser),
-		.M_AXI_ARVALID	      (s_m_axi_arvalid),
-		.M_AXI_ARREADY	      (s_m_axi_arready),
-		.M_AXI_RID	          (s_m_axi_rid),
-		.M_AXI_RDATA	        (s_m_axi_rdata),
-		.M_AXI_RRESP	        (s_m_axi_rresp),
-		.M_AXI_RLAST	        (s_m_axi_rlast),
-		.M_AXI_RUSER	        (s_m_axi_ruser),
-		.M_AXI_RVALID	        (s_m_axi_rvalid),
-		.M_AXI_RREADY	        (s_m_axi_rready));
+   // SCALAR AXI FULL CONTROLLER
+   riscv_axif_m_ctrl #(
+			.C_M_AXI_BURST_LEN	(8),
+			.C_M_AXI_ID_WIDTH	(1),
+			.C_M_AXI_ADDR_WIDTH	(32),
+			.C_M_AXI_DATA_WIDTH	(32),
+			.C_M_AXI_AWUSER_WIDTH	(0),
+			.C_M_AXI_ARUSER_WIDTH	(0),
+			.C_M_AXI_WUSER_WIDTH	(0),
+			.C_M_AXI_RUSER_WIDTH	(0),
+			.C_M_AXI_BUSER_WIDTH	(0)
+			) 
+   scalar_axif_m_ctrl_inst 
+     (
+      .axi_base_address_i   (axi_base_address),
+      .axi_write_address_i  (axi_write_address),
+      .axi_write_init_i	    (axi_write_init),
+      .axi_write_data_i	    (axi_write_data),
+      .axi_write_next_o     (axi_write_next),
+      .axi_write_done_o     (axi_write_done),
+      .axi_read_address_i   (axi_read_address),
+      .axi_read_init_i	    (axi_read_init),
+      .axi_read_data_o	    (axi_read_data),
+      .axi_read_next_o      (axi_read_next),
+      .M_AXI_ACLK	          (clk),
+      .M_AXI_ARESETN	      (rstn),
+      .M_AXI_AWID	          (s_m_axi_awid),
+      .M_AXI_AWADDR	        (s_m_axi_awaddr),
+      .M_AXI_AWLEN	        (s_m_axi_awlen),
+      .M_AXI_AWSIZE	        (s_m_axi_awsize),
+      .M_AXI_AWBURST	      (s_m_axi_awburst),
+      .M_AXI_AWLOCK	        (s_m_axi_awlock),
+      .M_AXI_AWCACHE	      (s_m_axi_awcache),
+      .M_AXI_AWPROT	        (s_m_axi_awprot),
+      .M_AXI_AWQOS	        (s_m_axi_awqos),
+      .M_AXI_AWUSER	        (s_m_axi_awuser),
+      .M_AXI_AWVALID	      (s_m_axi_awvalid),
+      .M_AXI_AWREADY	      (s_m_axi_awready),
+      .M_AXI_WDATA	        (s_m_axi_wdata),
+      .M_AXI_WSTRB	        (s_m_axi_wstrb),
+      .M_AXI_WLAST	        (s_m_axi_wlast),
+      .M_AXI_WUSER	        (s_m_axi_wuser),
+      .M_AXI_WVALID	        (s_m_axi_wvalid),
+      .M_AXI_WREADY	        (s_m_axi_wready),
+      .M_AXI_BID	          (s_m_axi_bid),
+      .M_AXI_BRESP	        (s_m_axi_bresp),
+      .M_AXI_BUSER	        (s_m_axi_buser),
+      .M_AXI_BVALID	        (s_m_axi_bvalid),
+      .M_AXI_BREADY	        (s_m_axi_bready),
+      .M_AXI_ARID	          (s_m_axi_arid),
+      .M_AXI_ARADDR	        (s_m_axi_araddr),
+      .M_AXI_ARLEN	        (s_m_axi_arlen),
+      .M_AXI_ARSIZE	        (s_m_axi_arsize),
+      .M_AXI_ARBURST	      (s_m_axi_arburst),
+      .M_AXI_ARLOCK	        (s_m_axi_arlock),
+      .M_AXI_ARCACHE	      (s_m_axi_arcache),
+      .M_AXI_ARPROT	        (s_m_axi_arprot),
+      .M_AXI_ARQOS	        (s_m_axi_arqos),
+      .M_AXI_ARUSER	        (s_m_axi_aruser),
+      .M_AXI_ARVALID	      (s_m_axi_arvalid),
+      .M_AXI_ARREADY	      (s_m_axi_arready),
+      .M_AXI_RID	          (s_m_axi_rid),
+      .M_AXI_RDATA	        (s_m_axi_rdata),
+      .M_AXI_RRESP	        (s_m_axi_rresp),
+      .M_AXI_RLAST	        (s_m_axi_rlast),
+      .M_AXI_RUSER	        (s_m_axi_ruser),
+      .M_AXI_RVALID	        (s_m_axi_rvalid),
+      .M_AXI_RREADY	        (s_m_axi_rready));
 
-
+endmodule
 // Local Variables:
 // verilog-library-extensions:(".v" ".sv" "_stub.v" "_bb.v")
 // verilog-library-directories:("." "../../../../common/" "../vector_core/rtl" "../axim_ctrl/rtl/")

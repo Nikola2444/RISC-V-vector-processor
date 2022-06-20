@@ -22,7 +22,12 @@ set_property -name {xsim.simulate.xsim.more_options} -value {-testplusarg UVM_TE
 #packages
 add_files -norecurse ..\/hdl\/packages\/typedef_pkg.sv
 add_files -norecurse ..\/hdl\/packages\/util_pkg.vhd
+add_files -norecurse ..\/hdl\/packages\/cache_pkg.vhd
 #common
+add_files -norecurse ..\/hdl\/common\/ram_tdp_rf.vhd
+add_files -norecurse ..\/hdl\/common\/ram_sp_ar.vhd
+add_files -norecurse ..\/hdl\/common\/ram_sp_ar_bw.vhd
+
 add_files -norecurse ..\/hdl\/common\/sdp_bram.sv
 add_files -norecurse ..\/hdl\/common\/sdp_bwe_bram.sv
 add_files -norecurse ..\/hdl\/common\/tdp_bram.sv
@@ -70,7 +75,7 @@ add_files -norecurse ..\/hdl\/riscv-v\/vector_axif_m_ctrl\/rtl\/axim_ctrl.sv
 
 #axim controller for scalar core
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_axil_s_ctrl/rtl/riscv_axil_s_ctrl.vhd
-
+add_files -norecurse ..\/hdl\/riscv-v\/scalar_axif_m_ctrl/rtl/riscv_axif_m_ctrl.vhd
 #mem_subsystem
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_cache\/rtl\/cache_contr_nway_vnv_axi.vhd
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/axi_m_controller.v

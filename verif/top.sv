@@ -37,10 +37,7 @@ module riscv_v_verif_top;
    // DUT
    riscv_v_w_mem_subsystem #
      (/*AUTOINST_PARAM*/
-      // Parameters
-      .C_M_AXI_ADDR_WIDTH		(32),
-      .C_M_AXI_DATA_WIDTH		(32),
-      .C_XFER_SIZE_WIDTH		(32),
+      // Parameters      
       .VLEN				(VLEN),
       .V_LANES				(V_LANES))
    DUT

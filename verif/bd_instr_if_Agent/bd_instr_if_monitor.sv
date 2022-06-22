@@ -79,26 +79,15 @@ class bd_instr_if_monitor extends uvm_monitor;
 	  
        end
    endtask : main_phase
-/* -----\/----- EXCLUDED -----\/-----
-		       branch_imm = {backdoor_instr_vif.instr_mem_read[31], backdoor_instr_vif.instr_mem_read[7], 
-				     backdoor_instr_vif.instr_mem_read[30:25], backdoor_instr_vif.instr_mem_read[11:8], 1'b0};
-		       rs1 = backdoor_instr_vif.instr_mem_read[19:15];		       
-		       rs2 = backdoor_instr_vif.instr_mem_read[24:20];
-		       funct3 = backdoor_instr_vif.instr_mem_read[14:12];
- -----/\----- EXCLUDED -----/\----- */
+
    task collect_instruction();
       if (backdoor_instr_vif.instr_mem_en && backdoor_instr_vif.instr_ready)
       begin	 
 	 begin
 	    if (backdoor_instr_vif.instr_mem_read[2:0] != 3'b111) // scalar instruction
 	    begin	
-	       //if (backdoor_instr_vif.instr_mem_read[2:0] != 7'b0100011)
-	       //begin
 	       sc_instr_queue.push_back(backdoor_instr_vif.instr_mem_read); //save non store instr
 	       sc_instr_addr_queue.push_back(backdoor_instr_vif.instr_mem_address); //save non store instr
-	       //end
-	       //else
-		 //sc_st_instr_queue.push_back(backdoor_instr_vif.instr_mem_read);//save store instr
 	    end
 	    else
 	    begin

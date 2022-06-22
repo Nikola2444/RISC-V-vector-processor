@@ -25,7 +25,7 @@ class bd_instr_if_driver extends uvm_driver#(bd_instr_if_seq_item);
       forever begin
 	 
 	 @(negedge backdoor_instr_vif.clk);
-	 if (backdoor_instr_vif.rstn && backdoor_instr_vif.instr_mem_en)
+	 if (backdoor_instr_vif.rstn)
 	 begin
 
 	    seq_item_port.get_next_item(req);

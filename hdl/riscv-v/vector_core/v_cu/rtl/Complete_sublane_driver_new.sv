@@ -545,7 +545,7 @@ always_comb begin
         default: bwen_selcetion = {{4{1'b0}}};
     endcase
     
-    bwen_mux = main_cnt > dp0_reg.read_limit+1 ? 'h0 : 
+    bwen_mux = (main_cnt > dp0_reg.read_limit+1) && current_state == SLIDE ? 'h0 : 
 	       (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
                                               bwen_selcetion;
 end

@@ -265,7 +265,10 @@ module Vector_Lane
 
    
    assign alu_reduction_o = ALU_reduction;
-   assign alu_sew_o = ALU_signals_reg[VRF_DELAY - 1].sew;
+   generate
+      for (genvar i=0; i<W_PORTS_NUM; i++)
+	assign alu_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].sew;
+   endgenerate
    assign alu_vld_o = ALU_signals_reg[VRF_DELAY-1].read_data_valid;
    
    assign alu_output_valid_next[0] = alu_vld_i;

@@ -251,9 +251,9 @@ module v_cu #
 				  instr_vld_reg[8] && v_instr_funct6_upper == 3'b110;
    assign reduction_op_o = reduction_instr_check;
    assign slide_instr_check     = !instr_vld_reg[11] && (v_instr_funct6 == 6'b001111 || v_instr_funct6 == 6'b001110);
-   assign slide_type_o = (sew_o == 2'b00 && (scalar_rs1_i == VLANE_NUM*4)) || 
-			 (sew_o == 2'b01 && (scalar_rs1_i == VLANE_NUM*2)) || 
-			 (sew_o == 2'b10 && (scalar_rs1_i == VLANE_NUM)) ? LP_FAST_SLIDE : LP_SLOW_SLIDE;
+   assign slide_type_o = (sew_o == 2'b00 && (scalar_rs1_reg == VLANE_NUM*4)) || 
+			 (sew_o == 2'b01 && (scalar_rs1_reg == VLANE_NUM*2)) || 
+			 (sew_o == 2'b10 && (scalar_rs1_reg == VLANE_NUM)) ? LP_FAST_SLIDE : LP_SLOW_SLIDE;
 		       
    assign widening_instr_check  = v_instr_funct6_upper == 3'b111 || v_instr_funct6_upper == 3'b110;
    

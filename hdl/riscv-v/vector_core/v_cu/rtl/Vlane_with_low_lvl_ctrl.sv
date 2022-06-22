@@ -561,8 +561,8 @@ endgenerate;
 	      0:begin
 		 case (alu_sew[lane][i])
 		    0: alu_b[lane][i] = vs2_data[lane][i];
-		    1: alu_b[lane][i] = alu_b_16bit;
-		    2: alu_b[lane][i] = alu_b_32bit;
+		    1: alu_b[lane][i] = alu_b_16bit[lane][i];
+		    2: alu_b[lane][i] = alu_b_32bit[lane][i];
 		 endcase
 	      end
 	      

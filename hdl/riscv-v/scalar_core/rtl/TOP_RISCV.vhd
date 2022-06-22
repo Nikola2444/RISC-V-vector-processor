@@ -67,7 +67,7 @@ architecture structural of scalar_core is
   signal if_id_en_s : std_logic;
 
   signal instr_mem_id_s : std_logic_vector(31 downto 0);
-
+  signal instr_mem_en_s : std_logic;
 begin
   -- data_path instance
   data_path_1 : entity work.data_path
@@ -117,7 +117,7 @@ begin
   --flush current instruction
   --instr_mem_flush_o <= '1' when (if_id_flush_s = '1' or instr_ready_i = '0')                     else '0';
   -- stall currnet instruction
-  --instr_mem_en_o    <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
+  instr_mem_en_s    <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
 
 
 

@@ -9,6 +9,18 @@ interface backdoor_instr_if (input clk, logic rstn);
    logic 	  instr_mem_en;
 endinterface:backdoor_instr_if
 
+interface backdoor_v_instr_if (input clk, logic rstn);   
+   logic [3:0] 	  start;
+   logic [3:0] 	  ready;
+   logic [31:0]   v_instruction;
+   logic [31:0]   v_scalar;
+   logic [2:0] 	  lmul;
+   logic [2:0] 	  sew;
+   logic [31:0]   vl;
+   logic [31:0]   vrf_read_ram [`V_LANES][2][4][`VRF_DEPTH-1:0];
+   
+endinterface:backdoor_v_instr_if
+
 interface backdoor_register_bank_if (input clk, logic rstn);   
    logic 	  rd_we_i;
    logic [4:0 ]   rs1_address_i;

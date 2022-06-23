@@ -20,7 +20,6 @@ class test_simple extends test_base;
       if (cfg.use_s_instr_backdoor)
       begin
 	 phase.raise_objection(this);
-	 uvm_test_done.set_drain_time(this, 100ms);
 	 simple_seq.start(env.bd_instr_agent.seqr);
 	 phase.drop_objection(this);
       end      

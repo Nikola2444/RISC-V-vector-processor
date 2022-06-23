@@ -22,4 +22,7 @@ jmp:
 	vadd.vv v6, v8, v7
 	vsub.vv v2, v5, v4
 	vsetvli x2, x0, e8, m1
+	nop
+	nop
+	nop
 	#vslidedown.vx v1, v2, x1	    

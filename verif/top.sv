@@ -141,7 +141,7 @@ module riscv_v_verif_top;
 	 for (int i=0;i<`V_LANES;i++)
 	 begin
 	    vrf_lvt[i][0]='{default:'0};	    
-	    vrf_lvt[i][1][j[31:2]][j[1:0]*8 +: 8]= j[i*8 +: 8] ^ 0;
+	    vrf_lvt[i][1][j[31:2]][j[1:0]*8 +: 8]= j[(i%4)*8 +: 8] ^ 0;
 	 end
       end
       //init read_rams
@@ -156,10 +156,10 @@ module riscv_v_verif_top;
 	    vrf_read_ram[i][0][1]='{default:'0};
 	    vrf_read_ram[i][0][2]='{default:'0};
 	    vrf_read_ram[i][0][3]='{default:'0};
-	    vrf_read_ram[i][1][0][j[31:2]][j[1:0]*8 +: 8]=j[i*8 +: 8] ^ 0;
-	    vrf_read_ram[i][1][1][j[31:2]][j[1:0]*8 +: 8]=j[i*8 +: 8] ^ 0;
-	    vrf_read_ram[i][1][2][j[31:2]][j[1:0]*8 +: 8]=j[i*8 +: 8] ^ 0;
-	    vrf_read_ram[i][1][3][j[31:2]][j[1:0]*8 +: 8]=j[i*8 +: 8] ^ 0;
+	    vrf_read_ram[i][1][0][j[31:2]][j[1:0]*8 +: 8]=j[(i%4)*8 +: 8] ^ 0;
+	    vrf_read_ram[i][1][1][j[31:2]][j[1:0]*8 +: 8]=j[(i%4)*8 +: 8] ^ 0;
+	    vrf_read_ram[i][1][2][j[31:2]][j[1:0]*8 +: 8]=j[(i%4)*8 +: 8] ^ 0;
+	    vrf_read_ram[i][1][3][j[31:2]][j[1:0]*8 +: 8]=j[(i%4)*8 +: 8] ^ 0;
 	 end
       end
    end

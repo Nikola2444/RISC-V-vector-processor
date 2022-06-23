@@ -525,30 +525,37 @@ endgenerate;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_res_reordered;
    always_comb
    begin
-      for(int byte_sel=0; byte_sel < 16/8; byte_sel++)
-      begin
-	 for (int lane=0; lane<VLANE_NUM; lane+=2)
+      
+      for (int lane=0; lane<VLANE_NUM; lane+=2)
+	for(int byte_sel=0; byte_sel < 16/8; byte_sel++)
+	begin
 	   for (int port=0; port<W_PORTS_NUM; port++)
 	   begin
-	      alu_b_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
-	      alu_a_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
-	      alu_c_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
+	      /* -----\/----- EXCLUDED -----\/-----
+	       alu_b_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+	       alu_a_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
+	       alu_c_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
+	       -----/\----- EXCLUDED -----/\----- */
+	      alu_b_16bit[byte_sel+lane][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+	      alu_a_16bit[byte_sel+lane][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
+	      alu_c_16bit[byte_sel+lane][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
 	   end
-      end
+	end
 
-      for(int byte_sel=0; byte_sel < 32/8; byte_sel++)
-      begin
-	 for (int lane=0; lane<VLANE_NUM; lane+=4)
+
+      for (int lane=0; lane<VLANE_NUM; lane+=4)
+	for(int byte_sel=0; byte_sel < 32/8; byte_sel++)
+	begin
 	   for (int port=0; port<W_PORTS_NUM; port++)
 	   begin
-	      alu_b_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
+	      alu_b_32bit[byte_sel + lane][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
 									  vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
-	      alu_a_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs1_data[lane+3][port][byte_sel*8 +:8], vs1_data[lane+2][port][byte_sel*8 +:8],
+	      alu_a_32bit[byte_sel + lane][port] = {vs1_data[lane+3][port][byte_sel*8 +:8], vs1_data[lane+2][port][byte_sel*8 +:8],
 									  vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
-	      alu_c_32bit[byte_sel*LP_32bit_ALU_GROUPS + lane/4][port] = {vs3_data[lane+3][port][byte_sel*8 +:8], vs3_data[lane+2][port][byte_sel*8 +:8],
+	      alu_c_32bit[byte_sel + lane][port] = {vs3_data[lane+3][port][byte_sel*8 +:8], vs3_data[lane+2][port][byte_sel*8 +:8],
 									  vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
 	   end 
-      end            
+	end            
    end
 
    
@@ -620,15 +627,38 @@ endgenerate;
       for (int lane=0; lane<VLANE_NUM; lane+=4)
       begin
 	   for (int port=0; port<W_PORTS_NUM; port++)
-	   begin	      
-	      alu_res_reordered[lane+0][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][7:0], alu_res[VLANE_NUM/4*2+lane/4][port][7:0],
-					   alu_res[VLANE_NUM/4+lane/4][port][7:0], alu_res[0+lane/4][port][7:0]};
-	      alu_res_reordered[lane+1][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][15:8], alu_res[VLANE_NUM/4*2+lane/4][port][15:8],
-					   alu_res[VLANE_NUM/4+lane/4][port][15:8], alu_res[0+lane/4][port][15:8]};
-	      alu_res_reordered[lane+2][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][23:16], alu_res[VLANE_NUM/4*2+lane/4][port][23:16],
-					   alu_res[VLANE_NUM/4+lane/4][port][23:16], alu_res[0+lane/4][port][23:16]};
-	      alu_res_reordered[lane+3][port] = {alu_res[VLANE_NUM/4*3+lane/4][port][31:24], alu_res[VLANE_NUM/4*2+lane/4][port][31:24],
-					   alu_res[VLANE_NUM/4+lane/4][port][31:24], alu_res[0+lane/4][port][31:24]};
+	   begin
+	      if (alu_sew[lane+0][port]==2'b10)
+		alu_res_reordered[lane+0][port] = {alu_res[lane+3][port][7:0], alu_res[lane+2][port][7:0],
+						   alu_res[lane+1][port][7:0], alu_res[lane+0][port][7:0]}; // take byte 0, from ALU0,1,2,3
+	      else if (alu_sew[lane+0][port]==2'b01)
+		alu_res_reordered[lane+0][port] = {2{alu_res[lane+1][port][7:0], alu_res[lane+0][port][7:0]}}; // take byte 0, from ALU0,1
+	      else
+		alu_res_reordered[lane+0][port] = {4{alu_res[lane+0][port][7:0]}}; //take byte 0 FROM ALU0
+
+	      if (alu_sew[lane+1][port]==2'b10)
+		alu_res_reordered[lane+1][port] = {alu_res[lane+3][port][15:8], alu_res[lane+2][port][15:8], //take byte 1, from ALU0,1,2,3
+						   alu_res[lane+1][port][15:8], alu_res[lane+0][port][15:8]};
+	      else if (alu_sew[lane+1][port]==2'b01)
+		alu_res_reordered[lane+1][port] = {2{alu_res[lane+1][port][15:8], alu_res[lane+0][port][15:8]}}; //take byte 1, from ALU0,1
+	      else
+		alu_res_reordered[lane+1][port] = {4{alu_res[lane+1][port][7:0]}}; //take byte 0 FROM ALU1
+
+	      if (alu_sew[lane+2][port]==2'b10)
+		alu_res_reordered[lane+2][port] = {alu_res[lane+3][port][23:16], alu_res[lane+2][port][23:16],//take byte 2, from ALU0,1,2,3
+						   alu_res[lane+1][port][23:16], alu_res[lane+0][port][23:16]};
+	      else if (alu_sew[lane+2][port]==2'b01)
+		alu_res_reordered[lane+2][port] = {2{alu_res[lane+3][port][7:0], alu_res[lane+2][port][7:0]}};//take byte 0, from ALU2,3
+	      else
+		alu_res_reordered[lane+2][port] = {4{alu_res[lane+2/4*2+lane/4][port][7:0]}}; //take byte 0 FROM ALU2
+
+	      if (alu_sew[lane+3][port]==2'b10)
+		alu_res_reordered[lane+3][port] = {alu_res[lane+3][port][31:24], alu_res[lane+2][port][31:24],//take byte 3, from ALU0,1,2,3
+					   alu_res[lane+1][port][31:24], alu_res[lane+0][port][31:24]};
+	      else if (alu_sew[lane+3][port]==2'b01)
+		alu_res_reordered[lane+3][port] = {2{alu_res[lane+3][port][15:8], alu_res[lane+2][port][15:8]}}; //take byte 1, from ALU2,3
+	      else
+		alu_res_reordered[lane+3][port] = {4{alu_res[lane+3][port][7:0]}}; //take byte 0 FROM ALU3
 	   end 
       end            
    end

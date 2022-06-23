@@ -23,3 +23,6 @@ Disassembly of section .text:
   2c:	02838357          	vadd.vv	v6,v8,v7
   30:	0a520157          	vsub.vv	v2,v5,v4
   34:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
+  38:	00000013          	nop
+  3c:	00000013          	nop
+  40:	00000013          	nop

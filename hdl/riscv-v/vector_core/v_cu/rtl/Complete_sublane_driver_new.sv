@@ -801,7 +801,7 @@ always_comb begin
               dp0_next.en_comp = 0;
               dp0_next.delay_addr = 0;
               dp0_next.input_sel = 2'b11;
-              dp0_next.reverse_bwen = up_down_slide_i;
+              dp0_next.reverse_bwen = !up_down_slide_i;
               dp0_next.slide_enable_buffering = 0;
               dp0_next.start_decrementor = 0;
 	   end

@@ -278,11 +278,14 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       else // slidedown
       begin
 	 dest_element_idx = (tr.vl<<tr.sew)-(tr.scalar << tr.sew) -1;
+	 src_element_idx = (tr.vl << tr.sew)-1;
 	 for (int i=0; i<(tr.vl<<tr.sew)-(tr.scalar << tr.sew); i++)
 	 begin	 
-	    dest_element_idx -= i;
-	    src_element_idx = tr.vl-i-1;
-	    vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];	
+
+	    vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];
+	    $display("vrf_dest[%0d][%0d][%0d]=%0x, vrf_src[%0d][%0d][%0d]=%0x", vd, dest_element_idx[31:2], dest_element_idx[1:0], vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8], vs2, src_element_idx[31:2], src_element_idx[1:0], vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8]);
+	    dest_element_idx--;
+	    src_element_idx--;
 	 end // for (int i=0; i<tr.vl; i++)
       end
       //check if expected matches dut output
@@ -300,7 +303,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	   begin
 	      $display("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
 		       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
-		       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data);
+		       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data); //dut result
 	      match_num++;
 	      match = 1;	
 	   end

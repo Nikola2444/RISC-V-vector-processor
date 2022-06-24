@@ -3,9 +3,9 @@
 
 	addi x2, x0, 3
 	addi x10, x0, 1
-	addi x1, x0, 1
-	vsetvli x2, x0, e8, m1
-	vslideup.vx v10, v11, x1
+	addi x1, x0, 16
+	vsetvli x2, x0, e16, m1
+	vslidedown.vx v10, v11, x1
 	#sw   x4, 0(x5)
 loop1:			    	    
 

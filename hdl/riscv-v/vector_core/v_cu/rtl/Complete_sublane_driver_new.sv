@@ -331,11 +331,16 @@ assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;
       begin
 	 for (int lane=0; lane<VLANE_NUM; lane++)
 	 begin
-	    first_elements_to_skip[lane] <= dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= lane ? LP_SKIP_NONE:
-		       dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= VLANE_NUM+lane ? LP_SKIP_1 :
-		       dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 2*VLANE_NUM+lane ? LP_SKIP_2 :
-		       dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 3*VLANE_NUM+lane ? LP_SKIP_3 : LP_SKIP_ALL;
-	    
+	    if (dp0_reg.up_down_slide)
+	      first_elements_to_skip[lane] <= dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= lane ? LP_SKIP_NONE:
+					      dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= VLANE_NUM+lane ? LP_SKIP_1 :
+					      dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 2*VLANE_NUM+lane ? LP_SKIP_2 :
+					      dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 3*VLANE_NUM+lane ? LP_SKIP_3 : LP_SKIP_ALL;
+	    else
+	      first_elements_to_skip[lane] <= dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= VLANE_NUM-1-lane ? LP_SKIP_NONE:
+					      dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 2*VLANE_NUM-1-lane ? LP_SKIP_1 :
+					      dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 3*VLANE_NUM-1-lane ? LP_SKIP_2 :
+					      dp0_reg.slide_amount[$clog2(VLANE_NUM*4)-1:0] <= 4*VLANE_NUM-1-lane ? LP_SKIP_3 : LP_SKIP_ALL;
 	    
 	 end
       end
@@ -546,7 +551,7 @@ always_comb begin
     endcase
     
     bwen_mux = (main_cnt > dp0_reg.read_limit+1) && current_state == SLIDE ? 'h0 : 
-	       (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
+//	       (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
                                               bwen_selcetion;
 end
 /////////////////////////////////////////////////////////////////////////////////
@@ -838,6 +843,7 @@ always_comb begin
                     7'b1000000 : begin                                            // SLIDE                        
                         //dp0_next.delay_addr = 1;                                  // Starting from the next cycle bwen is 1111                        
                         //dp0_next.reverse_bwen = up_down_slide_i;
+		       element_width_read=2'b00;
                         dp0_next.en_write = 1;
 		        next_state = SLIDE;                            
                         dp0_next.write_data_sel = 2'b10;                        

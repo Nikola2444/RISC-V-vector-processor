@@ -89,7 +89,10 @@ generate
                 if(load_i) begin
                     for(int i = 0; i < 8; i++)
                       if (i == 0)
-                        shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)] + slide_offset_i[$clog2(MEM_DEPTH)-1:0];
+			if (up_down_i)
+                          shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)] + slide_offset_i[$clog2(MEM_DEPTH)-1:0];
+		        else
+			  shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)] - slide_offset_i[$clog2(MEM_DEPTH)-1:0];
 		      else
                         shift_reg[i] <= start_addr_i[i * $clog2(MEM_DEPTH) +: $clog2(MEM_DEPTH)];
                 end

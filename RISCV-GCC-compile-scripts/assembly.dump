@@ -7,8 +7,8 @@ Disassembly of section .text:
 0000000000000000 <loop1-0x14>:
    0:	00300113          	li	sp,3
    4:	00100513          	li	a0,1
-   8:	00a00093          	li	ra,10
-   c:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
+   8:	00100093          	li	ra,1
+   c:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
   10:	3ab0c557          	vslideup.vx	v10,v11,ra
 
 0000000000000014 <loop1>:

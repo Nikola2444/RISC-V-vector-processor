@@ -958,7 +958,7 @@ always_comb begin
         end        
         SLIDE : begin
             next_state = SLIDE;
-            dp0_next.read_limit = read_limit_add - dp0_reg.slide_amount[31:2];
+            dp0_next.read_limit = read_limit_add - dp0_reg.slide_amount[$clog2(VLANE_NUM) +: 32-($clog2(VLANE_NUM))];
             // starting the main counter
             main_cnt_en = 1;            
             // read address generator

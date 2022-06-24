@@ -650,7 +650,7 @@ endgenerate;
 	      else if (alu_sew[lane+2][port]==2'b01)
 		alu_res_reordered[lane+2][port] = {2{alu_res[lane+3][port][7:0], alu_res[lane+2][port][7:0]}};//take byte 0, from ALU2,3
 	      else
-		alu_res_reordered[lane+2][port] = {4{alu_res[lane+2/4*2+lane/4][port][7:0]}}; //take byte 0 FROM ALU2
+		alu_res_reordered[lane+2][port] = {4{alu_res[lane+2][port][7:0]}}; //take byte 0 FROM ALU2
 
 	      if (alu_sew[lane+3][port]==2'b10)
 		alu_res_reordered[lane+3][port] = {alu_res[lane+3][port][31:24], alu_res[lane+2][port][31:24],//take byte 3, from ALU0,1,2,3

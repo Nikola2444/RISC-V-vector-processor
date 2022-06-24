@@ -121,36 +121,36 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 
 	 if (tr.sew==3'b000)
 	 begin
-	    op1={24'b0, vrf_read_ram[vs1][element_idx][tr.vl[1:0]*8 +:8]};
+	    op1={24'b0, vrf_read_ram[vs1][element_idx][i[1:0]*8 +:8]};
 	    if (funct3 == OPIVV || funct3 == OPMVV)
-	      op2={24'b0, vrf_read_ram[vs2][element_idx][tr.vl[1:0]*8 +:8]};
+	      op2={24'b0, vrf_read_ram[vs2][element_idx][i[1:0]*8 +:8]};
 	    else if (funct3 == OPIVX || funct3 == OPMVX)
 	      op2={24'b0, tr.scalar[7:0]};
 	    else
 	      op2={27'b0, tr.v_instruction[19:15]};//immediate
 
-	    op1_sign_ext = {{25{op1[7]}}, op1[6:0]};
-	    op2_sign_ext = {{25{op2[7]}}, op2[6:0]};
+	    op1_sign_ext = {{24{op1[7]}}, op1[7:0]};
+	    op2_sign_ext = {{24{op2[7]}}, op2[7:0]};
 	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3);
-	    vrf_read_ram[vd][element_idx][tr.vl[1:0]*8 +: 8]=res[7:0];
+	    vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]=res[7:0];
 
-	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx]);
+	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, i[1:0], vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]);
 	 end
 	 else if (tr.sew==3'b001)
 	 begin
-	    op1={16'b0, vrf_read_ram[vs1][element_idx][tr.vl[0]*16 +:16]};
+	    op1={16'b0, vrf_read_ram[vs1][element_idx][i[0]*16 +:16]};
 	    if (funct3 == OPIVV || funct3 == OPMVV)
-	      op2={16'b0, vrf_read_ram[vs2][element_idx][tr.vl[0]*16 +:16]};
+	      op2={16'b0, vrf_read_ram[vs2][element_idx][i[0]*16 +:16]};
 	    else if (funct3 == OPIVX || funct3 == OPMVX)
 	      op2={16'b0, tr.scalar[15:0]};
 	    else
 	      op2={27'b0, tr.v_instruction[19:15]};//immediate
 
-	    op1_sign_ext = {{17{op1[15]}}, op1[14:0]};
-	    op2_sign_ext = {{17{op2[15]}}, op2[14:0]};
+	    op1_sign_ext = {{16{op1[15]}}, op1[15:0]};
+	    op2_sign_ext = {{16{op2[15]}}, op2[15:0]};
 	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3);
-	    vrf_read_ram[vd][element_idx][tr.vl[0]*16 +: 16]=res[15:0];
-	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx]);
+	    vrf_read_ram[vd][element_idx][i[0]*16 +: 16]=res[15:0];
+	    $display("vrf=%0x, op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d, i[0]=%d", vrf_read_ram[vs1][element_idx], op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx], i[0]);
 	 end
 	 else
 	 begin
@@ -212,10 +212,10 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       if (funct3 == OPIVV || funct3 == OPIVX || funct3 == OPIVI)
 	case (funct6)
 	   6'b000000: begin	    
-	      res = op1 + op2;	    
+	      res = signed'(op1) + signed'(op2);	    
 	   end
-	   6'b000001: res = op1 - op2;
-	   6'b000010: res = op1 - op2;
+	   6'b000001: res = signed'(op1) - signed'(op2);
+	   6'b000010: res = signed'(op1) - signed'(op2);
 	   
 	   6'b001001: res = op1 & op2;
 	   6'b001010: res = op1 | op2;
@@ -228,6 +228,9 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	   6'b011101: res = signed'(op1) <= signed'(op2);
 	   6'b011110: res = unsigned'(op1) > unsigned'(op2);
 	   6'b011111: res = signed'(op1) > signed'(op2);
+	   default:begin
+		`uvm_fatal("VECTOR INVALID INSTR", "FUNCT6 not implemeted or invalid")		// 
+	   end
 
 	endcase // case (funct6)
       return res;
@@ -265,12 +268,23 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       funct6=tr.v_instruction[31:26];
 
       //do the slide
-      for (int i=0; i<(tr.vl<<tr.sew)-(tr.scalar << tr.sew); i++)
-      begin	 
-	 dest_element_idx = i + (tr.scalar << tr.sew);
-	 src_element_idx = i[31:2];
-	 vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx][i[1:0]*8 +: 8];	
-      end // for (int i=0; i<tr.vl; i++)
+      if (funct6==6'b001110)//slideup
+	for (int i=0; i<(tr.vl<<tr.sew)-(tr.scalar << tr.sew); i++)
+	begin	 
+	   dest_element_idx = i + (tr.scalar << tr.sew);
+	   src_element_idx = i[31:2];
+	   vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx][i[1:0]*8 +: 8];	
+	end // for (int i=0; i<tr.vl; i++)
+      else // slidedown
+      begin
+	 dest_element_idx = (tr.vl<<tr.sew)-(tr.scalar << tr.sew) -1;
+	 for (int i=0; i<(tr.vl<<tr.sew)-(tr.scalar << tr.sew); i++)
+	 begin	 
+	    dest_element_idx -= i;
+	    src_element_idx = tr.vl-i-1;
+	    vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];	
+	 end // for (int i=0; i<tr.vl; i++)
+      end
       //check if expected matches dut output
       vreg_to_update = vd*(`VLEN/32/`V_LANES);
       for (logic[31:0] j=0; j<`VLEN/8; j++)

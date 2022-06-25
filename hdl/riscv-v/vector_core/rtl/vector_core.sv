@@ -132,15 +132,17 @@ module vector_core #
    logic 					vlane_store_rdy; 
    logic [VLANE_NUM-1:0][31:0] 			vlane_load_data;
    
-   logic 					vlane_store_load_ivalid;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vlane_store_load_ivalid;
    logic [0:VLANE_NUM-1][3:0] 			vlane_load_bwen;
    logic 					vlane_load_rdy       ;
    logic 					vlane_load_last      ;
    logic 					vlane_load_dvalid    ;
    logic[1:0] 					vlane_store_driver;
    logic [1:0] 					vlane_store_driver_reg;
+   logic [1:0] 					vlane_idx_driver_reg;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 	vlane_store_dvalid;
    logic 	              			vlane_mcu_store_dvalid;
+   logic 	              			vlane_mcu_idx_ivalid;
    
    // End of automatics
    /*INSTANTIATE SCHEDULER*/
@@ -311,12 +313,16 @@ module vector_core #
       if (!rstn)
       begin
 	 vlane_store_driver_reg <= 'h0;
+	 vlane_idx_driver_reg <= 'h0;
       end
       else
       begin
+      
 	 if (!vlane_mcu_store_dvalid)
 	   vlane_store_driver_reg <= vlane_store_driver;
 	 
+	 if(!vlane_mcu_idx_ivalid)
+	   vlane_idx_driver_reg <= vlane_store_driver;
       end
    end
    
@@ -325,7 +331,7 @@ module vector_core #
       for (int i=0; i<VLANE_NUM; i++)
       begin
 	 mcu_store_data[i] = vlane_store_data[i][vlane_store_driver_reg];
-	 mcu_store_load_idx[i] = vlane_store_load_idx[i][vlane_store_driver_reg];
+	 mcu_store_load_idx[i] = vlane_store_load_idx[i][vlane_idx_driver_reg];
 	 vlane_load_data[i] = mcu_load_data[i];
 	 vlane_load_bwen[i] = mcu_load_bwe[i];
       end       
@@ -339,6 +345,17 @@ module vector_core #
 	   vlane_mcu_store_dvalid <= 1'b0;
 	 else
 	   vlane_mcu_store_dvalid <= 1'b1;
+      end
+   end
+   
+   // For indices of indexed loads and stores
+   always_comb
+   begin
+      for(int i=0;i<VLANE_NUM;i++) begin
+         if (vlane_store_load_ivalid[i][vlane_idx_driver_reg] == 1'b0)
+           vlane_mcu_idx_ivalid <= 1'b0;
+         else
+           vlane_mcu_idx_ivalid <= 1'b1;
       end
    end
 
@@ -388,13 +405,13 @@ module vector_core #
       .vlane_store_data_i   (mcu_store_data      ),
       .vlane_store_idx_i    (mcu_store_load_idx  ),
       .vlane_store_dvalid_i (vlane_mcu_store_dvalid),
-      .vlane_store_ivalid_i (vlane_store_laod_ivalid),
+      .vlane_store_ivalid_i (vlane_mcu_idx_ivalid),
       .vlane_store_rdy_o    (vlane_store_rdy     ),
       .vlane_load_data_o    (mcu_load_data     ),
       .vlane_load_bwe_o     (mcu_load_bwe      ),
       .vlane_load_idx_i     (mcu_store_load_idx),
       .vlane_load_rdy_i     (vlane_load_rdy      ),
-      .vlane_load_ivalid_i  (vlane_store_load_ivalid),
+      .vlane_load_ivalid_i  (vlane_mcu_idx_ivalid),
       .vlane_load_dvalid_o  (vlane_load_dvalid   ),
       .vlane_load_last_o    (vlane_load_last     )
       );

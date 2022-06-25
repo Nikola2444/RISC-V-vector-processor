@@ -1,0 +1,12 @@
+#-----------------------------------------------------------
+# Vivado v2020.1 (64-bit)
+# SW Build 2902540 on Wed May 27 19:54:49 MDT 2020
+# IP Build 2902112 on Wed May 27 22:43:36 MDT 2020
+# Start of session at: Sat Jun 25 17:32:44 2022
+# Process ID: 1176
+# Current directory: C:/Users/alexs/OneDrive/Desktop/RISC-V vector core/Github/Branched/RISC-V-vector-processor/vivado_pjt/result/riscv_v_pjt.runs/synth_1
+# Command line: vivado.exe -log riscv_v_w_mem_subsystem.vds -product Vivado -mode batch -messageDb vivado.pb -notrace -source riscv_v_w_mem_subsystem.tcl
+# Log file: C:/Users/alexs/OneDrive/Desktop/RISC-V vector core/Github/Branched/RISC-V-vector-processor/vivado_pjt/result/riscv_v_pjt.runs/synth_1/riscv_v_w_mem_subsystem.vds
+# Journal file: C:/Users/alexs/OneDrive/Desktop/RISC-V vector core/Github/Branched/RISC-V-vector-processor/vivado_pjt/result/riscv_v_pjt.runs/synth_1\vivado.jou
+#-----------------------------------------------------------
+source riscv_v_w_mem_subsystem.tcl -notrace

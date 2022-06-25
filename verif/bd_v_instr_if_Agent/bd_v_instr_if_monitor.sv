@@ -50,6 +50,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
    endfunction : connect_phase
 
    task main_phase(uvm_phase phase);
+      int drop_obj=0;
       phase.raise_objection(this);
       forever begin
 	 @(negedge vif.clk);
@@ -70,8 +71,11 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 
 	 if(vif.v_instruction==0)
 	   watch_dog_cnt++;
-	 if (vif.start==0 && vif.ready==4'b1111 && watch_dog_cnt > 10)
-	   phase.drop_objection(this);
+	 if (vif.start==0 && vif.ready==4'b1111 && watch_dog_cnt > 10 && drop_obj==0)
+	 begin
+	    drop_obj = 1;
+	    phase.drop_objection(this);
+	 end
 	  // ...
 	  // collect transactions
 	  // ...
@@ -104,7 +108,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	    end
 	 join_none
       end
-      if (vif.start[idx] && vif.ready[idx])
+      if (vif.start[idx] && vif.ready[idx] )
       begin
 	 $display("START DRIVER IDX IS: %d", idx);
 	 driver_processing[idx] = 1;
@@ -112,7 +116,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 sew_queue[idx].push_back( vif.sew);
 	 lmul_queue[idx].push_back(vif.lmul);
 	 vl_queue[idx].push_back(vif.vl);
-	 scalar_queue[idx].push_back(vif.v_scalar);
+	 scalar_queue[idx].push_back(vif.v_rs1_scalar);
       end
       
 

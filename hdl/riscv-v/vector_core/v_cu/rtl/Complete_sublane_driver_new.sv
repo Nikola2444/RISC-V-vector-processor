@@ -49,7 +49,7 @@ module Complete_sublane_driver_new
     output logic vmrf_wen_o,
     
     // Load and Store
-    // input logic load_valid_i,                                                   // NEW SIGNAL
+    //input logic load_valid_i,                                                   // NEW SIGNAL
     input logic load_last_i,                                                    // NEW SIGNAL
     output logic ready_for_load_o,                                              // NEW SIGNAL
     input logic [VLANE_NUM - 1 : 0][3 : 0] load_bwen_i,    
@@ -82,7 +82,7 @@ module Complete_sublane_driver_new
     output logic alu_en_32bit_mul_o,                               
     
     // Slides
-    // input logic slide_type_i,
+    //input logic slide_type_i,
     input logic up_down_slide_i,                                                // 0 for down, 1 for up
     input logic [31 : 0] slide_amount_i,
     output logic[$clog2(VLANE_NUM)-1:0] 	    slide_data_mux_sel_o,
@@ -152,7 +152,7 @@ typedef struct packed
     logic [31 : 0] ALU_x_data;
     logic [4 : 0] ALU_imm;
     logic vector_mask;
-    logic [1 : 0] write_data_sel;
+    logic [1 : 0] 	write_data_sel;
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
     logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
     logic [ALU_OPMODE - 1 : 0] ALU_opmode;
@@ -368,10 +368,13 @@ end
 /////////////////////////////////////////////////////////////////////////////////
 always_comb begin
     if(current_state == REDUCTION_WRITE_MODE) begin
-        for(int i = 0; i < VLANE_NUM; i++) begin
+        for(int i = 4; i < VLANE_NUM; i++) begin
             bwen[i] = 0;
         end
-        bwen[0] = bwen_mux;
+       bwen[0] = {3'b0, bwen_mux[0]};
+       bwen[1] = {3'b0, bwen_mux[0]};
+       bwen[2] = {3'b0, bwen_mux[0]};
+       bwen[3] = {3'b0, bwen_mux[0]};
     end
     else begin
         for(int i = 0; i < VLANE_NUM; i++) begin
@@ -568,7 +571,7 @@ waddr_cnt
 (
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .slide_offset_i(slide_waddr_offset[$clog2(MEM_DEPTH) - 1 : 0]),
+    .slide_offset_i(slide_waddr_offset),
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
     .up_down_i(dp0_reg.up_down_slide),
@@ -592,7 +595,7 @@ generate
         (
             .clk_i(clk_i),
             .rst_i(rst_i),
-	        .slide_offset_i('h0),
+	    .slide_offset_i('h0),
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(dp0_reg.up_down_slide),
@@ -790,7 +793,7 @@ always_comb begin
               dp0_next.reduction_op = reduction_op_i;
               dp0_next.vmrf_wen = 0;
               dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
-              dp0_next.sew = vsew_i;
+              dp0_next.sew = vsew_i[1 : 0];
               // slides
               dp0_next.up_down_slide = up_down_slide_i;
               dp0_next.slide_amount = slide_amount_i;
@@ -827,8 +830,7 @@ always_comb begin
                     7'b0010000 : begin                                            // LOAD
                         next_state = LOAD_MODE;
 		        ready_for_load_o = 1'b1;
-                        dp0_next.waddr_cnt_en = 1;
-                        dp0_next.write_data_sel = 1;
+                        
                     end
                     7'b0100000 : begin                                            // INDEXED_LOAD
                         dp0_next.store_load_index_valid = 1;
@@ -914,7 +916,9 @@ always_comb begin
             
         end 
         LOAD_MODE : begin
-            next_state = LOAD_MODE;
+           next_state = LOAD_MODE;
+	   dp0_next.waddr_cnt_en = 1;
+           dp0_next.write_data_sel = 1;
 	   element_width_write = 2'b10;
 	   request_write_control_o = 1'b1;
             //if(load_valid_i) begin            
@@ -923,6 +927,8 @@ always_comb begin
             //ready_for_load_o = dp0_reg.waddr_cnt_en;            
             if(load_last_i) begin
                 next_state = IDLE;
+	       dp0_next.waddr_cnt_en = 0;
+               dp0_next.write_data_sel = 0;
                 //ready_for_load_o = 0;
             end 
         end
@@ -941,7 +947,7 @@ always_comb begin
         end
         REDUCTION_WRITE_MODE : begin
             next_state = REDUCTION_WRITE_MODE;
-           request_write_control_o = 1'b1;
+            request_write_control_o = 1'b1; // 
             main_cnt_en = 1;
             
             if(main_cnt == dp0_reg.inst_delay) begin
@@ -951,6 +957,7 @@ always_comb begin
             
             if(dp0_reg.en_write) begin
                 next_state = IDLE;
+               dp0_next.reduction_op = 0;
                 dp0_next.en_write = 0;
                 dp0_next.vmrf_wen = 0;
             end

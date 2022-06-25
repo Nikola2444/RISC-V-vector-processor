@@ -34,7 +34,8 @@ assign backdoor_sc_data_vif.data_mem_re_o=DUT.data_mem_re;
 
 // ****************************Vector core instr interface***********************
 assign 	  backdoor_v_instr_vif.start = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.start_o;
-assign 	  backdoor_v_instr_vif.v_scalar = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.scalar_rs1_reg;
+assign 	  backdoor_v_instr_vif.v_rs1_scalar = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.scalar_rs1_reg;
+
 assign 	  backdoor_v_instr_vif.ready = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.port_group_ready_i;
 assign    backdoor_v_instr_vif.v_instruction = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.vector_instr_reg;
 assign 	  backdoor_v_instr_vif.lmul=DUT.riscv_v_inst.vector_core_inst.v_cu_inst.lmul_o;
@@ -148,10 +149,10 @@ assign backdoor_v_data_vif.ctrl_rxfer_size_o = DUT.riscv_v_inst.ctrl_rxfer_size_
 assign backdoor_v_data_vif.ctrl_rstart_o = DUT.riscv_v_inst.ctrl_rstart_o;
 
 assign backdoor_v_data_vif.rd_tready_o = DUT.riscv_v_inst.rd_tready_o;
-assign DUT.riscv_v_inst.ctrl_rdone_i = backdoor_v_data_vif.ctrl_rdone_i;
-assign DUT.riscv_v_inst.rd_tdata_i = backdoor_v_data_vif.rd_tdata_i;
-assign DUT.riscv_v_inst.rd_tvalid_i = backdoor_v_data_vif.rd_tvalid_i;
-assign DUT.riscv_v_inst.rd_tlast_i = backdoor_v_data_vif.rd_tlast_i;
+assign DUT.ctrl_rdone = backdoor_v_data_vif.ctrl_rdone_i;
+assign DUT.rd_tdata = backdoor_v_data_vif.rd_tdata_i;
+assign DUT.rd_tvalid = backdoor_v_data_vif.rd_tvalid_i;
+assign DUT.rd_tlast = backdoor_v_data_vif.rd_tlast_i;
 // Write if
 assign backdoor_v_data_vif.ctrl_waddr_offset_o = DUT.riscv_v_inst.ctrl_waddr_offset_o;
 assign backdoor_v_data_vif.ctrl_wxfer_size_o = DUT.riscv_v_inst.ctrl_wxfer_size_o;

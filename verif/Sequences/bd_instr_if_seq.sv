@@ -19,7 +19,7 @@ class riscv_v_simple_seq extends riscv_v_base_seq;
       //instr_queue_1 = read_instr_from_file (assembly_file_path);
       instr_queue_1 = read_instr_from_dump_file (assembly_file_path);
       req = bd_instr_if_seq_item::type_id::create("req"); 
-      foreach (instr_queue_1[i])
+      while(1)
       begin
 	 start_item(req);
 	 finish_item(req);

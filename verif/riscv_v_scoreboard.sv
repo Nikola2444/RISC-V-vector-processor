@@ -75,6 +75,8 @@ class riscv_v_scoreboard extends uvm_scoreboard;
                 $sformatf("V_SCBD:vMonitor sent...\n%s", tr_clone.sprint()),
                 UVM_MEDIUM)
       num_of_tr++;
+      if (tr_clone.v_instruction[6:0]==v_load)
+	load_instr_check(tr_clone);
       if (tr_clone.v_instruction[6:0]==v_arith && (tr_clone.v_instruction[31:26]==6'b001110 || tr_clone.v_instruction[31:26]==6'b001111)) // slides
 	slide_instr_check(tr_clone);
       else if (tr_clone.v_instruction[6:0]==v_arith)
@@ -138,9 +140,12 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	    op1_sign_ext = {{24{op1[7]}}, op1[7:0]};
 	    op2_sign_ext = {{24{op2[7]}}, op2[7:0]};
 	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3, tr.sew);
-	    vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]=res[7:0];
+	    if (funct3==OPMVV && funct6[5:3] == 3'b000) // reduction
+	      vrf_read_ram[vd][0][7:0]=res[7:0];
+	    else
+	      vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]=res[7:0];
 
-	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, i[1:0], vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]);
+	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, i[1:0], res);
 	 end
 	 else if (tr.sew==3'b001)
 	 begin
@@ -161,8 +166,11 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	    op1_sign_ext = {{16{op1[15]}}, op1[15:0]};
 	    op2_sign_ext = {{16{op2[15]}}, op2[15:0]};
 	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3, tr.sew);
-	    vrf_read_ram[vd][element_idx][i[0]*16 +: 16]=res[15:0];
-	    $display("vrf=%0x, op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d, i[0]=%d", vrf_read_ram[vs1][element_idx], op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx], i[0]);
+	    if (funct3==OPMVV && funct6[5:3] == 3'b000) // reduction
+	      vrf_read_ram[vd][0][15 : 0]=res[15:0];
+	    else
+	      vrf_read_ram[vd][element_idx][i[0]*16 +: 16]=res[15:0];
+	    $display("vrf=%0x, op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d, i[0]=%d", vrf_read_ram[vs1][element_idx], op1_sign_ext, op2_sign_ext, vd, element_idx, res, i[0]);
 	 end
 	 else
 	 begin
@@ -182,14 +190,18 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	    op1_sign_ext = op1;
 	    op2_sign_ext = op2;
 	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3, tr.sew);
-	    vrf_read_ram[vd][element_idx]=res;
-	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx]);
+	    if (funct3==OPMVV && funct6[5:3] == 3'b000) // reduction
+	      vrf_read_ram[vd][0]=res;
+	    else
+	      vrf_read_ram[vd][element_idx]=res;
+	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, res);
 	 end
 
 	 
 	 
       end // for (int i=0; i<tr.vl; i++)
-
+      cmp_exp_with_real(tr);
+/* -----\/----- EXCLUDED -----\/-----
       vreg_to_update = vd*(`VLEN/32/`V_LANES);
 	for (logic[31:0] j=0; j<`VLEN/8; j++)
 	begin
@@ -220,6 +232,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       begin
 	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)
       end
+ -----/\----- EXCLUDED -----/\----- */
    endfunction
 
 
@@ -305,7 +318,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       int 	   vrf_addr_offset;
       int 	   vreg_to_update;
       int 	   element_idx;
-      int 	   dest_element_idx;
+      int 	   element_idx;
       int          src_element_idx;
       int 	   vrf_vlane;
       int 	   byte_sel;
@@ -325,24 +338,26 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       if (funct6==6'b001110)//slideup
 	for (int i=0; i<(tr.vl<<tr.sew)-(tr.scalar << tr.sew); i++)
 	begin	 
-	   dest_element_idx = i + (tr.scalar << tr.sew);
+	   element_idx = i + (tr.scalar << tr.sew);
 	   src_element_idx = i[31:2];
-	   vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx][i[1:0]*8 +: 8];	
+	   vrf_read_ram[vd][element_idx[31:2]][element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx][i[1:0]*8 +: 8];	
 	end // for (int i=0; i<tr.vl; i++)
       else // slidedown
       begin
-	 dest_element_idx = (tr.vl<<tr.sew)-(tr.scalar << tr.sew) -1;
+	 element_idx = (tr.vl<<tr.sew)-(tr.scalar << tr.sew) -1;
 	 src_element_idx = (tr.vl << tr.sew)-1;
 	 for (int i=0; i<(tr.vl<<tr.sew)-(tr.scalar << tr.sew); i++)
 	 begin	 
 
-	    vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];
-	    $display("vrf_dest[%0d][%0d][%0d]=%0x, vrf_src[%0d][%0d][%0d]=%0x", vd, dest_element_idx[31:2], dest_element_idx[1:0], vrf_read_ram[vd][dest_element_idx[31:2]][dest_element_idx[1:0]*8 +: 8], vs2, src_element_idx[31:2], src_element_idx[1:0], vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8]);
-	    dest_element_idx--;
+	    vrf_read_ram[vd][element_idx[31:2]][element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];
+	    $display("vrf_dest[%0d][%0d][%0d]=%0x, vrf_src[%0d][%0d][%0d]=%0x", vd, element_idx[31:2], element_idx[1:0], vrf_read_ram[vd][element_idx[31:2]][element_idx[1:0]*8 +: 8], vs2, src_element_idx[31:2], src_element_idx[1:0], vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8]);
+	    element_idx--;
 	    src_element_idx--;
 	 end // for (int i=0; i<tr.vl; i++)
       end
+      cmp_exp_with_real(tr);
       //check if expected matches dut output
+/* -----\/----- EXCLUDED -----\/-----
       vreg_to_update = vd*(`VLEN/32/`V_LANES);
       for (logic[31:0] j=0; j<`VLEN/8; j++)
       begin
@@ -373,10 +388,106 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       begin
 	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)
       end
+ -----/\----- EXCLUDED -----/\----- */
       
+   endfunction // slide_instr_check
+
+   function void load_instr_check(bd_v_instr_if_seq_item tr);
+      logic [4:0] vs1;
+      logic [4:0] vs2;
+      logic [4:0] vd;
+      logic 	  vm;
+      logic [2:0] width;
+      logic [5:0] funct6;
+      logic [1:0] mop;
+      logic [31:0] op1;
+      logic [31:0] op2;
+      logic [31:0] op1_sign_ext;
+      logic [31:0] op2_sign_ext;
+      int 	   vrf_addr_offset;
+      int 	   vreg_to_update;
+      int 	   src_element_idx;
+      int 	   element_idx;
+      int 	   vrf_vlane;
+      int 	   byte_sel;
+      int 	   dest_byte_sel;
+      logic [7:0]  dut_vrf_data;
+      int 	   match=0;
+      logic [1:0]  sew;
+      logic [31:0] res;
+      vs1=tr.v_instruction[19:15];
+      vs2=tr.v_instruction[24:20];
+      vd=tr.v_instruction[11:7];
+      vm=tr.v_instruction[25];
+      width=tr.v_instruction[14:12];
+      mop = tr.v_instruction[27:26];
+      
+      funct6=tr.v_instruction[31:26];
+
+      if (mop==2'b00)
+      begin
+	 src_element_idx = tr.scalar;
+	 for (int i=0; i<tr.vl<<tr.sew; i++)
+	 begin
+	    vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8]=v_axi4_vif.ddr_mem[src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];
+	    src_element_idx ++;
+	 end // for (int i=0; i<tr.vl; i++)
+      end
+      
+      cmp_exp_with_real(tr);
+   endfunction // load_instr_check
+
+
+   function void cmp_exp_with_real(bd_v_instr_if_seq_item tr);
+      int 	   vrf_addr_offset;
+      int 	   vreg_to_update;
+
+      int 	   vrf_vlane;
+      int 	   byte_sel;
+      logic [7:0]  dut_vrf_data;
+      int 	   match=0;
+      logic [4:0]  vs1;
+      logic [4:0] vs2;
+      logic [4:0] vd;
+      vs1=tr.v_instruction[19:15];
+      vs2=tr.v_instruction[24:20];
+      vd=tr.v_instruction[11:7];
+
+      vreg_to_update = vd*(`VLEN/32/`V_LANES);
+      for (logic[31:0] j=0; j<`VLEN/8; j++)
+      begin
+	 vrf_vlane=j[$clog2(`V_LANES)-1:0]; // 1:0
+	 byte_sel=j[$clog2(`V_LANES) +:2];
+	 vrf_addr_offset = j[$clog2(`V_LANES) + 2 +: 27];
+	 dut_vrf_data = backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][0][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8] ^
+			backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8];
+	 //$display("vrf_addr_offset=%0d, vreg_to_update=%0d",vrf_addr_offset, vreg_to_update);
+	 assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)
+	    
+	   begin
+	      $display("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
+		       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
+		       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data);
+	      match_num++;
+	      match = 1;	
+	   end
+	 else
+	 begin
+	    match = 0;
+	    `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
+						     vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
+						     vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data)) // dut result
+	 end	   
+      end
+      if (match == 1)
+      begin
+	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)
+      end
    endfunction
    function void report_phase(uvm_phase phase);
       `uvm_info(get_type_name(), $sformatf("RISCV scoreboard examined: %0d TRANSACTIONS", num_of_tr), UVM_LOW);
       `uvm_info(get_type_name(), $sformatf("Calc scoreboard examined: %0d MATCHES", match_num), UVM_LOW);
    endfunction : report_phase
+
+   
 endclass : riscv_v_scoreboard

@@ -10,7 +10,7 @@ class bd_v_data_if_driver extends uvm_driver#(bd_v_data_if_seq_item);
    typedef enum {wr_idle_phase, wr_phase, resp_phase} write_fsm;
    write_fsm write_channel = wr_idle_phase;
 
-   logic [31:0] ddr[4096];
+   //logic [31:0] backdoor_v_data_vif.ddr_mem[4096];
 
    virtual interface backdoor_v_data_if backdoor_v_data_vif;
    function new(string name = "bd_v_data_if_driver", uvm_component parent = null);
@@ -38,10 +38,6 @@ class bd_v_data_if_driver extends uvm_driver#(bd_v_data_if_seq_item);
       logic [31:0] ctrl_raddr_offset;
       logic [31:0] ctrl_rxfer_size;
       int 	   data_offset=0;
-      for (int i=0; i<4096; i++)
-      begin
-	 ddr[i]=i;
-      end
       forever
       begin
 	 @(negedge backdoor_v_data_vif.clk);
@@ -62,7 +58,7 @@ class bd_v_data_if_driver extends uvm_driver#(bd_v_data_if_seq_item);
 	       backdoor_v_data_vif.rd_tvalid_i = $urandom_range(0, 1);
 	       if (backdoor_v_data_vif.rd_tready_o && backdoor_v_data_vif.rd_tvalid_i)
 	       begin
-		  backdoor_v_data_vif.rd_tdata_i = ddr[ctrl_raddr_offset+data_offset];
+		  backdoor_v_data_vif.rd_tdata_i = backdoor_v_data_vif.ddr_mem[ctrl_raddr_offset+data_offset];
 		  data_offset++;
 		  if (data_offset==ctrl_rxfer_size)
 		  begin
@@ -80,10 +76,7 @@ class bd_v_data_if_driver extends uvm_driver#(bd_v_data_if_seq_item);
       logic [31:0] ctrl_waddr_offset;
       logic [31:0] ctrl_wxfer_size;
       int 	   data_offset=0;
-      for (int i=0; i<4096; i++)
-      begin
-	 ddr[i]=i;
-      end
+
       forever
       begin
 	 @(negedge backdoor_v_data_vif.clk);
@@ -103,7 +96,7 @@ class bd_v_data_if_driver extends uvm_driver#(bd_v_data_if_seq_item);
 	       backdoor_v_data_vif.wr_tready_i = $urandom_range(0, 1);
 	       if (backdoor_v_data_vif.wr_tready_i && backdoor_v_data_vif.wr_tvalid_o)
 	       begin
-		  ddr[ctrl_waddr_offset+data_offset] = backdoor_v_data_vif.wr_tdata_o;
+		  backdoor_v_data_vif.ddr_mem[ctrl_waddr_offset+data_offset] = backdoor_v_data_vif.wr_tdata_o;
 		  data_offset++;
 		  if (data_offset==ctrl_wxfer_size)
 		  begin

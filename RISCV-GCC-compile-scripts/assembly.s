@@ -6,7 +6,8 @@
 	addi x1, x0, 4
 	#vsetvli x2, x0, e16, m1
 	#vslidedown.vx v10, v11, x1
-	#vredsum.vs v9, v12, v13
+	vredsum.vs v9, v12, v13
+	vle32.v 	v15, (x0)
 	#sw   x4, 0(x5)
 loop1:			    	    
 
@@ -21,7 +22,7 @@ jmp:
 	vadd.vv v6, v7, v8
 	  
 	vsetvli x2, x0, e16, m1
-	vadd.vv v6, v8, v7
+	vadd.vv v6, v6, v6
 	vsub.vv v2, v5, v4
 	vsetvli x2, x0, e8, m1
 	nop

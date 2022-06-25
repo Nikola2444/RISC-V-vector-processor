@@ -35,7 +35,7 @@ module riscv_v_verif_top;
    backdoor_v_instr_if backdoor_v_instr_vif(clk, rstn);
    backdoor_register_bank_if backdoor_register_bank_vif (clk, rstn);
    backdoor_sc_data_if backdoor_sc_data_vif (clk, rstn);
-   backdoor_v_data_if backdoor_v_data_vif (clk, rstn);
+   backdoor_v_data_if backdoor_v_data_vif (clk, rstn, ddr_mem);
 
    
    
@@ -131,7 +131,7 @@ module riscv_v_verif_top;
    begin
       //init DDR
       foreach(ddr_mem[i])
-	ddr_mem[i] = 1;
+	ddr_mem[i] = i*10;
       //init lvt_rams
 
       vrf_vlane_col = 0;

@@ -47,7 +47,7 @@ module Partial_sublane_driver
     output logic vmrf_wen_o,                                                    // Very important
     
     // Load and Store
-    // input logic load_valid_i,                                                   // NEW SIGNAL
+    //input logic load_valid_i,                                                   // NEW SIGNAL
     input logic load_last_i,                                                    // NEW SIGNAL
     output logic ready_for_load_o,                                              // NEW SIGNAL
     output logic request_write_control_o,                                       // NEW SIGNAL, 0 - ALU generates valid signal, 1 - only bwen is important
@@ -224,10 +224,13 @@ assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.w
 /////////////////////////////////////////////////////////////////////////////////
 always_comb begin
     if(current_state == REDUCTION_WRITE_MODE) begin
-        for(int i = 0; i < VLANE_NUM; i++) begin
+        for(int i = 4; i < VLANE_NUM; i++) begin
             bwen[i] = 0;
         end
-        bwen[0] = bwen_mux;
+       bwen[0] = {3'b0, bwen_mux[0]};
+       bwen[1] = {3'b0, bwen_mux[0]};
+       bwen[2] = {3'b0, bwen_mux[0]};
+       bwen[3] = {3'b0, bwen_mux[0]};
     end
     else begin
         for(int i = 0; i < VLANE_NUM; i++) begin
@@ -359,7 +362,7 @@ generate
         (
             .clk_i(clk_i),
             .rst_i(rst_i),
-	        .slide_offset_i('h0),
+	    .slide_offset_i('h0),
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(1'b1),
@@ -505,7 +508,7 @@ always_comb begin
               dp0_next.store_data_mux_sel = store_data_mux_sel_i;
               dp0_next.read_limit = read_limit_add;
               dp0_next.write_data_sel = 0;
-	      dp0_next.sew = vsew_i;
+	      dp0_next.sew = vsew_i[1 : 0];
               dp0_next.vector_mask = vector_mask_i;
               dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
               dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
@@ -534,8 +537,7 @@ always_comb begin
                     6'b010000 : begin                                            // LOAD
                         next_state = LOAD_MODE;
          		ready_for_load_o = 1'b1;
-    		        dp0_next.waddr_cnt_en = 1;
-                        dp0_next.write_data_sel = 1;
+    		        
                     end
                     6'b100000 : begin                                            // INDEXED_LOAD
                         dp0_next.store_load_index_valid = 1;
@@ -577,7 +579,7 @@ always_comb begin
             shift_data_validation = 1;
             
             raddr_cnt_en = 1;
-           element_width_read = vsew_i;
+           element_width_read = vsew_i[1:0];
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                 4'b0001 : begin                                            // REDUCTION
                    if(main_cnt == (dp0_reg.read_limit - 1 + dp0_reg.inst_delay)) begin                               // Not yet specified                  
@@ -613,7 +615,8 @@ always_comb begin
         end 
         LOAD_MODE : begin
             next_state = LOAD_MODE;
-            
+            dp0_next.waddr_cnt_en = 1;
+            dp0_next.write_data_sel = 1;
             //if(load_valid_i) begin
               //  dp0_next.waddr_cnt_en = 1;
             //end
@@ -622,6 +625,8 @@ always_comb begin
             
             if(load_last_i) begin
                 next_state = IDLE;
+	       dp0_next.waddr_cnt_en = 0;
+               dp0_next.write_data_sel = 0;
                 //ready_for_load_o = 0;
             end 
         end

@@ -11,8 +11,7 @@ package configurations_pkg;
    int 		       use_s_data_backdoor  = 1;
  
  `include "uvm_macros.svh" // Include the UVM macros
-   
- //`include "../ddr_mem_cl.sv"
+    
  `include "config.sv"
    
 

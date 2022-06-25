@@ -1,3 +1,9 @@
+/*
+    How is load implented?
+*/
+
+`timescale 1ns / 1ps
+
 module Vlane_with_low_lvl_ctrl
 #(
     parameter MEM_DEPTH = 512,
@@ -482,8 +488,9 @@ endgenerate;
    localparam VRF_DELAY = 3;
    localparam VMRF_DELAY = 2;
 
-   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
-   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0] op2_sel;
+   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_reduction_data;
+   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0]  op2_sel;
    logic [VRF_DELAY-1:0][1:0] 			     slide_read_byte_sel_reg;
    always@(posedge clk_i)
    begin
@@ -499,11 +506,14 @@ endgenerate;
 	 begin
 	    ALU_imm_data[i] 	  <= {ALU_imm_data[i][VRF_DELAY-2:0],ALU_imm_il[0][i]};
 	    ALU_x_data[i] 	  <= {ALU_x_data[i][VRF_DELAY-2:0],ALU_x_data_il[0][i]};
-	    ALU_reduction_data[i] <= {ALU_reduction_data[i][VRF_DELAY-2:0],ALU_reduction_data_il[0][i]};
+	    
 	    op2_sel[i] <= {op2_sel[i][VRF_DELAY-2:0],op2_sel_il[0][i]};
 	    slide_read_byte_sel_reg <= {slide_read_byte_sel_reg[VRF_DELAY-2:0], el_extractor_il[0][1]};//Lane0 R_port1
 	    
 	 end
+	 for (int lane=0; lane<VLANE_NUM; lane++)
+	   for (int i=0; i<W_PORTS_NUM; i++)	
+	     ALU_reduction_data[lane][i] <= {ALU_reduction_data[lane][i][VRF_DELAY-2:0], ALU_reduction_data_il[lane][0][i]};
       end      
    end
 
@@ -569,7 +579,7 @@ endgenerate;
 	      
               1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
               2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
-              3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
+              3: alu_b[lane][i] = ALU_reduction_data[lane][i][VRF_DELAY-1]; // Should insert an assert
               default: alu_b[lane][i] = vs2_data[lane][i];
            endcase // case (op2_sel[i][VRF_DELAY-1])
 	   alu_a[lane][i] = alu_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :

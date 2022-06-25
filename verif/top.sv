@@ -3,7 +3,7 @@ module riscv_v_verif_top;
    `include "defines.sv"
    import uvm_pkg::*;     // import the UVM library
 `include "uvm_macros.svh" // Include the UVM macros
-//`include "ddr_mem_cl.sv"
+
 
 
    import riscv_v_test_pkg::*;

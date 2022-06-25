@@ -121,7 +121,13 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 
 	 if (tr.sew==3'b000)
 	 begin
-	    op1={24'b0, vrf_read_ram[vs1][element_idx][i[1:0]*8 +:8]};
+	    if (funct3==OPMVV && funct6[5:3] == 3'b000) // reduction
+	      if (element_idx==0)//only first element
+		op1={24'b0, vrf_read_ram[vs1][element_idx][i[1:0]*8 +:8]};
+	      else
+		op1=res;
+	    else
+	      op1={24'b0, vrf_read_ram[vs1][element_idx][i[1:0]*8 +:8]};
 	    if (funct3 == OPIVV || funct3 == OPMVV)
 	      op2={24'b0, vrf_read_ram[vs2][element_idx][i[1:0]*8 +:8]};
 	    else if (funct3 == OPIVX || funct3 == OPMVX)
@@ -131,14 +137,20 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 
 	    op1_sign_ext = {{24{op1[7]}}, op1[7:0]};
 	    op2_sign_ext = {{24{op2[7]}}, op2[7:0]};
-	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3);
+	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3, tr.sew);
 	    vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]=res[7:0];
 
 	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, i[1:0], vrf_read_ram[vd][element_idx][i[1:0]*8 +: 8]);
 	 end
 	 else if (tr.sew==3'b001)
 	 begin
-	    op1={16'b0, vrf_read_ram[vs1][element_idx][i[0]*16 +:16]};
+	    if (funct3==OPMVV && funct6[5:3] == 3'b000)
+	      if (element_idx==0)
+		op1={16'b0, vrf_read_ram[vs1][element_idx][i[0]*16 +:16]};
+	      else
+		op1=res;
+	    else
+	      op1={16'b0, vrf_read_ram[vs1][element_idx][i[0]*16 +:16]};
 	    if (funct3 == OPIVV || funct3 == OPMVV)
 	      op2={16'b0, vrf_read_ram[vs2][element_idx][i[0]*16 +:16]};
 	    else if (funct3 == OPIVX || funct3 == OPMVX)
@@ -148,13 +160,19 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 
 	    op1_sign_ext = {{16{op1[15]}}, op1[15:0]};
 	    op2_sign_ext = {{16{op2[15]}}, op2[15:0]};
-	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3);
+	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3, tr.sew);
 	    vrf_read_ram[vd][element_idx][i[0]*16 +: 16]=res[15:0];
 	    $display("vrf=%0x, op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d, i[0]=%d", vrf_read_ram[vs1][element_idx], op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx], i[0]);
 	 end
 	 else
 	 begin
-	    op1=vrf_read_ram[vs1][element_idx][31:0];
+	    if (funct3==OPMVV && funct6[5:3] == 3'b000)
+	      if (element_idx==0)
+		op1=vrf_read_ram[vs1][element_idx][31:0];
+	      else
+		op1=res;
+	    else
+	      op1=vrf_read_ram[vs1][element_idx][31:0];
 	    if (funct3 == OPIVV || funct3 == OPMVV)
 	      op2=vrf_read_ram[vs2][element_idx][31:0];
 	    else if (funct3 == OPIVX || funct3 == OPMVX)
@@ -163,7 +181,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	      op2={27'b0, tr.v_instruction[19:15]};//immediate
 	    op1_sign_ext = op1;
 	    op2_sign_ext = op2;
-	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3);
+	    res = sc_calculate_arith(op1_sign_ext, op2_sign_ext, funct6, funct3, tr.sew);
 	    vrf_read_ram[vd][element_idx]=res;
 	    $display("op1_sign_ext=%0d, op2_sign_ext=%0d, res[%0d][%0d]=%0d", op1_sign_ext, op2_sign_ext, vd, element_idx, vrf_read_ram[vd][element_idx]);
 	 end
@@ -205,7 +223,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    endfunction
 
 
-   function logic [31:0] sc_calculate_arith (logic [31:0] op1, logic[31:0] op2, logic [5:0] funct6, logic [2:0] funct3);
+   function logic [31:0] sc_calculate_arith (logic [31:0] op1, logic[31:0] op2, logic [5:0] funct6, logic [2:0] funct3, sew);
       bit funct7_5;
       logic [31:0] res;
 
@@ -233,6 +251,42 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	   end
 
 	endcase // case (funct6)
+      else
+	case (funct6)
+	   6'b000000: begin	    
+	      res = signed'(op1) + signed'(op2);	    
+	   end
+	   6'b000001: res = op1 & op2;
+	   6'b000010: res = op1 | op2;
+	   
+	   6'b000011: res = op1 ^ op2;
+	   6'b000100: res = unsigned'(op1) < unsigned'(op2) ? op1 : op2;
+	   6'b000101: res = signed'(op1) < signed'(op2) ? op1 : op2;
+	   6'b000110: res = unsigned'(op1) > unsigned'(op2) ? op1 : op2;
+	   6'b000111: res = unsigned'(op1) > unsigned'(op2) ? op1 : op2;
+	   6'b100100: begin
+	      res = unsigned'(op1) * unsigned'(op2);
+	      if (sew == 2'b00)
+		return res[15:8];
+	      else if (sew == 2'b01)
+		return res[31:16];
+	   end
+	   6'b100101: res = signed'(op1) * signed'(op2);
+	   6'b100110: res = unsigned'(op1) * signed'(op2);
+	   6'b100111: begin
+	      res = signed'(op1) * signed'(op2);
+	      if (sew == 2'b00)
+		return res[15:8];
+	      else if (sew == 2'b01)
+		return res[31:16];
+	   end
+	   default:begin
+	      `uvm_fatal("VECTOR INVALID INSTR", "FUNCT6 not implemeted or invalid")		// 
+	   end
+
+	endcase // case (funct6)
+	
+
       return res;
    endfunction // sc_calculate_arith
 

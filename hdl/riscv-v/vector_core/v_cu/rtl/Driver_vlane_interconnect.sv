@@ -12,8 +12,8 @@ module Driver_vlane_interconnect
     input rst_i,
     
     // Config signals
-    output logic [1 : 0] vsew_i,
-    output logic [VLANE_NUM - 1 : 0][1 : 0] vsew_o,
+    output logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew_i,
+    output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] vsew_o,
     
     // Read data valid for ALU
     input logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_i,
@@ -104,7 +104,7 @@ logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] secondary_el_extractor;
 typedef struct packed
 {
     // Config signals
-    logic [1 : 0] vsew;
+    logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew;
 
     // Read data valid for ALU
     logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid;

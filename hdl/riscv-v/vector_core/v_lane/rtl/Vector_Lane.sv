@@ -17,7 +17,7 @@ module Vector_Lane
     input 							       rst_i,
    
     // Config and status signals
-    input logic [1 : 0] 					       vsew_i,
+    input logic [W_PORTS_NUM - 1 : 0][1 : 0] 			       vsew_i,
    
     // VRF
     input logic [R_PORTS_NUM - 1 : 0] 				       vrf_ren_i,
@@ -153,7 +153,7 @@ module Vector_Lane
       logic [W_PORTS_NUM - 1 : 0] 							    ALU_reduction;
       logic [W_PORTS_NUM - 1 : 0] 							    store_load_index_valid;
       logic [W_PORTS_NUM - 1 : 0] 							    read_data_valid;
-      logic [1 : 0] 									    sew;
+      logic [W_PORTS_NUM - 1 : 0][1 : 0] 						    sew;
       
    } ALU_packet; 
 
@@ -227,7 +227,7 @@ module Vector_Lane
       // Write IF
       .waddr_i(vrf_waddr),
       .bwe_i(vrf_bwen),
-      .wen_i({W_PORTS_NUM{1'b0}}),                                   // What is this signal doing?
+      //.wen_i({W_PORTS_NUM{1'b0}}),                                   // What is this signal doing?
       .din_i(vrf_wdata)
       );
 
@@ -265,7 +265,7 @@ module Vector_Lane
    assign alu_reduction_o = ALU_reduction;
    generate
       for (genvar i=0; i<W_PORTS_NUM; i++)
-	assign alu_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].sew;
+	assign alu_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].sew[i];
    endgenerate
    assign alu_vld_o = ALU_signals_reg[VRF_DELAY-1].read_data_valid;
    
@@ -409,9 +409,9 @@ module Vector_Lane
          assign read_data_hw_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2][0];
 	 
 	 if (i_gen == SLIDE_PORT_ID)
-           assign read_data_mux_sel[SLIDE_PORT_ID] = slide_op_i ? 2'b10 : ALU_signals_reg[VRF_DELAY - 1].sew;
+           assign read_data_mux_sel[SLIDE_PORT_ID] = slide_op_i ? 2'b10 : ALU_signals_reg[VRF_DELAY - 1].sew[0];
 	 else
-           assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 1].sew;
+           assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 1].sew[i_gen/2];
       end
       
       for(j_gen = 0; j_gen < W_PORTS_NUM; j_gen++) begin

@@ -109,7 +109,7 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_output;
 logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 2 : 0][31 : 0] lane_result;
 
 // Driver - Interconnect signals
-logic [1 : 0] vsew_di;
+logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew_di;
 logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_di;                              // TO BE CHECKED
 logic [W_PORTS_NUM - 1 : 0] vrf_ren_di;
 logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren_di;
@@ -142,7 +142,7 @@ logic [W_PORTS_NUM - 1 : 0] vector_mask_di;
 logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_di;
 
 // Interconnect - Vector lane signals
-logic [VLANE_NUM - 1 : 0][1 : 0] vsew_il;
+logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] vsew_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] read_data_valid_il;
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_ren_il;
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_oreg_ren_il;
@@ -208,7 +208,7 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_i(vsew_i),
-                .vsew_o(vsew_di),
+                .vsew_o(vsew_di[0]),
                 .vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
                 .start_i(start_i[0]),
@@ -283,6 +283,7 @@ generate
                 .clk_i(clk_i),
                 .rst_i(rst_i),
                 .vl_i(vl_i),
+                .vsew_o(vsew_di[i]),
                 .vsew_i(vsew_i),
                 //.vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
@@ -605,7 +606,7 @@ endgenerate;
 		  .alu_vld_o(alu_out_vld[i]),
 		  .alu_o(alu_res[i]),
 		  .alu_mask_vector_o(alu_mask_vector[i]),
-		  .alu_en_32bit_mul_i(1'b0),// Need more details
+		  //.alu_en_32bit_mul_i(1'b0),// Need more details
 		  .alu_stall_i(1'b0) // Need more details
 	    
 		  );
@@ -676,8 +677,10 @@ endgenerate;
 	 slide_data_input[lane] = {4{slide_data_output[lane_sel[lane]][slide_read_byte_sel_reg[VRF_DELAY-2]*8 +: 8]}};  
       end      
    end
-/* -----\/----- EXCLUDED -----\/-----
+
 always_comb begin
+/* -----\/----- EXCLUDED -----\/-----
+
     // Left shift : 1 -> 0
     if(up_down_slide_il) begin                  
         for(int i = 0; i < VLANE_NUM - 1; i++) begin
@@ -692,13 +695,14 @@ always_comb begin
         end
         slide_data_input[0] = slide_data_output[VLANE_NUM - 1];
     end
-    
+ -----/\----- EXCLUDED -----/\----- */
+
     for(int i = 0; i < W_PORTS_NUM; i++) begin
         for(int j = 1; j < VLANE_NUM; j++) begin
             lane_result[i][j - 1] = ALU_output[j][i];
         end
     end
 end
- -----/\----- EXCLUDED -----/\----- */
+
 
 endmodule

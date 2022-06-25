@@ -13,7 +13,7 @@ module alu #
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] 	     alu_a_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] 	     alu_b_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] 	     alu_c_i,
-    input [1:0] 				     sew_i,
+    input [PARALLEL_IF_NUM-1:0][1:0] 		     sew_i,
     input [PARALLEL_IF_NUM-1:0] 		     alu_reduction_i,
     output logic [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
     input [PARALLEL_IF_NUM-1:0] 		     alu_vld_i,
@@ -22,7 +22,7 @@ module alu #
 
     // Enables 32 bit multiply, but takes a bit longer to
     // execute.
-    input 					     alu_en_32bit_mul_i,
+    //input 					     alu_en_32bit_mul_i,
     // stalls all registers in ALU
     input 					     alu_stall_i
     );
@@ -40,7 +40,7 @@ module alu #
     .clk		(clk),
     .reduction_op_i     (alu_reduction_i[0]),
     .rstn		(rstn),
-    .sew_i		(sew_i),
+    .sew_i		(sew_i[0]),
     .alu_opmode_i	(alu_opmode_i[0][8:0]),
     .op1_i		(alu_a_i[0]),
     .op2_i		(alu_b_i[0]),
@@ -57,7 +57,7 @@ module alu #
     .clk		(clk),
     .reduction_op_i     (alu_reduction_i[1]),
     .rstn		(rstn),
-    .sew_i		(sew_i),
+    .sew_i		(sew_i[1]),
     .alu_opmode_i	(alu_opmode_i[1][8:0]),
     .op1_i		(alu_a_i[1]),
     .op2_i		(alu_b_i[1]),
@@ -74,7 +74,7 @@ module alu #
     // Inputs
     .clk		(clk),
     .rstn		(rstn),
-    .sew_i		(sew_i),
+    .sew_i		(sew_i[2]),
     .reduction_op_i     (alu_reduction_i[2]),
     .alu_opmode_i	(alu_opmode_i[2][8:0]),
     .op1_i		(alu_a_i[2]),
@@ -91,7 +91,7 @@ module alu #
     // Inputs
     .clk		(clk),
     .rstn		(rstn),
-    .sew_i		(sew_i),
+    .sew_i		(sew_i[3]),
     .reduction_op_i     (alu_reduction_i[3]),
     .alu_opmode_i	(alu_opmode_i[3][8:0]),
     .op1_i		(alu_a_i[3]),

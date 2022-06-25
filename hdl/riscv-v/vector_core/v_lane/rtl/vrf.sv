@@ -3,11 +3,11 @@ module vrf #
    parameter W_PORTS_NUM = 4,
    parameter MULTIPUMP_WRITE = 2,
    parameter MULTIPUMP_READ = 2,
-   parameter RAM_TYPE = "DISTRAM",
+   parameter RAM_TYPE = "BRAM",
    parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
    // 
    parameter MEM_DEPTH = 512,
-   parameter MEM_WIDTH = 1,
+   parameter MEM_WIDTH = 32,
    parameter NUM_OF_BYTES = MEM_WIDTH < 8 ? 1 : MEM_WIDTH/8)
    (
     input 					   clk,
@@ -24,7 +24,7 @@ module vrf #
     // write IF
     input [W_PORTS_NUM-1:0][$clog2(MEM_DEPTH)-1:0] waddr_i,
     input [W_PORTS_NUM-1:0][NUM_OF_BYTES-1:0] 	   bwe_i,
-    input [W_PORTS_NUM-1:0] 			   wen_i,
+    //input [W_PORTS_NUM-1:0] 			   wen_i,
     input [W_PORTS_NUM-1:0] [MEM_WIDTH-1:0] 	   din_i
     );
    
@@ -91,7 +91,7 @@ module vrf #
    // write IF
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][$clog2(MEM_DEPTH)-1:0]      waddr_reg;
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][NUM_OF_BYTES-1:0] 	     bwe_reg;
-   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0] 			     wen_reg;
+   //logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0] 			     wen_reg;
    logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][MEM_WIDTH-1:0] 	     din_reg;
 
 
@@ -109,7 +109,7 @@ module vrf #
       begin
 	 waddr_reg <= '{default:'0};
 	 bwe_reg   <= '{default:'0};
-	 wen_reg   <= '{default:'0};
+	 //wen_reg   <= '{default:'0};
 	 din_reg   <= '{default:'0};
       end
       else
@@ -119,7 +119,7 @@ module vrf #
 	   begin
 	      waddr_reg[i] <= {waddr_reg[i][LP_INPUT_REG_NUM-2:0],waddr_i[i]};
 	      bwe_reg[i] <= {bwe_reg[i][LP_INPUT_REG_NUM-2:0],bwe_i[i]};
-              wen_reg[i] <= {wen_reg[i][LP_INPUT_REG_NUM-2:0],wen_i[i]};
+              //wen_reg[i] <= {wen_reg[i][LP_INPUT_REG_NUM-2:0],wen_i[i]};
               din_reg[i] <= {din_reg[i][LP_INPUT_REG_NUM-2:0],din_i[i]};	      
 	   end
 	end
@@ -129,7 +129,7 @@ module vrf #
 	   begin
 	      waddr_reg[i][0] <= waddr_i[i];
               bwe_reg[i][0] <= bwe_i[i];
-              wen_reg[i][0] <= wen_i[i];
+              //wen_reg[i][0] <= wen_i[i];
 	      din_reg[i][0] <= din_i[i];
 	   end
 	end	
@@ -340,11 +340,18 @@ module vrf #
 	 for (genvar j=0; j<LP_BANK_NUM;j++)
 	 begin
 	    if (MULTIPUMP_READ > 1)
-	      assign read_ram_raddr[j][i]   = !multipump_sel_reg ? raddr_i[i*MULTIPUMP_READ] : raddr_i[i*MULTIPUMP_READ+1];
+	    begin
+	       assign read_ram_raddr[j][i]   = !multipump_sel_reg ? raddr_i[i*MULTIPUMP_READ] : raddr_i[i*MULTIPUMP_READ+1];
+	       assign read_ram_ren[j][i]     = !multipump_sel_reg ? ren_i[i*MULTIPUMP_READ]   : ren_i[i*MULTIPUMP_READ+1] ;
+	       assign read_ram_oreg_en[j][i] = !multipump_sel_reg ? oreg_en_i[i*MULTIPUMP_READ]   : oreg_en_i[i*MULTIPUMP_READ+1] ;
+	    end
 	    else
-	      assign read_ram_raddr[j][i]   = raddr_i[i];
-	    assign read_ram_ren[j][i]	  = ren_i[i];
-	    assign read_ram_oreg_en[j][i] = oreg_en_i[i];
+	    begin
+	       assign read_ram_raddr[j][i]   = raddr_i[i];
+	       assign read_ram_ren[j][i]     = ren_i[i];
+	       assign read_ram_oreg_en[j][i] = oreg_en_i[i];
+	    end
+	    
 	 end
       end
       

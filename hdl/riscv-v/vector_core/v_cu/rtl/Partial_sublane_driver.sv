@@ -16,7 +16,7 @@ module Partial_sublane_driver
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
     input logic [2 : 0] vsew_i,
-    
+    output logic [1 : 0] vsew_o,
     // Control Flow signals
     input logic [$clog2(INST_TYPE_NUM) - 1 : 0] inst_type_i,                    // 0 - normal, 1 - reduction, 2 - load, ...
     
@@ -128,6 +128,7 @@ typedef struct packed
     logic [31 : 0] ALU_x_data;
     logic [4 : 0] ALU_imm;
     logic vector_mask;
+   logic  [1:0] sew;
     logic [1 : 0] write_data_sel;
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
     logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
@@ -186,6 +187,7 @@ logic [5 : 0] inst_type_comp;
 
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
+assign vsew_o = dp0_reg.sew;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
@@ -467,6 +469,7 @@ always_comb begin
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
     dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
     dp0_next.reduction_op = dp0_reg.reduction_op;
+    dp0_next.sew = dp0_reg.sew;
     // Loads //
     ready_for_load_o = 0;
     element_width_read = vsew_i;
@@ -502,6 +505,7 @@ always_comb begin
               dp0_next.store_data_mux_sel = store_data_mux_sel_i;
               dp0_next.read_limit = read_limit_add;
               dp0_next.write_data_sel = 0;
+	      dp0_next.sew = vsew_i[1 : 0];
               dp0_next.vector_mask = vector_mask_i;
               dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
               dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;

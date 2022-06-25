@@ -1,9 +1,3 @@
-/*
-    How is load implented?
-*/
-
-`timescale 1ns / 1ps
-
 module Vlane_with_low_lvl_ctrl
 #(
     parameter MEM_DEPTH = 512,

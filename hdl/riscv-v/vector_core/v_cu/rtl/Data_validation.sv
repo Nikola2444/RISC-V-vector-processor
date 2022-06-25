@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module Data_validation
 #(
     parameter MAX_VL_PER_LANE = 4 * 8 * 8,

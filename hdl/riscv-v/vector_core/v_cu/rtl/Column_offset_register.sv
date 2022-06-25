@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module Column_offset_register
 #(
     parameter VREG_LOC_PER_LANE = 8,

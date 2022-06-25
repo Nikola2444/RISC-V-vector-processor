@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module Address_counter
 #(
     parameter MEM_DEPTH = 512,

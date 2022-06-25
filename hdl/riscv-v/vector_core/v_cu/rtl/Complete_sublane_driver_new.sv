@@ -1,9 +1,3 @@
-/*
-    Kada se koriste redukcije, onda se upisuje u svakom lejnu u njegov prvi element podatak, a treba samo za prvi lejn
-*/
-
-`timescale 1ns / 1ps
-
 module Complete_sublane_driver_new
 #(
     parameter MEM_DEPTH = 512,

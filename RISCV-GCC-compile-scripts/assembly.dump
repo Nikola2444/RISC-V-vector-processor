@@ -4,27 +4,25 @@ assembly.o:     file format elf64-littleriscv
 
 Disassembly of section .text:
 
-0000000000000000 <loop1-0x14>:
+0000000000000000 <loop1-0xc>:
    0:	00300113          	li	sp,3
    4:	00100513          	li	a0,1
-   8:	01000093          	li	ra,16
-   c:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
-  10:	3eb0c557          	vslidedown.vx	v10,v11,ra
+   8:	00400093          	li	ra,4
 
-0000000000000014 <loop1>:
-  14:	00208463          	beq	ra,sp,1c <jmp>
-  18:	00550513          	addi	a0,a0,5
+000000000000000c <loop1>:
+   c:	00208463          	beq	ra,sp,14 <jmp>
+  10:	00550513          	addi	a0,a0,5
 
-000000000000001c <jmp>:
-  1c:	00f00093          	li	ra,15
-  20:	022180d7          	vadd.vv	v1,v2,v3
-  24:	0a630257          	vsub.vv	v4,v6,v6
-  28:	027402d7          	vadd.vv	v5,v7,v8
-  2c:	02740357          	vadd.vv	v6,v7,v8
-  30:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
-  34:	02838357          	vadd.vv	v6,v8,v7
-  38:	0a520157          	vsub.vv	v2,v5,v4
-  3c:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
+0000000000000014 <jmp>:
+  14:	00f00093          	li	ra,15
+  18:	022180d7          	vadd.vv	v1,v2,v3
+  1c:	0a630257          	vsub.vv	v4,v6,v6
+  20:	027402d7          	vadd.vv	v5,v7,v8
+  24:	02740357          	vadd.vv	v6,v7,v8
+  28:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
+  2c:	02838357          	vadd.vv	v6,v8,v7
+  30:	0a520157          	vsub.vv	v2,v5,v4
+  34:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
+  38:	00000013          	nop
+  3c:	00000013          	nop
   40:	00000013          	nop
-  44:	00000013          	nop
-  48:	00000013          	nop

@@ -2,7 +2,7 @@ module alu #
   (
    parameter OP_WIDTH = 32,
    parameter PARALLEL_IF_NUM=4,
-   parameter V_LANE_NUM)
+   parameter V_LANE_NUM = 8)
    (
     input 					     clk,
     input 					     rstn,
@@ -18,13 +18,13 @@ module alu #
     output logic [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
     input [PARALLEL_IF_NUM-1:0] 		     alu_vld_i,
     output [PARALLEL_IF_NUM-1:0] 		     alu_vld_o,
-    output logic [PARALLEL_IF_NUM-1:0] 		     alu_mask_vector_o,
+    output logic [PARALLEL_IF_NUM-1:0] 		     alu_mask_vector_o
 
     // Enables 32 bit multiply, but takes a bit longer to
     // execute.
     //input 					     alu_en_32bit_mul_i,
     // stalls all registers in ALU
-    input 					     alu_stall_i
+    // input 					     alu_stall_i
     );
 
    logic [3:0][31:0] 				     alu_out;

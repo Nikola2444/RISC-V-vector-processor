@@ -155,7 +155,7 @@ module riscv_v_w_mem_subsystem #
    logic [C_XFER_SIZE_WIDTH-1:0] 	     ctrl_wxfer_size; //=16;    // ALEKSA HAS CHANGED THIS
    logic 				     wr_tvalid; // =1;                      // ALEKSA HAS CHANGED THIS
    logic [C_M_AXI_DATA_WIDTH-1:0] 	     wr_tdata; // = 10;         // ALEKSA HAS CHANGED THIS
-   logic                                     wr_tstrb_msk;
+   logic [3 : 0] wr_tstrb_msk;  // ALEKSA HAS CHANGED THIS
    logic 				     ctrl_wstrb_msk_en;
    /*******DEBUG logic*******/
    /* -----\/----- EXCLUDED -----\/-----

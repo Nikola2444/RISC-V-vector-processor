@@ -32,7 +32,7 @@ module mem_subsys #(
   output logic 	                                 mcu_ld_buffered_o       ,
   input  logic                                   mcu_ld_vld_i            ,
   // SHEDULER => BUFF_ARRAY CONFIG IF [general]
-  input  logic [31:0]                            mcu_vl_i                ,
+  input  logic [31:0]                           mcu_vl_i                ,
   // MCU <=> AXIM CONTROL IF [read channel]
   output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ,
   output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_o       ,

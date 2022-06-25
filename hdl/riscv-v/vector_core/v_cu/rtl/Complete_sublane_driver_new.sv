@@ -15,7 +15,7 @@ module Complete_sublane_driver_new
     
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
-    input logic [2 : 0] vsew_i,
+    input logic [1 : 0] vsew_i,
     output logic [1 : 0] vsew_o,
     input logic [2 : 0] vlmul_i,                                                // NEW SIGNAL
     
@@ -49,7 +49,7 @@ module Complete_sublane_driver_new
     output logic vmrf_wen_o,
     
     // Load and Store
-    input logic load_valid_i,                                                   // NEW SIGNAL
+    // input logic load_valid_i,                                                   // NEW SIGNAL
     input logic load_last_i,                                                    // NEW SIGNAL
     output logic ready_for_load_o,                                              // NEW SIGNAL
     input logic [VLANE_NUM - 1 : 0][3 : 0] load_bwen_i,    
@@ -82,7 +82,7 @@ module Complete_sublane_driver_new
     output logic alu_en_32bit_mul_o,                               
     
     // Slides
-    input logic slide_type_i,
+    // input logic slide_type_i,
     input logic up_down_slide_i,                                                // 0 for down, 1 for up
     input logic [31 : 0] slide_amount_i,
     output logic[$clog2(VLANE_NUM)-1:0] 	    slide_data_mux_sel_o,
@@ -568,7 +568,7 @@ waddr_cnt
 (
     .clk_i(clk_i),
     .rst_i(rst_i),
-    .slide_offset_i(slide_waddr_offset),
+    .slide_offset_i(slide_waddr_offset[$clog2(MEM_DEPTH) - 1 : 0]),
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
     .up_down_i(dp0_reg.up_down_slide),
@@ -592,7 +592,7 @@ generate
         (
             .clk_i(clk_i),
             .rst_i(rst_i),
-	    .slide_offset_i('h0),
+	        .slide_offset_i('h0),
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(dp0_reg.up_down_slide),
@@ -790,7 +790,7 @@ always_comb begin
               dp0_next.reduction_op = reduction_op_i;
               dp0_next.vmrf_wen = 0;
               dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
-              dp0_next.sew = vsew_i[1 : 0];
+              dp0_next.sew = vsew_i;
               // slides
               dp0_next.up_down_slide = up_down_slide_i;
               dp0_next.slide_amount = slide_amount_i;

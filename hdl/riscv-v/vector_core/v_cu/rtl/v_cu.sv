@@ -15,7 +15,7 @@ module v_cu #
    op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o, up_down_slide_o,
    slide_amount_o, vector_mask_o,
    // Inputs
-   clk, rstn, instr_vld_i, scalar_rs1_i, scalar_rs2_i, vector_instr_i,
+   clk, rstn, instr_vld_i, scalar_rs1_i, /* scalar_rs2_i ,*/ vector_instr_i,
    vrf_starting_addr_vld_i, vrf_starting_waddr_i,
    vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
    );
@@ -37,7 +37,7 @@ module v_cu #
    input [11:0] instr_vld_i;
    output [11:0] instr_rdy_o;
    input [31:0]  scalar_rs1_i;
-   input [31:0]  scalar_rs2_i;
+   // input [31:0]  scalar_rs2_i;
    input [31:0]  vector_instr_i;
 
    output [2:0]  sew_o;

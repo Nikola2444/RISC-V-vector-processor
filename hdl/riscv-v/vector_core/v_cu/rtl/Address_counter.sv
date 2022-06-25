@@ -10,7 +10,7 @@ module Address_counter
     input rst_i,
     
     input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] start_addr_i,
-    input logic [31-$clog2(VLANE_NUM*4):0]                          slide_offset_i,
+    input logic [$clog2(MEM_DEPTH)-1:0]                          slide_offset_i,
     input logic load_i,
     input logic rst_cnt_i,
     input logic up_down_i,                                          // UP for 1, DOWN for 0

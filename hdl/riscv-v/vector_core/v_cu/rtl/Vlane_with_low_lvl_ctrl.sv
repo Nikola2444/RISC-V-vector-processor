@@ -207,7 +207,7 @@ generate
                 .clk_i(clk_i),
                 .rst_i(rst_i),
                 .vl_i(vl_i),
-                .vsew_i(vsew_i),
+                .vsew_i(vsew_i[1 : 0]),
                 .vsew_o(vsew_di[0]),
                 .vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
@@ -228,7 +228,7 @@ generate
                 .vmrf_addr_o(vmrf_addr_di[0]),   
                 .vmrf_wen_o(vmrf_wen_di[0]),
                 .load_bwen_i(load_bwen_i),
-                .load_valid_i(load_valid_i),
+                // .load_valid_i(load_valid_i),
                 .load_last_i(load_last_i),
                 .ready_for_load_o(ready_for_load[0]),
                 .store_data_mux_sel_i(store_data_mux_sel_i),
@@ -256,7 +256,7 @@ generate
                 .up_down_slide_i(up_down_slide_i),
 	            .slide_op_o (slide_op),
 	            .slide_data_mux_sel_o  (slide_data_mux_sel),
-	            .slide_type_i   (slide_type),
+	            // .slide_type_i   (slide_type),
                 .slide_amount_i(slide_amount_i),
                 .up_down_slide_o(up_down_slide_di),                                         // 1 for left and 0 for right
                 .request_write_control_o(request_write_control_di[0]),
@@ -284,7 +284,7 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_o(vsew_di[i]),
-                .vsew_i(vsew_i),
+                .vsew_i(vsew_i[1 : 0]),
                 //.vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
                 .start_i(start_i[i]),
@@ -304,7 +304,7 @@ generate
                 .vmrf_addr_o(vmrf_addr_di[i]),   
                 .vmrf_wen_o(vmrf_wen_di[i]),
                 .load_bwen_i(load_bwen_i),
-                .load_valid_i(load_valid_i),
+                // .load_valid_i(load_valid_i),
                 .load_last_i(load_last_i),
                 .ready_for_load_o(ready_for_load[i]),
                 .request_write_control_o(request_write_control_di[i]),
@@ -605,9 +605,9 @@ endgenerate;
 		  .alu_vld_i(alu_in_vld[i]),
 		  .alu_vld_o(alu_out_vld[i]),
 		  .alu_o(alu_res[i]),
-		  .alu_mask_vector_o(alu_mask_vector[i]),
+		  .alu_mask_vector_o(alu_mask_vector[i])
 		  //.alu_en_32bit_mul_i(1'b0),// Need more details
-		  .alu_stall_i(1'b0) // Need more details
+		  // .alu_stall_i(1'b0) // Need more details
 	    
 		  );
 	 // ALU output needed for reduction

@@ -44,7 +44,8 @@ module riscv_v #
    output  			 wr_tvalid_o ,
    input  				 wr_tready_i ,
    output   			 ctrl_wstrb_msk_en_o,
-   output   			 wr_tstrb_msk_o);
+   output [3 : 0]   	 wr_tstrb_msk_o // ALEKSA HAS CHANGED THIS
+   );
 
 
    //---------------------------- VECTOR CORE INTERFACE---------------------------

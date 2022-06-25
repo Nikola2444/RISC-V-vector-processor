@@ -8,9 +8,6 @@
 // Notes       :
 //------------------------------------------------------------------------------
 
-`timescale 1ns/1ns
-
-
 module sdp_distram #(
   parameter WIDTH = 1,
   parameter DEPTH = 512,

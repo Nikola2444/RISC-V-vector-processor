@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module Driver_vlane_interconnect
 #(
     parameter W_PORTS_NUM = 4,

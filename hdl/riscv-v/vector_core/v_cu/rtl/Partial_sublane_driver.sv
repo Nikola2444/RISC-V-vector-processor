@@ -1,5 +1,3 @@
-`timescale 1ns / 1ps
-
 module Partial_sublane_driver
 #(
     parameter MEM_DEPTH = 514,

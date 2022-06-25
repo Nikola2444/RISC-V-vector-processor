@@ -4,10 +4,10 @@
 	addi x2, x0, 3
 	addi x10, x0, 1
 	addi x1, x0, 4
-	#vsetvli x2, x0, e16, m1
+	vsetvli x2, x0, e16, m1
 	#vslidedown.vx v10, v11, x1
 	vredsum.vs v9, v12, v13
-	vle32.v 	v15, (x0)
+	vle16.v v15, (x0)
 	#sw   x4, 0(x5)
 loop1:			    	    
 

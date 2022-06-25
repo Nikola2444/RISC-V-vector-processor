@@ -318,7 +318,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       int 	   vrf_addr_offset;
       int 	   vreg_to_update;
       int 	   element_idx;
-      int 	   element_idx;
+
       int          src_element_idx;
       int 	   vrf_vlane;
       int 	   byte_sel;
@@ -409,7 +409,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       int 	   src_element_idx;
       int 	   element_idx;
       int 	   vrf_vlane;
-      int 	   byte_sel;
+      int 	   byte_sel=0;
       int 	   dest_byte_sel;
       logic [7:0]  dut_vrf_data;
       int 	   match=0;
@@ -427,10 +427,25 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       if (mop==2'b00)
       begin
 	 src_element_idx = tr.scalar;
-	 for (int i=0; i<tr.vl<<tr.sew; i++)
+	 for (int i=0; i<tr.vl<<width[1:0]; i++)
 	 begin
 	    vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8]=v_axi4_vif.ddr_mem[src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];
 	    src_element_idx ++;
+	 end // for (int i=0; i<tr.vl; i++)
+      end
+      if (mop==2'b10)
+      begin
+	 src_element_idx = tr.scalar;
+	 byte_sel = src_element_idx[1:0];
+	 for (int i=0; i<tr.vl<<tr.sew; i++)
+	 begin
+	    vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8]=v_axi4_vif.ddr_mem[src_element_idx[31:2]][byte_sel*8 +: 8];
+	    byte_sel++;
+	    if (byte_sel==4)
+	    begin
+	       byte_sel = 0;
+	       src_element_idx += tr.scalar2;
+	    end
 	 end // for (int i=0; i<tr.vl; i++)
       end
       

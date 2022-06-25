@@ -237,7 +237,7 @@ module vector_core #
 	     .rstn			(rstn),
 	     .instr_vld_i		(instr_vld[11:0]),
 	     .scalar_rs1_i		(scalar_rs1[31:0]),
-	    // .scalar_rs2_i		(scalar_rs2[31:0]),
+	     .scalar_rs2_i		(scalar_rs2[31:0]),
 	     .vector_instr_i		(vector_instr[31:0]),
 	     .port_group_ready_i	(port_group_ready[W_PORTS_NUM-1:0]),
 	     .vrf_starting_waddr_i (ru_vrf_starting_waddr),

@@ -15,7 +15,7 @@ module v_cu #
    op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o, up_down_slide_o,
    slide_amount_o, vector_mask_o,
    // Inputs
-   clk, rstn, instr_vld_i, scalar_rs1_i, /* scalar_rs2_i ,*/ vector_instr_i,
+   clk, rstn, instr_vld_i, scalar_rs1_i, scalar_rs2_i, vector_instr_i,
    vrf_starting_addr_vld_i, vrf_starting_waddr_i,
    vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
    );
@@ -37,7 +37,7 @@ module v_cu #
    input [11:0] instr_vld_i;
    output [11:0] instr_rdy_o;
    input [31:0]  scalar_rs1_i;
-   // input [31:0]  scalar_rs2_i;
+   input [31:0]  scalar_rs2_i;
    input [31:0]  vector_instr_i;
 
    output [2:0]  sew_o;
@@ -113,7 +113,7 @@ module v_cu #
    // singnals needed by comb logic
    logic [2:0] 								  v_instr_funct6_upper;
    logic [5:0] 								  v_instr_funct6;
-   //logic [2:0] 								  v_instr_funct3;
+   logic [2:0] 								  v_instr_funct3;
    logic [4:0] 								  v_instr_imm;
    logic [1:0] 								  v_instr_mop;
    logic [4:0] 								  v_instr_rs1;
@@ -155,6 +155,7 @@ module v_cu #
    logic [11:0] 			  instr_vld_reg;
    logic [11:0] 			  instr_rdy_reg;
    logic [31:0] 			  scalar_rs1_reg;
+   logic [31:0] 			  scalar_rs2_reg;
    logic [4:0] 				  v_instr_vs1;
    logic [4:0] 				  v_instr_vs2;
    logic [4:0] 				  v_instr_vd;
@@ -177,6 +178,7 @@ module v_cu #
 	 vector_instr_reg 	   <= 'h0;
 	 instr_vld_reg 		   <= 'h0;
 	 scalar_rs1_reg 	   <= 'h0;
+	 scalar_rs2_reg 	   <= 'h0;
 	 vtype_reg 		   <= {26'h0, 3'b010, 3'b000};
 	 vl_reg 		   <= 4096/32;
 	 vrf_starting_waddr_reg    <= 0;
@@ -189,6 +191,7 @@ module v_cu #
 	 vector_instr_reg 	   <= vector_instr_i;
 	 instr_vld_reg 		   <= instr_vld_i;
 	 scalar_rs1_reg 	   <= scalar_rs1_i;
+	 scalar_rs1_reg 	   <= scalar_rs2_i;
 	 instr_rdy_reg 		   <= instr_rdy_o;
 	 vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
 	 vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;
@@ -235,7 +238,7 @@ module v_cu #
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
 		    v_instr_vd != 0 ? vlmax : vl_reg;
    
-   //assign v_instr_funct3       = vector_instr_reg[14:12];
+   assign v_instr_funct3       = vector_instr_reg[14:12];
    //assign v_instr_mop          = vector_instr_reg[27:26];
 
    assign v_instr_funct6_upper = vector_instr_reg[31:29];

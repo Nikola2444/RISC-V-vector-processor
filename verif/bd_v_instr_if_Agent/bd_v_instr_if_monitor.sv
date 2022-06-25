@@ -30,6 +30,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
    logic [2:0] 	lmul_queue[4][$];
    logic [31:0] vl_queue[4][$];
    logic [31:0] scalar_queue[4][$];
+   logic [31:0] scalar2_queue[4][$];
    int          driver_processing[4] = '{default:'0};
    int 		watch_dog_cnt=0;
    // coverage can go here
@@ -103,6 +104,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	       curr_it[idx].lmul = lmul_queue[idx].pop_front();
 	       curr_it[idx].vl = vl_queue[idx].pop_front();
 	       curr_it[idx].scalar = scalar_queue[idx].pop_front();
+	       curr_it[idx].scalar2 = scalar2_queue[idx].pop_front();
 	       curr_it[idx].vrf_read_ram = vif.vrf_read_ram;
 	       item_collected_port.write(curr_it[idx]);
 	    end
@@ -117,6 +119,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 lmul_queue[idx].push_back(vif.lmul);
 	 vl_queue[idx].push_back(vif.vl);
 	 scalar_queue[idx].push_back(vif.v_rs1_scalar);
+	 scalar2_queue[idx].push_back(vif.v_rs2_scalar);
       end
       
 

@@ -35,6 +35,7 @@ assign backdoor_sc_data_vif.data_mem_re_o=DUT.data_mem_re;
 // ****************************Vector core instr interface***********************
 assign 	  backdoor_v_instr_vif.start = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.start_o;
 assign 	  backdoor_v_instr_vif.v_rs1_scalar = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.scalar_rs1_reg;
+assign 	  backdoor_v_instr_vif.v_rs2_scalar = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.scalar_rs2_reg;
 
 assign 	  backdoor_v_instr_vif.ready = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.port_group_ready_i;
 assign    backdoor_v_instr_vif.v_instruction = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.vector_instr_reg;

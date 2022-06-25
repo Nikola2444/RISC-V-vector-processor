@@ -12,6 +12,7 @@ class bd_v_instr_if_seq_item extends uvm_sequence_item;
    logic [2:0] lmul;
    logic [31:0] vl;
    logic [31:0] scalar;
+   logic [31:0] scalar2;
    logic [31:0] vrf_read_ram [`V_LANES][2][4][`VRF_DEPTH-1:0];
 
    `uvm_object_utils_begin(bd_v_instr_if_seq_item)

@@ -595,7 +595,7 @@ module buff_array #(
       ldbuff_read_cntr <= ldbuff_read_cntr_next;
     end
   end
-  assign ldbuff_read_cntr_next = ldbuff_read_cntr + ((VLANE_NUM)<<cfg_load_data_sew_i[1:0]);
+  assign ldbuff_read_cntr_next = ldbuff_read_cntr + ((VLANE_NUM)<<2);
   assign ldbuff_read_done_o = (ldbuff_read_cntr_next >= ldbuff_byte_cnt);
 
   // Write counter addresses write ports of index load buffers

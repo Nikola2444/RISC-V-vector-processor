@@ -147,9 +147,9 @@ mem_subsys #(
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   assign mcu_vl = 256;
-  int sew_in_bytes = 4;
+  int sew_in_bytes = 2;
   int store1_load2 = 2;
-  int unit1_stride2_index3 = 3;
+  int unit1_stride2_index3 = 2;
   // SCHEDULER DRIVER
   initial
   begin

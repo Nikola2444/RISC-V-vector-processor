@@ -151,10 +151,10 @@ module riscv_v_w_mem_subsystem #
    logic [C_XFER_SIZE_WIDTH-1:0] 	     ctrl_rxfer_size;
    logic 				     rd_tready;
    logic 				     ctrl_wstart;
-   logic [C_M_AXI_ADDR_WIDTH-1:0] 	     ctrl_waddr_offset=0;
-   logic [C_XFER_SIZE_WIDTH-1:0] 	     ctrl_wxfer_size=16;
-   logic 				     wr_tvalid=1;
-   logic [C_M_AXI_DATA_WIDTH-1:0] 	     wr_tdata = 10;
+   logic [C_M_AXI_ADDR_WIDTH-1:0] 	     ctrl_waddr_offset; //=0;   // ALEKSA HAS CHANGED THIS
+   logic [C_XFER_SIZE_WIDTH-1:0] 	     ctrl_wxfer_size; //=16;    // ALEKSA HAS CHANGED THIS
+   logic 				     wr_tvalid; // =1;                      // ALEKSA HAS CHANGED THIS
+   logic [C_M_AXI_DATA_WIDTH-1:0] 	     wr_tdata; // = 10;         // ALEKSA HAS CHANGED THIS
    logic                                     wr_tstrb_msk;
    logic 				     ctrl_wstrb_msk_en;
    /*******DEBUG logic*******/
@@ -304,7 +304,7 @@ module riscv_v_w_mem_subsystem #
    // SCALAR AXI FULL CONTROLLER
    riscv_axif_m_ctrl #(
 			.C_M_AXI_BURST_LEN	(8),
-			.C_M_AXI_ID_WIDTH	(1),
+			.C_M_AXI_ID_WIDTH	(C_M_AXI_ID_WIDTH),
 			.C_M_AXI_ADDR_WIDTH	(32),
 			.C_M_AXI_DATA_WIDTH	(32),
 			.C_M_AXI_AWUSER_WIDTH	(C_M_AXI_AWUSER_WIDTH),

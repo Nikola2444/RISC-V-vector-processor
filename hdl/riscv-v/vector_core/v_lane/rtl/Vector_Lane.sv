@@ -515,6 +515,7 @@ module Vector_Lane
          assign bwen_mux_sel[j_gen] = vm_reg[VMRF_DELAY - 1][j_gen]; // 
          assign write_data_mux_sel[j_gen] = write_data_sel_i[j_gen];
          assign ALU_output_o[j_gen] = ALU_out_data[j_gen];
+         assign vs3_data_o[j_gen] = op3[j_gen];
 
       end
       

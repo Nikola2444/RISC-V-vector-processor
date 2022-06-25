@@ -53,7 +53,7 @@ module vector_core #
    output logic 			 ctrl_wstart_o           ;
    input  logic 			 ctrl_wdone_i            ;
    output  logic 			 ctrl_wstrb_msk_en_o             ;
-   output  logic 			 wr_tstrb_msk_o             ;
+   output  logic [3 : 0]	 wr_tstrb_msk_o             ;
    output logic [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o              ;
    output logic 			 wr_tvalid_o             ;
    input  logic 			 wr_tready_i             ;
@@ -69,9 +69,9 @@ module vector_core #
    logic 				 mcu_strided_ld_st;	// From scheduler_inst of scheduler.v
    logic 				 mcu_unit_ld_st;	// From scheduler_inst of scheduler.v
    
-   logic 				 mcu_ld_rdy=1'b1;
-   logic 				 mcu_ld_buffered=1'b1;
-   logic 				 mcu_st_rdy=1'b1;
+   // logic 				 mcu_ld_rdy=1'b1;       // ALEKSA HAS CHANGED THIS
+   // logic 				 mcu_ld_buffered=1'b1;  // ALEKSA HAS CHANGED THIS
+   // logic 				 mcu_st_rdy=1'b1;       // ALEKSA HAS CHANGED THIS
 
    //Scheduler-V_CU interconnections
    logic [11:0] 			 instr_vld;		// From scheduler_inst of scheduler.v
@@ -387,7 +387,7 @@ module vector_core #
       .wr_tstrb_msk_o       (wr_tstrb_msk_o),
       .vlane_store_data_i   (mcu_store_data      ),
       .vlane_store_idx_i    (mcu_store_load_idx  ),
-      .vlane_store_dvalid_i (vlane_mcu_store_dvalid  ),
+      .vlane_store_dvalid_i (vlane_mcu_store_dvalid),
       .vlane_store_ivalid_i (vlane_store_laod_ivalid),
       .vlane_store_rdy_o    (vlane_store_rdy     ),
       .vlane_load_data_o    (mcu_load_data     ),

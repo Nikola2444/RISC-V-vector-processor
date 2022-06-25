@@ -554,8 +554,8 @@ end
 // Address counters - instantiation //
    
 //If slide offset waddt
-assign slide_waddr_offset = dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM*4) +: 31] :
-			    !dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[$clog2(VLANE_NUM*4) +: 31] : 'h0;
+assign slide_waddr_offset = dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[31 : $clog2(VLANE_NUM*4)] :
+			    !dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[31 : $clog2(VLANE_NUM*4)] : 'h0;
 
 Address_counter
 #(

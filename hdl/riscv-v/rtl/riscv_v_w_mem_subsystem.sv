@@ -1,3 +1,5 @@
+`define INCLUDE_AXIL_IF
+
 module riscv_v_w_mem_subsystem #
   (  
      parameter integer VLEN = 4096,
@@ -6,8 +8,17 @@ module riscv_v_w_mem_subsystem #
      parameter integer C_LVL1_CACHE_SIZE = (1024*1),
      parameter integer C_LVL2_CACHE_SIZE = (1024*4),
      parameter integer C_LVL2_CACHE_NWAY = 4
-     ) (/*AUTOARG*/
+  ) (/*AUTOARG*/
 	// Outputs
+  `ifdef INCLUDE_AXIL_IF
+    s_axi_aclk, s_axi_rready, s_axi_aresetn, s_axi_awaddr, s_axi_awprot,
+    s_axi_awvalid, s_axi_awready, s_axi_wdata, s_axi_wstrb, s_axi_wvalid,
+    s_axi_wready, s_axi_bresp, s_axi_bvalid, s_axi_bready, s_axi_araddr,
+    s_axi_arprot, s_axi_arvalid, s_axi_arready, s_axi_rdata, s_axi_rresp,
+    s_axi_rready, s_axi_rvalid,
+  `else 
+    ce, axi_base_address, pc_reg,
+  `endif
 	v_m_axi_awvalid, v_m_axi_awaddr, v_m_axi_awlen, v_m_axi_wvalid,
 	v_m_axi_wdata, v_m_axi_wstrb, v_m_axi_wlast, v_m_axi_arvalid,
 	v_m_axi_araddr, v_m_axi_arlen, v_m_axi_rready, v_m_axi_bready,
@@ -18,101 +29,132 @@ module riscv_v_w_mem_subsystem #
 	s_m_axi_awcache, s_m_axi_awprot, s_m_axi_awqos, s_m_axi_awuser,
 	s_m_axi_wuser, s_m_axi_arid, s_m_axi_arsize, s_m_axi_arburst,
 	s_m_axi_arlock, s_m_axi_arcache, s_m_axi_arprot, s_m_axi_arqos,
-	s_m_axi_aruser, pc_reg,
+	s_m_axi_aruser,
 	// Inputs
 	clk, clk2, rstn, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
 	v_m_axi_rvalid, v_m_axi_rdata, v_m_axi_rlast, v_m_axi_bvalid,
 	s_m_axi_awready, s_m_axi_wready, s_m_axi_arready, s_m_axi_rvalid,
 	s_m_axi_rdata, s_m_axi_rlast, s_m_axi_bvalid, s_m_axi_bid,
 	s_m_axi_bresp, s_m_axi_buser, s_m_axi_rid, s_m_axi_rresp,
-	s_m_axi_ruser, ce, axi_base_address
+	s_m_axi_ruser
 	);
-   localparam C_M_AXI_ADDR_WIDTH = 32;
-   localparam C_M_AXI_DATA_WIDTH = 32;
-   localparam C_M_AXI_ID_WIDTH   = 3;
-   localparam C_XFER_SIZE_WIDTH  = 32;
-   localparam C_M_AXI_AWUSER_WIDTH = 3;
-   // Width of User Write Address Bus
-   localparam C_M_AXI_ARUSER_WIDTH = 3;
-   // Width of User Write Data Bus
-   localparam C_M_AXI_WUSER_WIDTH = 3;
-   //Width of User Read Data Bus
-   localparam C_M_AXI_RUSER_WIDTH = 3;
-   // Width of User Response Bus
-   localparam C_M_AXI_BUSER_WIDTH = 3;
+    localparam C_S_AXI_DATA_WIDTH = 32;
+    localparam C_S_AXI_ADDR_WIDTH = 4;
+    localparam C_M_AXI_ADDR_WIDTH = 32;
+    localparam C_M_AXI_DATA_WIDTH = 32;
+    localparam C_M_AXI_ID_WIDTH   = 3;
+    localparam C_XFER_SIZE_WIDTH  = 32;
+    localparam C_M_AXI_AWUSER_WIDTH = 3;
+    // Width of User Write Address Bus
+    localparam C_M_AXI_ARUSER_WIDTH = 3;
+    // Width of User Write Data Bus
+    localparam C_M_AXI_WUSER_WIDTH = 3;
+    //Width of User Read Data Bus
+    localparam C_M_AXI_RUSER_WIDTH = 3;
+    // Width of User Response Bus
+    localparam C_M_AXI_BUSER_WIDTH = 3;
 
-   input 	       clk;
-   input 	       clk2;
-   input 	       rstn;
-   // AXI FULL VECTOR CORE IF
-   output logic        v_m_axi_awvalid ;
-   input logic 	       v_m_axi_awready ;
-   output logic [C_M_AXI_ADDR_WIDTH-1:0] v_m_axi_awaddr ;
-   output logic [8-1:0] 		 v_m_axi_awlen ;
-   output logic 			 v_m_axi_wvalid ;
-   input logic 				 v_m_axi_wready ;
-   output logic [C_M_AXI_DATA_WIDTH-1:0] v_m_axi_wdata ;
-   output logic [C_M_AXI_DATA_WIDTH/8-1:0] v_m_axi_wstrb ;
-   output logic 			   v_m_axi_wlast ;
-   output logic 			   v_m_axi_arvalid ;
-   input logic 				   v_m_axi_arready ;
-   output logic [C_M_AXI_ADDR_WIDTH-1:0]   v_m_axi_araddr ;
-   output logic [8-1:0] 		   v_m_axi_arlen ;
-   input logic 				   v_m_axi_rvalid ;
-   output logic 			   v_m_axi_rready ;
-   input logic [C_M_AXI_DATA_WIDTH-1:0]    v_m_axi_rdata ;
-   input logic 				   v_m_axi_rlast ;
-   input logic 				   v_m_axi_bvalid ;
-   output logic 			   v_m_axi_bready;
-   //AXI FULL SCALAR CORE IF
-   output logic 			   s_m_axi_awvalid ;
-   input logic 				   s_m_axi_awready ;
-   output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_awaddr ;
-   output logic [8-1:0] 		   s_m_axi_awlen ;
-   output logic 			   s_m_axi_wvalid ;
-   input logic 				   s_m_axi_wready ;
-   output logic [C_M_AXI_DATA_WIDTH-1:0]   s_m_axi_wdata ;
-   output logic [C_M_AXI_DATA_WIDTH/8-1:0] s_m_axi_wstrb ;
-   output logic 			   s_m_axi_wlast ;
-   output logic 			   s_m_axi_arvalid ;
-   input logic 				   s_m_axi_arready ;
-   output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_araddr ;
-   output logic [8-1:0] 		   s_m_axi_arlen ;
-   input logic 				   s_m_axi_rvalid ;
-   output logic 			   s_m_axi_rready ;
-   input logic [C_M_AXI_DATA_WIDTH-1:0]    s_m_axi_rdata ;
-   input logic 				   s_m_axi_rlast ;
-   input logic 				   s_m_axi_bvalid ;
-   output logic 			   s_m_axi_bready;
-   output logic [C_M_AXI_ID_WIDTH-1 : 0]   s_m_axi_awid;
-   output logic [2 : 0] 		   s_m_axi_awsize;
-   output logic [1 : 0] 		   s_m_axi_awburst;
-   output logic 			   s_m_axi_awlock;
-   output logic [3 : 0] 		   s_m_axi_awcache;
-   output logic [2 : 0] 		   s_m_axi_awprot;
-   output logic [3 : 0] 		   s_m_axi_awqos;
-   output logic [C_M_AXI_AWUSER_WIDTH-1 : 0] s_m_axi_awuser;
-   output logic [C_M_AXI_WUSER_WIDTH-1 : 0]  s_m_axi_wuser;
-   input logic [C_M_AXI_ID_WIDTH-1 : 0]      s_m_axi_bid ;
-   input logic [1 : 0] 			     s_m_axi_bresp;
-   input logic [C_M_AXI_BUSER_WIDTH-1 : 0]   s_m_axi_buser;
-   output logic [C_M_AXI_ID_WIDTH-1 : 0]     s_m_axi_arid;
-   output logic [2 : 0] 		     s_m_axi_arsize;
-   output logic [1 : 0] 		     s_m_axi_arburst;
-   output logic 			     s_m_axi_arlock;
-   output logic [3 : 0] 		     s_m_axi_arcache;
-   output logic [2 : 0] 		     s_m_axi_arprot;
-   output logic [3 : 0] 		     s_m_axi_arqos;
-   output logic [C_M_AXI_ARUSER_WIDTH-1 : 0] s_m_axi_aruser;
-   input logic [C_M_AXI_ID_WIDTH-1 : 0]      s_m_axi_rid;
-   input logic [1 : 0] 			     s_m_axi_rresp;
-   input logic [C_M_AXI_RUSER_WIDTH-1 : 0]   s_m_axi_ruser;
-   // AXI LITE IF; TO BE INSERTED
-   // THESE WILL BE AXI LITE REGISTERS
-   input logic 				     ce ; // will be clock enable to start/stop processor
-   input logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
-   output logic [31:0] 			     pc_reg; // will be just a way to see from sogtware where the PC is currently
+    input 	       clk;
+    input 	       clk2;
+    input 	       rstn;
+    // AXI FULL VECTOR CORE IF
+    output logic        v_m_axi_awvalid ;
+    input  logic 	       v_m_axi_awready ;
+    output logic [C_M_AXI_ADDR_WIDTH-1:0] v_m_axi_awaddr ;
+    output logic [8-1:0] 		 v_m_axi_awlen ;
+    output logic 			 v_m_axi_wvalid ;
+    input  logic 				 v_m_axi_wready ;
+    output logic [C_M_AXI_DATA_WIDTH-1:0] v_m_axi_wdata ;
+    output logic [C_M_AXI_DATA_WIDTH/8-1:0] v_m_axi_wstrb ;
+    output logic 			   v_m_axi_wlast ;
+    output logic 			   v_m_axi_arvalid ;
+    input  logic 				   v_m_axi_arready ;
+    output logic [C_M_AXI_ADDR_WIDTH-1:0]   v_m_axi_araddr ;
+    output logic [8-1:0] 		   v_m_axi_arlen ;
+    input  logic 				   v_m_axi_rvalid ;
+    output logic 			   v_m_axi_rready ;
+    input  logic [C_M_AXI_DATA_WIDTH-1:0]    v_m_axi_rdata ;
+    input  logic 				   v_m_axi_rlast ;
+    input  logic 				   v_m_axi_bvalid ;
+    output logic 			   v_m_axi_bready;
+    //AXI FULL SCALAR CORE IF
+    output logic 			   s_m_axi_awvalid ;
+    input  logic 				   s_m_axi_awready ;
+    output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_awaddr ;
+    output logic [8-1:0] 		   s_m_axi_awlen ;
+    output logic 			   s_m_axi_wvalid ;
+    input  logic 				   s_m_axi_wready ;
+    output logic [C_M_AXI_DATA_WIDTH-1:0]   s_m_axi_wdata ;
+    output logic [C_M_AXI_DATA_WIDTH/8-1:0] s_m_axi_wstrb ;
+    output logic 			   s_m_axi_wlast ;
+    output logic 			   s_m_axi_arvalid ;
+    input  logic 				   s_m_axi_arready ;
+    output logic [C_M_AXI_ADDR_WIDTH-1:0]   s_m_axi_araddr ;
+    output logic [8-1:0] 		   s_m_axi_arlen ;
+    input  logic 				   s_m_axi_rvalid ;
+    output logic 			   s_m_axi_rready ;
+    input  logic [C_M_AXI_DATA_WIDTH-1:0]    s_m_axi_rdata ;
+    input  logic 				   s_m_axi_rlast ;
+    input  logic 				   s_m_axi_bvalid ;
+    output logic 			   s_m_axi_bready;
+    output logic [C_M_AXI_ID_WIDTH-1 : 0]   s_m_axi_awid;
+    output logic [2 : 0] 		   s_m_axi_awsize;
+    output logic [1 : 0] 		   s_m_axi_awburst;
+    output logic 			   s_m_axi_awlock;
+    output logic [3 : 0] 		   s_m_axi_awcache;
+    output logic [2 : 0] 		   s_m_axi_awprot;
+    output logic [3 : 0] 		   s_m_axi_awqos;
+    output logic [C_M_AXI_AWUSER_WIDTH-1 : 0] s_m_axi_awuser;
+    output logic [C_M_AXI_WUSER_WIDTH-1 : 0]  s_m_axi_wuser;
+    input  logic [C_M_AXI_ID_WIDTH-1 : 0]      s_m_axi_bid ;
+    input  logic [1 : 0] 			     s_m_axi_bresp;
+    input  logic [C_M_AXI_BUSER_WIDTH-1 : 0]   s_m_axi_buser;
+    output logic [C_M_AXI_ID_WIDTH-1 : 0]     s_m_axi_arid;
+    output logic [2 : 0] 		     s_m_axi_arsize;
+    output logic [1 : 0] 		     s_m_axi_arburst;
+    output logic 			     s_m_axi_arlock;
+    output logic [3 : 0] 		     s_m_axi_arcache;
+    output logic [2 : 0] 		     s_m_axi_arprot;
+    output logic [3 : 0] 		     s_m_axi_arqos;
+    output logic [C_M_AXI_ARUSER_WIDTH-1 : 0] s_m_axi_aruser;
+    input  logic [C_M_AXI_ID_WIDTH-1 : 0]      s_m_axi_rid;
+    input  logic [1 : 0] 			     s_m_axi_rresp;
+    input  logic [C_M_AXI_RUSER_WIDTH-1 : 0]   s_m_axi_ruser;
+// AXI LITE IF; TO BE INSERTED
+// THESE WILL BE AXI LITE REGISTERS
+    `ifdef INCLUDE_AXIL_IF 
+    input  logic s_axi_aclk;
+    input  logic s_axi_aresetn;
+    input  logic [C_S_AXI_ADDR_WIDTH-1 : 0] s_axi_awaddr;
+    input  logic s_axi_awprot;
+    input  logic s_axi_awvalid;
+    output logic s_axi_awready;
+    input  logic [C_S_AXI_DATA_WIDTH-1 : 0] s_axi_wdata;
+    input  logic [(C_S_AXI_DATA_WIDTH/8)-1 : 0] s_axi_wstrb;
+    input  logic s_axi_wvalid;
+    output logic s_axi_wready;
+    output logic [1 : 0]s_axi_bresp;
+    output logic s_axi_bvalid;
+    input  logic s_axi_bready;
+    input  logic [C_S_AXI_ADDR_WIDTH-1 : 0] s_axi_araddr;
+    input  logic [2 : 0] s_axi_arprot;
+    input  logic s_axi_arvalid;
+    input  logic s_axi_arready;
+    output logic [C_S_AXI_DATA_WIDTH-1 : 0] s_axi_rdata;
+    output logic [1 : 0] s_axi_rresp;
+    output logic s_axi_rvalid;
+    input  logic s_axi_rready;
+    `else
+    input  logic 				           ce;               // will be clock enable to start/stop processor
+    input  logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
+    output logic [31:0] 			     pc_reg;           // will be just a way to see from sogtware where the PC is currently
+    `endif
 
+    `ifdef INCLUDE_AXIL_IF 
+    logic 				         ce ; // will be clock enable to start/stop processor
+    logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
+    logic [31:0] 			     pc_reg; // will be just a way to see from sogtware where the PC is currently
+    `endif
 
    // SCALAR CACHE <=> SCALAR AXI FULL CONTROLLER
    logic [31:0] 			     axi_write_address;
@@ -211,10 +253,7 @@ module riscv_v_w_mem_subsystem #
 		    .rd_tdata		(rd_tdata[C_M_AXI_DATA_WIDTH-1:0]),
 		    .ctrl_wdone		(ctrl_wdone),
 		    .wr_tready		(wr_tready),
-		    .ctrl_rstart	(ctrl_rstart),
-		    .ctrl_raddr_offset	(ctrl_raddr_offset[C_M_AXI_ADDR_WIDTH-1:0]),
-		    .ctrl_rxfer_size	(ctrl_rxfer_size[C_XFER_SIZE_WIDTH-1:0]),
-		    .ctrl_wstrb_msk_en	(ctrl_wstrb_msk_en),
+		    .ctrl_rstart	(ctrl_rstart), .ctrl_raddr_offset	(ctrl_raddr_offset[C_M_AXI_ADDR_WIDTH-1:0]), .ctrl_rxfer_size	(ctrl_rxfer_size[C_XFER_SIZE_WIDTH-1:0]), .ctrl_wstrb_msk_en	(ctrl_wstrb_msk_en),
 		    .rd_tready		(rd_tready),
 		    .ctrl_wstart	(ctrl_wstart),
 		    .ctrl_waddr_offset	(ctrl_waddr_offset[C_M_AXI_ADDR_WIDTH-1:0]),
@@ -370,8 +409,42 @@ module riscv_v_w_mem_subsystem #
       .M_AXI_RVALID	        (s_m_axi_rvalid),
       .M_AXI_RREADY	        (s_m_axi_rready));
 
+// AXI LITE SLAVE CONTROLLER
+`ifdef INCLUDE_AXIL_IF
+  riscv_axil_s_ctrl #(
+		.C_S_AXI_DATA_WIDTH(C_S_AXI_DATA_WIDTH),
+		.C_S_AXI_ADDR_WIDTH(C_S_AXI_ADDR_WIDTH)
+	) riscv_axil_s_ctrl_inst (
+		.ce_o	              (ce),
+		.axi_base_address_o (axi_base_address),
+		.pc_reg_i           (pc_reg),
+		.S_AXI_ACLK	        (s_axi_aclk),
+		.S_AXI_ARESETN	    (s_axi_aresetn),
+		.S_AXI_AWADDR	      (s_axi_awaddr),
+		.S_AXI_AWPROT	      (s_axi_awprot),
+		.S_AXI_AWVALID	    (s_axi_awvalid),
+		.S_AXI_AWREADY	    (s_axi_awready),
+		.S_AXI_WDATA	      (s_axi_wdata),
+		.S_AXI_WSTRB	      (s_axi_wstrb),
+		.S_AXI_WVALID	      (s_axi_wvalid),
+		.S_AXI_WREADY	      (s_axi_wready),
+		.S_AXI_BRESP	      (s_axi_bresp),
+		.S_AXI_BVALID	      (s_axi_bvalid),
+		.S_AXI_BREADY	      (s_axi_bready),
+		.S_AXI_ARADDR	      (s_axi_araddr),
+		.S_AXI_ARPROT	      (s_axi_arprot),
+		.S_AXI_ARVALID	    (s_axi_arvalid),
+		.S_AXI_ARREADY	    (s_axi_arready),
+		.S_AXI_RDATA	      (s_axi_rdata),
+		.S_AXI_RRESP	      (s_axi_rresp),
+		.S_AXI_RVALID	      (s_axi_rvalid),
+		.S_AXI_RREADY	      (s_axi_rready)
+	);
+`endif
 endmodule
+
+
 // Local Variables:
 // verilog-library-extensions:(".v" ".sv" "_stub.v" "_bb.v")
-// verilog-library-directories:("." "../../../../common/" "../vector_core/rtl" "../axim_ctrl/rtl/")
+// verilog-library-directories:("." "../../../../common/" "../vector_core/rtl" "../axim_ctrl/rtl/" )
 // End:

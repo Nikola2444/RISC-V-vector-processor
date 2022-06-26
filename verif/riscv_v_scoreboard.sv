@@ -293,6 +293,16 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	      else if (sew == 2'b01)
 		return res[31:16];
 	   end
+	   6'b111011: begin
+	      res = signed'(op1) * signed'(op2);
+	      if (sew == 2'b00)
+		return res[15:0];
+	      else if (sew == 2'b01)
+		return res[31:0];
+	      else
+		`uvm_fatal("VECTOR INVALID INSTR", "WIDENING MULTIPLY, WRONG SEW")		// 
+	   end
+	     
 	   default:begin
 	      `uvm_fatal("VECTOR INVALID INSTR", "FUNCT6 not implemeted or invalid")		// 
 	   end

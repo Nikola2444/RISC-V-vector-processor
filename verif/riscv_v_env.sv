@@ -66,7 +66,7 @@ class riscv_v_env extends uvm_env;
       //if (cfg.use_v_data_backdoor==1)	
 	//bd_v_data_agent  =   bd_v_data_if_agent::type_id::create("bd_v_data_agent", this);	
       //else
-	v_axi4_agent     = AXI4_agent::type_id::create("v_axi4_agent", this);	
+      v_axi4_agent     = AXI4_agent::type_id::create("v_axi4_agent", this);	
 
       sc_scbd = riscv_sc_scoreboard::type_id::create("sc_scbd", this);
       v_scbd = riscv_v_scoreboard::type_id::create("v_scbd", this);

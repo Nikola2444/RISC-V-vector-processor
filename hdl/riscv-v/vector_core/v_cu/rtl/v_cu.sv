@@ -1,4 +1,4 @@
-`include "../../../../packages/typedef_pkg.sv"
+//`include "../../../../packages/typedef_pkg.sv"
 module v_cu #
   (parameter VLEN=4096,
    parameter VLANE_NUM=16,
@@ -19,7 +19,7 @@ module v_cu #
    vrf_starting_addr_vld_i, vrf_starting_waddr_i,
    vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
    );
-
+   import typedef_pkg::*;
    localparam LP_VRF_DELAY=2;
    localparam LP_VECTOR_REGISTER_NUM=32;
    localparam LP_MAX_LMUL=8;

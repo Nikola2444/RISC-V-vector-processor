@@ -3,7 +3,33 @@ module riscv_v_verif_top;
    `include "defines.sv"
    import uvm_pkg::*;     // import the UVM library
 `include "uvm_macros.svh" // Include the UVM macros
+   function automatic void read_instr_from_dump_file (string assembly_file_path, ref logic[31:0]ddr_mem[`DDR_DEPTH]);
+      logic [31:0] instr;
+      logic [31 : 0] instr_queue_1[$];
+      string       instr_string;
+      int 	   fd = $fopen (assembly_file_path, "r");
 
+      while (!$feof(fd)) begin
+	 $fgets(instr_string, fd);
+	 for (int i = 0; i < instr_string.len(); i++)
+	 begin
+	    if (instr_string[i]=="." || instr_string[i]==">")
+	      break;
+	    if (instr_string[i]==":")
+	    begin
+	       $sscanf(instr_string.substr(i, instr_string.len()-1), (":   %h "), instr);
+	       instr_queue_1.push_back(instr);
+	    end
+	 end	 
+      end
+      
+
+      foreach (instr_queue_1[i])
+      begin
+	 $display("instruction[%d]: %h", i, instr_queue_1[i]);
+	 ddr_mem[i]=instr_queue_1[i];
+      end 
+   endfunction
 
 
    import riscv_v_test_pkg::*;
@@ -24,13 +50,13 @@ module riscv_v_verif_top;
    logic 	clk;
    logic 	clk2;
    logic 	rstn;
-   
+   string 	assembly_file_path = "../../../../../../RISCV-GCC-compile-scripts/assembly.dump";
       
    
    
    // interface
-   axi4_if v_axi4_vif(clk, rstn, ddr_mem);
-   axi4_if s_axi4_vif(clk, rstn, ddr_mem);
+   axi4_if v_axi4_vif(clk, rstn, ddr_mem, 256);
+   axi4_if s_axi4_vif(clk, rstn, ddr_mem, 8);
    backdoor_instr_if backdoor_instr_vif(clk, rstn);
    backdoor_v_instr_if backdoor_v_instr_vif(clk, rstn);
    backdoor_register_bank_if backdoor_register_bank_vif (clk, rstn);
@@ -96,8 +122,7 @@ module riscv_v_verif_top;
       .s_m_axi_bvalid	(s_axi4_vif.m_axi_bvalid),
 
       .ce(ce),
-      .axi_base_address(0),
-      .pc_reg()
+      .axi_base_address(0)      
       );
 
 `include "backdoor_connections.sv"
@@ -130,7 +155,8 @@ module riscv_v_verif_top;
    initial
    begin
       //init DDR
-      foreach(ddr_mem[i])
+      read_instr_from_dump_file(assembly_file_path, ddr_mem);
+      for (int i=2048; i < `DDR_DEPTH; i++)
 	ddr_mem[i] = i*10;
       //init lvt_rams
 

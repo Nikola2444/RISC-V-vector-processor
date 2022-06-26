@@ -48,7 +48,7 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
 	 @(negedge vif.clk);
 	 case (axi_read_channel)
             rd_idle_phase:  begin
-               read_burst_length = 256;
+               read_burst_length = vif.burst_len;
                vif.m_axi_rlast = 0;
                vif.m_axi_arready = 0;
                vif.m_axi_rvalid = 0;          
@@ -63,8 +63,8 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
             rd_phase: begin
                vif.m_axi_arready = 1'b0;
                vif.m_axi_rdata = vif.ddr_mem[rd_transfer_base_addr + num_of_data_read];
-               vif.m_axi_rvalid = $random();
-               
+               //vif.m_axi_rvalid = $random();
+               vif.m_axi_rvalid = 1'b1;
                if (vif.m_axi_rready && vif.m_axi_rvalid) begin            
 		  if ((num_of_data_read+1)%(read_burst_length+1)  == 0 && num_of_data_read != 0) begin
 		     axi_read_channel = rd_idle_phase;
@@ -92,7 +92,7 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
             wr_idle_phase:  begin
                i = 0;
                vif.m_axi_bvalid = 0;
-               write_burst_length = 256;
+               write_burst_length = vif.burst_len;
                vif.m_axi_awready = 0;
                vif.m_axi_wready = 0;               
                if (vif.m_axi_awvalid) begin

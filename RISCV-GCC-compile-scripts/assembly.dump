@@ -28,36 +28,35 @@ Disassembly of section .text:
 0000000000000034 <loop1>:
   34:	000572d7          	vsetvli	t0,a0,e8,m1,tu,mu,d1
   38:	02038007          	vle8.v	v0,(t2)
-  3c:	0ab40107          	vlse8.v	v2,(s0),a1
-  40:	ee012257          	vwmul.vv	v4,v0,v2
-  44:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
-  48:	02432357          	vredsum.vs	v6,v4,v6
-  4c:	40550533          	sub	a0,a0,t0
-  50:	005383b3          	add	t2,t2,t0
-  54:	00d00e33          	add	t3,zero,a3
-  58:	00000eb3          	add	t4,zero,zero
+  3c:	ee012257          	vwmul.vv	v4,v0,v2
+  40:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
+  44:	02432357          	vredsum.vs	v6,v4,v6
+  48:	40550533          	sub	a0,a0,t0
+  4c:	005383b3          	add	t2,t2,t0
+  50:	00d00e33          	add	t3,zero,a3
+  54:	00000eb3          	add	t4,zero,zero
 
-000000000000005c <multiply>:
-  5c:	005e8eb3          	add	t4,t4,t0
-  60:	00100f13          	li	t5,1
-  64:	41ee0e33          	sub	t3,t3,t5
-  68:	fe0e1ae3          	bnez	t3,5c <multiply>
-  6c:	01d40433          	add	s0,s0,t4
-  70:	fca042e3          	bgtz	a0,34 <loop1>
-  74:	0055f857          	vsetvli	a6,a1,e16,m2,tu,mu,d1
-  78:	3a80b457          	vslideup.vi	v8,v8,1
-  7c:	02830457          	vadd.vv	v8,v8,v6
-  80:	00140413          	addi	s0,s0,1
-  84:	00100f13          	li	t5,1
-  88:	41e80833          	sub	a6,a6,t5
-  8c:	f8081ee3          	bnez	a6,28 <loop2>
-  90:	0204d427          	vse16.v	v8,(s1)
-  94:	96806457          	vmul.vx	v8,v8,zero
-  98:	00291f13          	slli	t5,s2,0x2
-  9c:	01e484b3          	add	s1,s1,t5
-  a0:	412585b3          	sub	a1,a1,s2
-  a4:	f6b04ee3          	bgtz	a1,20 <loop3>
-  a8:	00100f13          	li	t5,1
-  ac:	41e30333          	sub	t1,t1,t5
-  b0:	00c383b3          	add	t2,t2,a2
-  b4:	f60314e3          	bnez	t1,1c <loop4>
+0000000000000058 <multiply>:
+  58:	005e8eb3          	add	t4,t4,t0
+  5c:	00100f13          	li	t5,1
+  60:	41ee0e33          	sub	t3,t3,t5
+  64:	fe0e1ae3          	bnez	t3,58 <multiply>
+  68:	01d40433          	add	s0,s0,t4
+  6c:	fca044e3          	bgtz	a0,34 <loop1>
+  70:	0055f857          	vsetvli	a6,a1,e16,m2,tu,mu,d1
+  74:	3a80b457          	vslideup.vi	v8,v8,1
+  78:	02830457          	vadd.vv	v8,v8,v6
+  7c:	00140413          	addi	s0,s0,1
+  80:	00100f13          	li	t5,1
+  84:	41e80833          	sub	a6,a6,t5
+  88:	fa0810e3          	bnez	a6,28 <loop2>
+  8c:	0204d427          	vse16.v	v8,(s1)
+  90:	96806457          	vmul.vx	v8,v8,zero
+  94:	00291f13          	slli	t5,s2,0x2
+  98:	01e484b3          	add	s1,s1,t5
+  9c:	412585b3          	sub	a1,a1,s2
+  a0:	f8b040e3          	bgtz	a1,20 <loop3>
+  a4:	00100f13          	li	t5,1
+  a8:	41e30333          	sub	t1,t1,t5
+  ac:	00c383b3          	add	t2,t2,a2
+  b0:	f60316e3          	bnez	t1,1c <loop4>

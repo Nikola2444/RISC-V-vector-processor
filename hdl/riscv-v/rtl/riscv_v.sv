@@ -50,8 +50,8 @@ module riscv_v #
 
    //---------------------------- VECTOR CORE INTERFACE---------------------------
    // Vector core status signals
-   logic 				 all_v_stores_executed;
-   logic 				 all_v_loads_executed;
+   logic 				 all_v_stores_executed=1'b1;
+   logic 				 all_v_loads_executed=1'b1;
    logic 				 vector_stall;
    // Signals going to M_CU inside vector core
    logic 				 scalar_load_req;

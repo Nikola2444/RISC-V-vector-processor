@@ -3,7 +3,7 @@
 // information about ld and st instructions.
 
 
-`include "../../../../packages/typedef_pkg.sv"
+//`include "../../../../packages/typedef_pkg.sv"
 module scheduler
   (input logic clk,
    input logic 	       rstn,
@@ -38,7 +38,7 @@ module scheduler
 
    );
 
-
+   import typedef_pkg::*;
    logic [31:0]        vector_instr_reg, vector_instr_next;
    logic [31:0]        scalar_rs1_reg, scalar_rs2_reg;
    logic 	       v_st_instr_check;

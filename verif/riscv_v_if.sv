@@ -1,7 +1,7 @@
 `ifndef RISCV_V_IF_SV
  `define RISCV_V_IF_SV
 
-interface axi4_if (input clk, logic rstn, output reg [31:0] ddr_mem[`DDR_DEPTH]);
+interface axi4_if (input clk, logic rstn, output reg [31:0] ddr_mem[`DDR_DEPTH], input logic[31:0] burst_len);
    // AXI FULL VECTOR CORE IF
    parameter integer C_M_AXI_ADDR_WIDTH = 32;
    parameter integer C_M_AXI_DATA_WIDTH = 32;

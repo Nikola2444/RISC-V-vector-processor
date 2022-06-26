@@ -1,5 +1,6 @@
-`include "../../../../packages/typedef_pkg.sv"
-module alu_submodule #
+//`include "typedef_pkg.sv"
+
+module alu_submodule #  
   (parameter V_LANE_NUM=0)
    (/*AUTOARG*/
    // Outputs
@@ -8,6 +9,7 @@ module alu_submodule #
    clk, rstn, sew_i, alu_opmode_i, op1_i, op2_i, op3_i, alu_vld_i,
    reduction_op_i
    );
+   import typedef_pkg::*;
    localparam LP_MAX_PIPE_STAGES=4;
    //opmode for all operation exept multiply
    localparam logic [6:0] LP_OPMODE_NORMAL=7'b0110011;

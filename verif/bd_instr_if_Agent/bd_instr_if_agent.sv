@@ -49,7 +49,7 @@ class bd_instr_if_agent extends uvm_agent;
 
    function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
-      if(cfg.is_active == UVM_ACTIVE) begin
+      if(cfg.instr_agent_active == 1) begin
          drv.seq_item_port.connect(seqr.seq_item_export);
       end
    endfunction : connect_phase

@@ -4,29 +4,60 @@ assembly.o:     file format elf64-littleriscv
 
 Disassembly of section .text:
 
-0000000000000000 <loop1-0x14>:
-   0:	00300113          	li	sp,3
-   4:	00100513          	li	a0,1
-   8:	00000093          	li	ra,0
-   c:	02c6a4d7          	vredsum.vs	v9,v12,v13
-  10:	0200e787          	vle32.v	v15,(ra)
+0000000000000000 <loop4-0x1c>:
+   0:	00000393          	li	t2,0
+   4:	20000413          	li	s0,512
+   8:	7d000493          	li	s1,2000
+   c:	01000313          	li	t1,16
+  10:	02000613          	li	a2,32
+  14:	04000693          	li	a3,64
+  18:	96806457          	vmul.vx	v8,v8,zero
 
-0000000000000014 <loop1>:
-  14:	00208463          	beq	ra,sp,1c <jmp>
-  18:	00550513          	addi	a0,a0,5
+000000000000001c <loop4>:
+  1c:	00d005b3          	add	a1,zero,a3
 
-000000000000001c <jmp>:
-  1c:	00f00093          	li	ra,15
-  20:	022180d7          	vadd.vv	v1,v2,v3
-  24:	0a630257          	vsub.vv	v4,v6,v6
-  28:	027402d7          	vadd.vv	v5,v7,v8
-  2c:	02740357          	vadd.vv	v6,v7,v8
-  30:	40000093          	li	ra,1024
-  34:	0200e7a7          	vse32.v	v15,(ra)
-  38:	00407157          	vsetvli	sp,zero,e16,m1,tu,mu,d1
-  3c:	02630357          	vadd.vv	v6,v6,v6
-  40:	0a520157          	vsub.vv	v2,v5,v4
-  44:	00007157          	vsetvli	sp,zero,e8,m1,tu,mu,d1
-  48:	00000013          	nop
-  4c:	00000013          	nop
-  50:	00000013          	nop
+0000000000000020 <loop3>:
+  20:	0055f857          	vsetvli	a6,a1,e16,m2,tu,mu,d1
+  24:	01000933          	add	s2,zero,a6
+
+0000000000000028 <loop2>:
+  28:	00c00533          	add	a0,zero,a2
+  2c:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
+  30:	96606357          	vmul.vx	v6,v6,zero
+
+0000000000000034 <loop1>:
+  34:	000572d7          	vsetvli	t0,a0,e8,m1,tu,mu,d1
+  38:	02038007          	vle8.v	v0,(t2)
+  3c:	0ab40107          	vlse8.v	v2,(s0),a1
+  40:	ee012257          	vwmul.vv	v4,v0,v2
+  44:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
+  48:	02432357          	vredsum.vs	v6,v4,v6
+  4c:	40550533          	sub	a0,a0,t0
+  50:	005383b3          	add	t2,t2,t0
+  54:	00d00e33          	add	t3,zero,a3
+  58:	00000eb3          	add	t4,zero,zero
+
+000000000000005c <multiply>:
+  5c:	005e8eb3          	add	t4,t4,t0
+  60:	00100f13          	li	t5,1
+  64:	41ee0e33          	sub	t3,t3,t5
+  68:	fe0e1ae3          	bnez	t3,5c <multiply>
+  6c:	01d40433          	add	s0,s0,t4
+  70:	fca042e3          	bgtz	a0,34 <loop1>
+  74:	0055f857          	vsetvli	a6,a1,e16,m2,tu,mu,d1
+  78:	3a80b457          	vslideup.vi	v8,v8,1
+  7c:	02830457          	vadd.vv	v8,v8,v6
+  80:	00140413          	addi	s0,s0,1
+  84:	00100f13          	li	t5,1
+  88:	41e80833          	sub	a6,a6,t5
+  8c:	f8081ee3          	bnez	a6,28 <loop2>
+  90:	0204d427          	vse16.v	v8,(s1)
+  94:	96806457          	vmul.vx	v8,v8,zero
+  98:	00291f13          	slli	t5,s2,0x2
+  9c:	01e484b3          	add	s1,s1,t5
+  a0:	412585b3          	sub	a1,a1,s2
+  a4:	f6b04ee3          	bgtz	a1,20 <loop3>
+  a8:	00100f13          	li	t5,1
+  ac:	41e30333          	sub	t1,t1,t5
+  b0:	00c383b3          	add	t2,t2,a2
+  b4:	f60314e3          	bnez	t1,1c <loop4>

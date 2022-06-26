@@ -1,6 +1,6 @@
 module vector_core #
-  (parameter VLEN=4096,
-   parameter VLANE_NUM=16,
+  (parameter VLEN=1024,
+   parameter VLANE_NUM=4,
    parameter R_PORTS_NUM = 8,
    parameter W_PORTS_NUM = 4,
    parameter MULTIPUMP_WRITE = 2,
@@ -52,8 +52,8 @@ module vector_core #
    output logic [C_XFER_SIZE_WIDTH-1:0]  ctrl_wxfer_size_o       ;
    output logic 			 ctrl_wstart_o           ;
    input  logic 			 ctrl_wdone_i            ;
-   output  logic 			 ctrl_wstrb_msk_en_o             ;
-   output  logic [3 : 0]	 wr_tstrb_msk_o             ;
+   output logic 			 ctrl_wstrb_msk_en_o     ;
+   output logic [3 : 0] 		 wr_tstrb_msk_o          ;
    output logic [C_M_AXI_DATA_WIDTH-1:0] wr_tdata_o              ;
    output logic 			 wr_tvalid_o             ;
    input  logic 			 wr_tready_i             ;
@@ -84,9 +84,9 @@ module vector_core #
 
    //renaming_unit-vcu
    logic 				 ru_vrf_starting_addr_vld;
-   logic [8*$clog2(MEM_DEPTH)-1:0] 	 ru_vrf_starting_waddr;
-   logic [8*$clog2(MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr0;
-   logic [8*$clog2(MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr1;
+   logic [8*$clog2( MEM_DEPTH)-1:0] 	 ru_vrf_starting_waddr;
+   logic [8*$clog2( MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr0;
+   logic [8*$clog2( MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr1;
    
 
    // V_CU-Vector_lanes interconnections
@@ -112,9 +112,9 @@ module vector_core #
    logic [31:0] 			  vl_o;			// From v_cu_inst of v_cu.v
    logic 				  vrf_oreg_ren;		// From v_cu_inst of v_cu.v
    logic 				  vrf_ren;		// From v_cu_inst of v_cu.v
-   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
-   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
-   logic [8*$clog2(MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
+   logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
+   logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
+   logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
    logic [1:0] 				  wdata_width;		// From v_cu_inst of v_cu.v
    logic [W_PORTS_NUM-1:0] 		  port_group_ready;
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel;
@@ -215,9 +215,9 @@ module vector_core #
 	     .inst_delay_o		(inst_delay/*[W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0]*/),
 	     .vrf_ren_o			(vrf_ren),
 	     .vrf_oreg_ren_o		(vrf_oreg_ren),
-	     .vrf_starting_waddr_o	(vrf_starting_waddr[8*$clog2(MEM_DEPTH)-1:0]),
-	     .vrf_starting_raddr_vs1_o	(vrf_starting_raddr_vs1[8*$clog2(MEM_DEPTH)-1:0]),
-	     .vrf_starting_raddr_vs2_o	(vrf_starting_raddr_vs2[8*$clog2(MEM_DEPTH)-1:0]),
+	     .vrf_starting_waddr_o	(vrf_starting_waddr[8*$clog2( MEM_DEPTH)-1:0]),
+	     .vrf_starting_raddr_vs1_o	(vrf_starting_raddr_vs1[8*$clog2( MEM_DEPTH)-1:0]),
+	     .vrf_starting_raddr_vs2_o	(vrf_starting_raddr_vs2[8*$clog2( MEM_DEPTH)-1:0]),
 	     .wdata_width_o		(wdata_width[1:0]),
 	     .store_data_mux_sel_o	(store_data_mux_sel[$clog2(R_PORTS_NUM)-1:0]),
 	     .store_load_index_mux_sel_o(store_load_idx_mux_sel[$clog2(R_PORTS_NUM)-1:0]),
@@ -250,7 +250,7 @@ module vector_core #
    Vlane_with_low_lvl_ctrl # 
      (/*AUTO_INSTPARAM*/
       // Parameters
-      .MEM_DEPTH			(MEM_DEPTH),
+      . MEM_DEPTH			( MEM_DEPTH),
       .MAX_VL_PER_LANE 		        (LP_MAX_VL_PER_LANE),
       .VREG_LOC_PER_LANE		(VREG_LOC_PER_LANE),
       .W_PORTS_NUM			(W_PORTS_NUM),

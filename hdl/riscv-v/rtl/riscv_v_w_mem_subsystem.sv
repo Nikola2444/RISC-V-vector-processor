@@ -3,7 +3,7 @@
 module riscv_v_w_mem_subsystem #
   (  
      parameter integer VLEN = 4096,
-     parameter integer V_LANES = 4,
+     parameter integer V_LANES = 8,
      parameter integer CHAINING = 4,
      parameter integer C_LVL1_CACHE_SIZE = (1024*1),
      parameter integer C_LVL2_CACHE_SIZE = (1024*4),
@@ -15,7 +15,7 @@ module riscv_v_w_mem_subsystem #
     s_axi_awvalid, s_axi_awready, s_axi_wdata, s_axi_wstrb, s_axi_wvalid,
     s_axi_wready, s_axi_bresp, s_axi_bvalid, s_axi_bready, s_axi_araddr,
     s_axi_arprot, s_axi_arvalid, s_axi_arready, s_axi_rdata, s_axi_rresp,
-    s_axi_rready, s_axi_rvalid,
+    s_axi_rvalid,
   `else 
     ce, axi_base_address, pc_reg,
   `endif
@@ -319,7 +319,7 @@ module riscv_v_w_mem_subsystem #
 			  ) cache_inst(
 				       .clk(clk),
 				       .ce(ce),
-				       .reset(rst),
+				       .reset(rstn),
 				       .data_ready_o(data_ready),
 				       .instr_ready_o(instr_ready),
 				       .fencei_i(fencei),

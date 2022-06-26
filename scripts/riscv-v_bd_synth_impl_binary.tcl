@@ -87,7 +87,7 @@ add_files -norecurse /home/fouste/RISC-V-vector-processor/scripts/result/RISCV_A
 
 
 launch_runs synth_1 -jobs 4
-launch_runs impl_1 -jobs 4
+
 launch_runs impl_1 -to_step write_bitstream -jobs 4
 
 #wait on implementation
@@ -97,7 +97,8 @@ puts "* Synthesis & Implementation Finished *"
 
 update_compile_order -fileset sources_1
 
-write_hw_platform -fixed -include_bit -force -file /home/fouste/RISC-V-vector-processor/scripts_package_create_bd/result/RISCV_AXI_system/riscv_v_axi_bd_wrapper.xsa
+write_hw_platform -fixed -include_bit -force -file /home/fouste/RISC-V-vector-processor/scripts/release/RISCV_AXI_system/riscv_v_axi_bd_wrapper.xsa
+
 
 
 

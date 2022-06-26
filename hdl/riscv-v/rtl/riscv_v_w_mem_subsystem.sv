@@ -5,11 +5,11 @@ module riscv_v_w_mem_subsystem #
      parameter integer VLEN = 4096,
      parameter integer V_LANES = 8,
      parameter integer CHAINING = 4,
+     parameter integer C_BLOCK_SIZE = 64,
      parameter integer C_LVL1_CACHE_SIZE = (1024*1),
      parameter integer C_LVL2_CACHE_SIZE = (1024*4),
      parameter integer C_LVL2_CACHE_NWAY = 4
-  ) (/*AUTOARG*/
-	// Outputs
+  ) (
   `ifdef INCLUDE_AXIL_IF
     s_axi_aclk, s_axi_rready, s_axi_aresetn, s_axi_awaddr, s_axi_awprot,
     s_axi_awvalid, s_axi_awready, s_axi_wdata, s_axi_wstrb, s_axi_wvalid,
@@ -19,6 +19,8 @@ module riscv_v_w_mem_subsystem #
   `else 
     ce, axi_base_address, pc_reg,
   `endif
+  /*AUTOARG*/
+	// Outputs
 	v_m_axi_awvalid, v_m_axi_awaddr, v_m_axi_awlen, v_m_axi_wvalid,
 	v_m_axi_wdata, v_m_axi_wstrb, v_m_axi_wlast, v_m_axi_arvalid,
 	v_m_axi_araddr, v_m_axi_arlen, v_m_axi_rready, v_m_axi_bready,
@@ -40,19 +42,19 @@ module riscv_v_w_mem_subsystem #
 	);
     localparam C_S_AXI_DATA_WIDTH = 32;
     localparam C_S_AXI_ADDR_WIDTH = 4;
-    localparam C_M_AXI_ADDR_WIDTH = 32;
     localparam C_M_AXI_DATA_WIDTH = 32;
-    localparam C_M_AXI_ID_WIDTH   = 3;
+    localparam C_M_AXI_ADDR_WIDTH = 32;
+    localparam C_M_AXI_ID_WIDTH   = 4;
     localparam C_XFER_SIZE_WIDTH  = 32;
-    localparam C_M_AXI_AWUSER_WIDTH = 3;
-    // Width of User Write Address Bus
-    localparam C_M_AXI_ARUSER_WIDTH = 3;
-    // Width of User Write Data Bus
-    localparam C_M_AXI_WUSER_WIDTH = 3;
-    //Width of User Read Data Bus
-    localparam C_M_AXI_RUSER_WIDTH = 3;
-    // Width of User Response Bus
-    localparam C_M_AXI_BUSER_WIDTH = 3;
+    localparam C_M_AXI_BURST_LEN  = (C_BLOCK_SIZE/4);
+
+    localparam C_PHY_ADDR_WIDTH   = 32;
+
+    localparam C_M_AXI_AWUSER_WIDTH = 4;
+    localparam C_M_AXI_ARUSER_WIDTH = 4;
+    localparam C_M_AXI_WUSER_WIDTH  = 4;
+    localparam C_M_AXI_RUSER_WIDTH  = 4;
+    localparam C_M_AXI_BUSER_WIDTH  = 4;
 
     input 	       clk;
     input 	       clk2;
@@ -139,7 +141,7 @@ module riscv_v_w_mem_subsystem #
     input  logic [C_S_AXI_ADDR_WIDTH-1 : 0] s_axi_araddr;
     input  logic [2 : 0] s_axi_arprot;
     input  logic s_axi_arvalid;
-    input  logic s_axi_arready;
+    output logic s_axi_arready;
     output logic [C_S_AXI_DATA_WIDTH-1 : 0] s_axi_rdata;
     output logic [1 : 0] s_axi_rresp;
     output logic s_axi_rvalid;
@@ -220,47 +222,50 @@ module riscv_v_w_mem_subsystem #
 	       // Parameters
 	       .C_M_AXI_ADDR_WIDTH	(C_M_AXI_ADDR_WIDTH),
 	       .C_M_AXI_DATA_WIDTH	(C_M_AXI_DATA_WIDTH),
-	       .C_XFER_SIZE_WIDTH	(C_XFER_SIZE_WIDTH))
+	       .C_XFER_SIZE_WIDTH	  (C_XFER_SIZE_WIDTH))
    v_axim_ctrl_inst(/*AUTO_INST*/
 		    .clk		(clk),
 		    .rst		(!rstn),
 		    // Outputs
 		    .m_axi_awvalid	(v_m_axi_awvalid),
-		    .m_axi_awaddr	(v_m_axi_awaddr[C_M_AXI_ADDR_WIDTH-1:0]),
-		    .m_axi_awlen	(v_m_axi_awlen[8-1:0]),
-		    .m_axi_wvalid	(v_m_axi_wvalid),
-		    .m_axi_wdata	(v_m_axi_wdata[C_M_AXI_DATA_WIDTH-1:0]),
-		    .m_axi_wstrb	(v_m_axi_wstrb[C_M_AXI_DATA_WIDTH/8-1:0]),
-		    .m_axi_wlast	(v_m_axi_wlast),
+		    .m_axi_awaddr	  (v_m_axi_awaddr[C_M_AXI_ADDR_WIDTH-1:0]),
+		    .m_axi_awlen	  (v_m_axi_awlen[8-1:0]),
+		    .m_axi_wvalid	  (v_m_axi_wvalid),
+		    .m_axi_wdata	  (v_m_axi_wdata[C_M_AXI_DATA_WIDTH-1:0]),
+		    .m_axi_wstrb	  (v_m_axi_wstrb[C_M_AXI_DATA_WIDTH/8-1:0]),
+		    .m_axi_wlast	  (v_m_axi_wlast),
 		    .m_axi_arvalid	(v_m_axi_arvalid),
-		    .m_axi_araddr	(v_m_axi_araddr[C_M_AXI_ADDR_WIDTH-1:0]),
-		    .m_axi_arlen	(v_m_axi_arlen[8-1:0]),
-		    .m_axi_rready	(v_m_axi_rready),
-		    .m_axi_bready	(v_m_axi_bready),
+		    .m_axi_araddr	  (v_m_axi_araddr[C_M_AXI_ADDR_WIDTH-1:0]),
+		    .m_axi_arlen	  (v_m_axi_arlen[8-1:0]),
+		    .m_axi_rready	  (v_m_axi_rready),
+		    .m_axi_bready	  (v_m_axi_bready),
 		    //AXIM inputs
 		    .m_axi_awready	(v_m_axi_awready),
-		    .m_axi_wready	(v_m_axi_wready),
+		    .m_axi_wready 	(v_m_axi_wready),
 		    .m_axi_arready	(v_m_axi_arready),
-		    .m_axi_rvalid	(v_m_axi_rvalid),
-		    .m_axi_rdata	(v_m_axi_rdata[C_M_AXI_DATA_WIDTH-1:0]),
-		    .m_axi_rlast	(v_m_axi_rlast),
-		    .m_axi_bvalid	(v_m_axi_bvalid),
+		    .m_axi_rvalid	  (v_m_axi_rvalid),
+		    .m_axi_rdata	  (v_m_axi_rdata[C_M_AXI_DATA_WIDTH-1:0]),
+		    .m_axi_rlast	  (v_m_axi_rlast),
+		    .m_axi_bvalid	  (v_m_axi_bvalid),
 		    //Vector core if
 		    .ctrl_baseaddr	(axi_base_address),
-		    .ctrl_rdone		(ctrl_rdone),
-		    .rd_tvalid		(rd_tvalid),
-		    .rd_tlast		(rd_tlast),
-		    .rd_tdata		(rd_tdata[C_M_AXI_DATA_WIDTH-1:0]),
-		    .ctrl_wdone		(ctrl_wdone),
-		    .wr_tready		(wr_tready),
-		    .ctrl_rstart	(ctrl_rstart), .ctrl_raddr_offset	(ctrl_raddr_offset[C_M_AXI_ADDR_WIDTH-1:0]), .ctrl_rxfer_size	(ctrl_rxfer_size[C_XFER_SIZE_WIDTH-1:0]), .ctrl_wstrb_msk_en	(ctrl_wstrb_msk_en),
-		    .rd_tready		(rd_tready),
-		    .ctrl_wstart	(ctrl_wstart),
+		    .ctrl_rdone	  	(ctrl_rdone),
+		    .rd_tvalid	  	(rd_tvalid),
+		    .rd_tlast		    (rd_tlast),
+		    .rd_tdata		    (rd_tdata[C_M_AXI_DATA_WIDTH-1:0]),
+		    .ctrl_wdone	   	    (ctrl_wdone),
+		    .wr_tready	  	    (wr_tready),
+		    .ctrl_rstart  	    (ctrl_rstart),
+        .ctrl_raddr_offset	(ctrl_raddr_offset[C_M_AXI_ADDR_WIDTH-1:0]),
+        .ctrl_rxfer_size	  (ctrl_rxfer_size[C_XFER_SIZE_WIDTH-1:0]),
+        .ctrl_wstrb_msk_en	(ctrl_wstrb_msk_en),
+		    .rd_tready	  	    (rd_tready),
+		    .ctrl_wstart  	    (ctrl_wstart),
 		    .ctrl_waddr_offset	(ctrl_waddr_offset[C_M_AXI_ADDR_WIDTH-1:0]),
-		    .ctrl_wxfer_size	(ctrl_wxfer_size[C_XFER_SIZE_WIDTH-1:0]),
-		    .wr_tvalid		(wr_tvalid),
-		    .wr_tstrb_msk	(wr_tstrb_msk),
-		    .wr_tdata		(wr_tdata[C_M_AXI_DATA_WIDTH-1:0]));
+		    .ctrl_wxfer_size	  (ctrl_wxfer_size[C_XFER_SIZE_WIDTH-1:0]),
+		    .wr_tvalid		      (wr_tvalid),
+		    .wr_tstrb_msk	      (wr_tstrb_msk),
+		    .wr_tdata		        (wr_tdata[C_M_AXI_DATA_WIDTH-1:0]));
 
 
    // RISCV SCALAR + VECTOR CORE
@@ -310,9 +315,9 @@ module riscv_v_w_mem_subsystem #
 
    // SCALAR CACHE CONTROLLER
    cache_contr_nway_vnv #(
-			  .C_PHY_ADDR_WIDTH       (32),
+			  .C_PHY_ADDR_WIDTH       (C_PHY_ADDR_WIDTH),
 			  .C_TS_BRAM_TYPE         ("HIGH_PERFORMANCE"),
-			  .C_BLOCK_SIZE           (64),
+			  .C_BLOCK_SIZE           (C_BLOCK_SIZE),
 			  .C_LVL1_CACHE_SIZE      (C_LVL1_CACHE_SIZE),
 			  .C_LVL2_CACHE_SIZE      (C_LVL2_CACHE_SIZE),
 			  .C_LVL2C_ASSOCIATIVITY  (C_LVL2_CACHE_NWAY)
@@ -342,10 +347,10 @@ module riscv_v_w_mem_subsystem #
 
    // SCALAR AXI FULL CONTROLLER
    riscv_axif_m_ctrl #(
-			.C_M_AXI_BURST_LEN	(8),
-			.C_M_AXI_ID_WIDTH	(C_M_AXI_ID_WIDTH),
-			.C_M_AXI_ADDR_WIDTH	(32),
-			.C_M_AXI_DATA_WIDTH	(32),
+			.C_M_AXI_BURST_LEN	  (C_M_AXI_BURST_LEN),
+			.C_M_AXI_ID_WIDTH	    (C_M_AXI_ID_WIDTH),
+			.C_M_AXI_ADDR_WIDTH	  (C_M_AXI_ADDR_WIDTH),
+			.C_M_AXI_DATA_WIDTH	  (C_M_AXI_DATA_WIDTH),
 			.C_M_AXI_AWUSER_WIDTH	(C_M_AXI_AWUSER_WIDTH),
 			.C_M_AXI_ARUSER_WIDTH	(C_M_AXI_ARUSER_WIDTH),
 			.C_M_AXI_WUSER_WIDTH	(C_M_AXI_WUSER_WIDTH),

@@ -4,7 +4,7 @@ module riscv_v #
    parameter integer C_M_AXI_DATA_WIDTH = 32,
    parameter integer C_XFER_SIZE_WIDTH = 32,
    parameter VLEN=4096,
-   parameter V_LANES=16,
+   parameter V_LANES=4,
    parameter CHAINING=4)
    (
    input 	     clk,

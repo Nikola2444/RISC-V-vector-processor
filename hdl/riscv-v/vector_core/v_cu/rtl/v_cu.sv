@@ -191,7 +191,7 @@ module v_cu #
 	 vector_instr_reg 	   <= vector_instr_i;
 	 instr_vld_reg 		   <= instr_vld_i;
 	 scalar_rs1_reg 	   <= scalar_rs1_i;
-	 scalar_rs1_reg 	   <= scalar_rs2_i;
+	 scalar_rs2_reg 	   <= scalar_rs2_i;
 	 instr_rdy_reg 		   <= instr_rdy_o;
 	 vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
 	 vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;

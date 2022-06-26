@@ -1,32 +1,32 @@
 module riscv_v_w_mem_subsystem #
   (  
      parameter integer VLEN = 4096,
-     parameter integer V_LANES = 4,
+     parameter integer V_LANES = 8,
      parameter integer CHAINING = 4,
      parameter integer C_LVL1_CACHE_SIZE = (1024*1),
      parameter integer C_LVL2_CACHE_SIZE = (1024*4),
      parameter integer C_LVL2_CACHE_NWAY = 4
      ) (/*AUTOARG*/
-	// Outputs
-	v_m_axi_awvalid, v_m_axi_awaddr, v_m_axi_awlen, v_m_axi_wvalid,
-	v_m_axi_wdata, v_m_axi_wstrb, v_m_axi_wlast, v_m_axi_arvalid,
-	v_m_axi_araddr, v_m_axi_arlen, v_m_axi_rready, v_m_axi_bready,
-	s_m_axi_awvalid, s_m_axi_awaddr, s_m_axi_awlen, s_m_axi_wvalid,
-	s_m_axi_wdata, s_m_axi_wstrb, s_m_axi_wlast, s_m_axi_arvalid,
-	s_m_axi_araddr, s_m_axi_arlen, s_m_axi_rready, s_m_axi_bready,
-	s_m_axi_awid, s_m_axi_awsize, s_m_axi_awburst, s_m_axi_awlock,
-	s_m_axi_awcache, s_m_axi_awprot, s_m_axi_awqos, s_m_axi_awuser,
-	s_m_axi_wuser, s_m_axi_arid, s_m_axi_arsize, s_m_axi_arburst,
-	s_m_axi_arlock, s_m_axi_arcache, s_m_axi_arprot, s_m_axi_arqos,
-	s_m_axi_aruser, pc_reg,
-	// Inputs
-	clk, clk2, rstn, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
-	v_m_axi_rvalid, v_m_axi_rdata, v_m_axi_rlast, v_m_axi_bvalid,
-	s_m_axi_awready, s_m_axi_wready, s_m_axi_arready, s_m_axi_rvalid,
-	s_m_axi_rdata, s_m_axi_rlast, s_m_axi_bvalid, s_m_axi_bid,
-	s_m_axi_bresp, s_m_axi_buser, s_m_axi_rid, s_m_axi_rresp,
-	s_m_axi_ruser, ce, axi_base_address
-	);
+   // Outputs
+   v_m_axi_awvalid, v_m_axi_awaddr, v_m_axi_awlen, v_m_axi_wvalid,
+   v_m_axi_wdata, v_m_axi_wstrb, v_m_axi_wlast, v_m_axi_arvalid,
+   v_m_axi_araddr, v_m_axi_arlen, v_m_axi_rready, v_m_axi_bready,
+   s_m_axi_awvalid, s_m_axi_awaddr, s_m_axi_awlen, s_m_axi_wvalid,
+   s_m_axi_wdata, s_m_axi_wstrb, s_m_axi_wlast, s_m_axi_arvalid,
+   s_m_axi_araddr, s_m_axi_arlen, s_m_axi_rready, s_m_axi_bready,
+   s_m_axi_awid, s_m_axi_awsize, s_m_axi_awburst, s_m_axi_awlock,
+   s_m_axi_awcache, s_m_axi_awprot, s_m_axi_awqos, s_m_axi_awuser,
+   s_m_axi_wuser, s_m_axi_arid, s_m_axi_arsize, s_m_axi_arburst,
+   s_m_axi_arlock, s_m_axi_arcache, s_m_axi_arprot, s_m_axi_arqos,
+   s_m_axi_aruser, pc_reg,
+   // Inputs
+   clk, clk2, rstn, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
+   v_m_axi_rvalid, v_m_axi_rdata, v_m_axi_rlast, v_m_axi_bvalid,
+   s_m_axi_awready, s_m_axi_wready, s_m_axi_arready, s_m_axi_rvalid,
+   s_m_axi_rdata, s_m_axi_rlast, s_m_axi_bvalid, s_m_axi_bid,
+   s_m_axi_bresp, s_m_axi_buser, s_m_axi_rid, s_m_axi_rresp,
+   s_m_axi_ruser, ce, axi_base_address
+   );
    localparam C_M_AXI_ADDR_WIDTH = 32;
    localparam C_M_AXI_DATA_WIDTH = 32;
    localparam C_M_AXI_ID_WIDTH   = 3;
@@ -44,6 +44,7 @@ module riscv_v_w_mem_subsystem #
    input 	       clk;
    input 	       clk2;
    input 	       rstn;
+   //input               rst;
    // AXI FULL VECTOR CORE IF
    output logic        v_m_axi_awvalid ;
    input logic 	       v_m_axi_awready ;
@@ -280,7 +281,7 @@ module riscv_v_w_mem_subsystem #
 			  ) cache_inst(
 				       .clk(clk),
 				       .ce(ce),
-				       .reset(rst),
+				       .reset(rstn),
 				       .data_ready_o(data_ready),
 				       .instr_ready_o(instr_ready),
 				       .fencei_i(fencei),

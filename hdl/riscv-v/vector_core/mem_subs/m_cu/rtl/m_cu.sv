@@ -464,7 +464,7 @@ module m_cu #(
             sdbuff_rvalid             = 1'b0;
             sdbuff_ren_o          = 1'b0;
           end
-          if(!wr_tready_i) begin
+          if(!wr_tready_i && wr_tvalid_o) begin
             sdbuff_read_stall_o   = 1'b1;
             sdbuff_ren_o          = 1'b0;
           end
@@ -489,7 +489,7 @@ module m_cu #(
               sdbuff_ren_o          = 1'b0;
             end
           end
-          if(!wr_tready_i) begin
+          if(!wr_tready_i && wr_tvalid_o) begin
             sdbuff_read_stall_o   = 1'b1;
             sdbuff_ren_o          = 1'b0;
           end
@@ -548,7 +548,7 @@ module m_cu #(
               sdbuff_ren_o          = 1'b0;
             end
           end
-          if(!wr_tready_i) begin
+          if(!wr_tready_i && wr_tvalid_o) begin
             sdbuff_read_stall_o   = 1'b1;
             sdbuff_ren_o          = 1'b0;
           end

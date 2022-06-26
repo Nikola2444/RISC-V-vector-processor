@@ -122,7 +122,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 scalar2_queue[idx].push_back(vif.v_rs2_scalar);
       end
       
-
+      
    endtask
 
    

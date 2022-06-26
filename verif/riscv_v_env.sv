@@ -63,8 +63,9 @@ class riscv_v_env extends uvm_env;
       bd_instr_agent   =   bd_instr_if_agent::type_id::create("bd_instr_agent", this);
       bd_v_instr_agent   =   bd_v_instr_if_agent::type_id::create("bd_v_instr_agent", this);      
       s_axi4_agent     = AXI4_agent::type_id::create("s_axi4_agent", this);
-      if (cfg.use_v_data_backdoor)	bd_v_data_agent  =   bd_v_data_if_agent::type_id::create("bd_v_data_agent", this);	
-      else
+      //if (cfg.use_v_data_backdoor==1)	
+	//bd_v_data_agent  =   bd_v_data_if_agent::type_id::create("bd_v_data_agent", this);	
+      //else
 	v_axi4_agent     = AXI4_agent::type_id::create("v_axi4_agent", this);	
 
       sc_scbd = riscv_sc_scoreboard::type_id::create("sc_scbd", this);

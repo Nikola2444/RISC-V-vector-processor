@@ -55,7 +55,7 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
                if (vif.m_axi_arvalid) begin
 		  axi_read_channel = rd_phase;
 		  vif.m_axi_arready = 1'b1;
-		  rd_transfer_base_addr = vif.m_axi_araddr/64;
+		  rd_transfer_base_addr = vif.m_axi_araddr/4;
 		  //$display("going to rd phase");
 		  read_burst_length = vif.m_axi_arlen;
                end
@@ -90,16 +90,15 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
 	 @(negedge vif.clk);
 	 case (axi_write_channel)
             wr_idle_phase:  begin
-               
+               i = 0;
                vif.m_axi_bvalid = 0;
                write_burst_length = 256;
                vif.m_axi_awready = 0;
-               vif.m_axi_wready = 0;
-               
+               vif.m_axi_wready = 0;               
                if (vif.m_axi_awvalid) begin
 		  vif.m_axi_awready = 1;
 		  axi_write_channel = wr_phase;
-		  wr_transfer_base_addr = vif.m_axi_awaddr/64;
+		  wr_transfer_base_addr = vif.m_axi_awaddr/4;
 		  write_burst_length = vif.m_axi_awlen;
                end
             end
@@ -107,12 +106,11 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
                vif.m_axi_awready = 1'b0;        
                vif.m_axi_wready = $random();         
                if (vif.m_axi_wready && vif.m_axi_wvalid) begin
-		  vif.ddr_mem[wr_transfer_base_addr+i]=vif.m_axi_wdata[511:0];
+		  vif.ddr_mem[wr_transfer_base_addr+i]=vif.m_axi_wdata[31:0];
 		  i++;
 		  if (vif.m_axi_wlast)
 		    axi_write_channel = resp_phase;
-		  for (int j = 0; j < 128; j++)
-		    $display("vif.ddr_mem[%d]=%d",j, vif.ddr_mem[j]);
+		  $display("vif.ddr_mem[%d]=%d",wr_transfer_base_addr+i, vif.ddr_mem[wr_transfer_base_addr+i]);
                end
             end
             resp_phase:begin

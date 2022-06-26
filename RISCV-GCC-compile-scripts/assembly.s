@@ -3,11 +3,11 @@
 
 	addi x2, x0, 3
 	addi x10, x0, 1
-	addi x1, x0, 4
-	vsetvli x2, x0, e16, m1
+	addi x1, x0, 0
+	#vsetvli x2, x0, e32, m1
 	#vslidedown.vx v10, v11, x1
 	vredsum.vs v9, v12, v13
-	vle16.v v15, (x0)
+	vle32.v v15, (x1)
 	#sw   x4, 0(x5)
 loop1:			    	    
 
@@ -20,7 +20,8 @@ jmp:
 	vsub.vv v4, v6, v6    
 	vadd.vv v5, v7, v8
 	vadd.vv v6, v7, v8
-	  
+	addi x1, x0, 1024
+	vse32.v v15, (x1)
 	vsetvli x2, x0, e16, m1
 	vadd.vv v6, v6, v6
 	vsub.vv v2, v5, v4

@@ -254,7 +254,7 @@ module scheduler
       end
    end
 
-   assign mcu_st_vld_o = v_st_instr_check && !v_idx_unordered_check;
+   assign mcu_st_vld_o = v_st_instr_check && !v_idx_unordered_check && instr_rdy_i[3:2]!=0;
 
    //check handshake between scheduler and V_CU
    

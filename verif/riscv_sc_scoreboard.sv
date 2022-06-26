@@ -103,7 +103,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	      match_num++;
 	   end
 	 else
-	   `uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
+	   `uvm_error("SC_MISSMATCH_IMM", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
 						rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
       end
       else if (opcode == sc_arith)
@@ -116,7 +116,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	      match_num++;
 	   end
 	 else
-	   `uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
+	   `uvm_error("SC_MISSMATCH_ARITH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
 						rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
       end
       else if (opcode == sc_store)
@@ -144,7 +144,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       bit funct7_5;
       logic [31:0] res;
       funct7_5 = funct7[5];//check if add or sub
-
+      $display("op1=%d op2=%d", op1, op2);
       case (funct3)
 	 000: begin
 	    if (op2_imm)

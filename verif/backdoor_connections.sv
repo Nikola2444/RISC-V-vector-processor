@@ -145,24 +145,36 @@ endgenerate
 // ********Vector core data IF***************
 
 //read IF
+/* -----\/----- EXCLUDED -----\/-----
 assign backdoor_v_data_vif.ctrl_raddr_offset_o = DUT.riscv_v_inst.ctrl_raddr_offset_o;
 assign backdoor_v_data_vif.ctrl_rxfer_size_o = DUT.riscv_v_inst.ctrl_rxfer_size_o;
 assign backdoor_v_data_vif.ctrl_rstart_o = DUT.riscv_v_inst.ctrl_rstart_o;
+ -----/\----- EXCLUDED -----/\----- */
 
+/* -----\/----- EXCLUDED -----\/-----
 assign backdoor_v_data_vif.rd_tready_o = DUT.riscv_v_inst.rd_tready_o;
 assign DUT.ctrl_rdone = backdoor_v_data_vif.ctrl_rdone_i;
 assign DUT.rd_tdata = backdoor_v_data_vif.rd_tdata_i;
 assign DUT.rd_tvalid = backdoor_v_data_vif.rd_tvalid_i;
 assign DUT.rd_tlast = backdoor_v_data_vif.rd_tlast_i;
+ -----/\----- EXCLUDED -----/\----- */
 // Write if
+/* -----\/----- EXCLUDED -----\/-----
 assign backdoor_v_data_vif.ctrl_waddr_offset_o = DUT.riscv_v_inst.ctrl_waddr_offset_o;
 assign backdoor_v_data_vif.ctrl_wxfer_size_o = DUT.riscv_v_inst.ctrl_wxfer_size_o;
 assign backdoor_v_data_vif.ctrl_wstart_o = DUT.riscv_v_inst.ctrl_wstart_o;
+ -----/\----- EXCLUDED -----/\----- */
 
+
+
+/* -----\/----- EXCLUDED -----\/-----
 assign DUT.riscv_v_inst.wr_tready_i = backdoor_v_data_vif.wr_tready_i;
 assign DUT.riscv_v_inst.ctrl_wdone_i = backdoor_v_data_vif.ctrl_wdone_i;
 assign backdoor_v_data_vif.wr_tdata_o = DUT.riscv_v_inst.wr_tdata_o;
 assign backdoor_v_data_vif.wr_tvalid_o = DUT.riscv_v_inst.wr_tvalid_o;
+ -----/\----- EXCLUDED -----/\----- */
+
+
 
 /***********************************************************/
 // Vector core VRF backdoor interface

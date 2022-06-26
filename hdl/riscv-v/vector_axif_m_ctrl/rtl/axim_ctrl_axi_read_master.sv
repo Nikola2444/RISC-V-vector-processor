@@ -194,7 +194,8 @@ always @(posedge aclk) begin
                       ? ctrl_xfer_size_in_bytes[LP_LOG_DW_BYTES+:LP_TOTAL_LEN_WIDTH]
                       : ctrl_xfer_size_in_bytes[LP_LOG_DW_BYTES+:LP_TOTAL_LEN_WIDTH] - 1'b1;
     // Align transfer to 4kB to avoid AXI protocol issues if starting address is not correctly aligned.
-    addr_offset_r <= ctrl_addr_offset & ~LP_ADDR_MASK;
+    //addr_offset_r <= ctrl_addr_offset & ~LP_ADDR_MASK;
+     addr_offset_r <= ctrl_addr_offset;
   end
 end
 

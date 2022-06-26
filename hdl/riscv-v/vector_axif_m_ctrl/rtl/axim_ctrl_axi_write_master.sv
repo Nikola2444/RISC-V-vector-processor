@@ -188,7 +188,8 @@ always @(posedge aclk) begin
                       ? ctrl_xfer_size_in_bytes[LP_LOG_DW_BYTES+:LP_TOTAL_LEN_WIDTH]
                       : ctrl_xfer_size_in_bytes[LP_LOG_DW_BYTES+:LP_TOTAL_LEN_WIDTH] - 1'b1;
     // Align transfer to burst length to avoid AXI protocol issues if starting address is not correctly aligned.
-    addr_offset_r <= ctrl_addr_offset & ~LP_ADDR_MASK;
+    //addr_offset_r <= ctrl_addr_offset & ~LP_ADDR_MASK;
+     addr_offset_r <= ctrl_addr_offset;
     byte_remainder_r <= ctrl_xfer_size_in_bytes[0+:LP_LOG_DW_BYTES]-1'b1;
   end
 end
@@ -215,7 +216,7 @@ always @(posedge aclk) begin
     w_running <= 1'b0;
   end
   else begin
-    w_running <= start            ? 1'b1 :
+     w_running <= start            ? 1'b1 :
                  w_final_transfer ? 1'b0 :
                                     w_running ;
   end
@@ -397,7 +398,7 @@ always @(posedge aclk) begin
 end
 
 always @(posedge aclk) begin
-  wfirst_pulse <= m_axi_wvalid & wfirst & ~wfirst_d1;
+   wfirst_pulse <= m_axi_wvalid & wfirst & ~wfirst_d1;   
 end
 
 axim_ctrl_counter #(

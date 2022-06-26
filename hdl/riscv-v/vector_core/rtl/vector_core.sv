@@ -226,7 +226,7 @@ module vector_core #
 	     .alu_x_data_o		(alu_x_data/*[W_PORTS_NUM-1:0][31:0]*/),
 	     .alu_imm_o			(alu_imm/*[W_PORTS_NUM-1:0][4:0]*/),
 	     .alu_opmode_o		(alu_opmode/*[W_PORTS_NUM-1:0][ALU_OPMODE_WIDTH-1:0]*/),
-	     .reduction_op_o               (reduction_op),
+	     .reduction_op_o            (reduction_op),
 	     .up_down_slide_o		(up_down_slide),
 	     .slide_amount_o		(slide_amount[31:0]),
 	     .slide_type_o              (slide_type),

@@ -1,5 +1,5 @@
-`define INCLUDE_AXIL_IF
-`define INCLUDE_DBG_SIGNALS
+//`define INCLUDE_AXIL_IF
+//`define INCLUDE_DBG_SIGNALS
 
 module riscv_v_w_mem_subsystem #
   (  

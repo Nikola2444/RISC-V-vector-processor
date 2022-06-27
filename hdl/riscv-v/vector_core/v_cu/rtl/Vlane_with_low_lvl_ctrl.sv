@@ -529,7 +529,7 @@ endgenerate;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] alu_res_reordered;
    always_comb
    begin
-      
+
       for (int lane=0; lane<VLANE_NUM; lane+=2)
 	for(int byte_sel=0; byte_sel < 16/8; byte_sel++)
 	begin

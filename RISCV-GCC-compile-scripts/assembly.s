@@ -19,6 +19,7 @@
     vsetvli x10, x1, e32, m1
     
     vle32.v v2, (x4)
+    vle32.v v3, (x4)
     vadd.vv v4, v2, v3
     vadd.vv v5, v2, v4
     vle32.v v3, (x4)    

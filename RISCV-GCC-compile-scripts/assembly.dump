@@ -4,36 +4,30 @@ assembly.o:     file format elf64-littleriscv
 
 Disassembly of section .text:
 
-0000000000000000 <lw1-0x60>:
-   0:	04000093          	li	ra,64
-   4:	40000113          	li	sp,1024
-   8:	40000193          	li	gp,1024
-   c:	40018193          	addi	gp,gp,1024
-  10:	40000213          	li	tp,1024
-  14:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  18:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  1c:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  20:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  24:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  28:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  2c:	40020213          	addi	tp,tp,1024 # 400 <lw1+0x3a0>
-  30:	0080f557          	vsetvli	a0,ra,e32,m1,tu,mu,d1
-  34:	02026107          	vle32.v	v2,(tp)
-  38:	02218257          	vadd.vv	v4,v2,v3
-  3c:	022202d7          	vadd.vv	v5,v2,v4
-  40:	02026187          	vle32.v	v3,(tp)
-  44:	02218257          	vadd.vv	v4,v2,v3
-  48:	00000013          	nop
-  4c:	00000013          	nop
-  50:	00000013          	nop
-  54:	00000013          	nop
-  58:	00400213          	li	tp,4
-  5c:	02026227          	vse32.v	v4,(tp)
-
-0000000000000060 <lw1>:
+0000000000000000 <.text>:
+   0:	40000393          	li	t2,1024
+   4:	40038393          	addi	t2,t2,1024
+   8:	40038393          	addi	t2,t2,1024
+   c:	40038393          	addi	t2,t2,1024
+  10:	40038393          	addi	t2,t2,1024
+  14:	40038393          	addi	t2,t2,1024
+  18:	40038393          	addi	t2,t2,1024
+  1c:	40038393          	addi	t2,t2,1024
+  20:	20000413          	li	s0,512
+  24:	7d000493          	li	s1,2000
+  28:	01000313          	li	t1,16
+  2c:	02000613          	li	a2,32
+  30:	04000693          	li	a3,64
+  34:	02838457          	vadd.vv	v8,v8,v7
+  38:	000572d7          	vsetvli	t0,a0,e8,m1,tu,mu,d1
+  3c:	0203e007          	vle32.v	v0,(t2)
+  40:	ee012257          	vwmul.vv	v4,v0,v2
+  44:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
+  48:	02432357          	vredsum.vs	v6,v4,v6
+  4c:	40550533          	sub	a0,a0,t0
+  50:	005383b3          	add	t2,t2,t0
+  54:	00d00e33          	add	t3,zero,a3
+  58:	00000eb3          	add	t4,zero,zero
+  5c:	00000013          	nop
   60:	00000013          	nop
   64:	00000013          	nop
-  68:	00000013          	nop
-  6c:	00000013          	nop
-  70:	00000013          	nop
-  74:	fedff0ef          	jal	ra,60 <lw1>

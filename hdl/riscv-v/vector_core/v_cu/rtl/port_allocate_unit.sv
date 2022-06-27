@@ -137,6 +137,6 @@ module port_allocate_unit#
    assign instr_rdy_o[5:4] = {2{port_rdy_i != 0 && load_in_progress_reg==0 && instr_vld_i[3:2]==0 && dependancy_issue_i==0}};//store_rdy
    assign instr_rdy_o[10:6] = {5{port_rdy_i != 0 && dependancy_issue_i==0}};
    //Config instruction ready
-   assign instr_rdy_o[11] = port_rdy_i == 4'hf; 
+   assign instr_rdy_o[11] = port_rdy_i == 4'hf && start_o == 0; 
    
 endmodule

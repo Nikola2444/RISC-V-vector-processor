@@ -39,7 +39,7 @@ loop4:
 				add x29, x0, x0				# x29 = 0
 				
 				multiply:
-					add x29, x29, x5			# x29 += x5
+					add x29, x29, x5	        # x29 += x5
 					addi x30, x0, 1
 					sub x28, x28, x30
 					bnez x28, multiply

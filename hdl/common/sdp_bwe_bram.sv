@@ -43,7 +43,16 @@ module sdp_bwe_bram #(
   endgenerate
  -----/\----- EXCLUDED -----/\----- */
 
+// Registers
+//logic [clogb2(RAM_DEPTH-1)-1:0] addra_reg;
+//logic [(NB_COL*COL_WIDTH)-1:0]  dina_reg; 
+//logic [NB_COL-1:0] wea_reg;
 
+//always_ff@(posedge clka) begin
+//    addra_reg <= addra;
+//    dina_reg <= dina;
+//    wea_reg <= wea;        
+//end
 
   always @(posedge clkb)
     if (enb)

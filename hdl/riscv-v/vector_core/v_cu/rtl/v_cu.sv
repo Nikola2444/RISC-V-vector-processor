@@ -169,6 +169,13 @@ module v_cu #
    //logic [W_PORTS_NUM-1:0] 		  port_group_ready_i;
    logic 				  alloc_port_vld;
    logic 				  alloc_port_rdy;
+   
+    /***************DEPENDANCY CHECK*************/
+   logic [$clog2(W_PORTS_NUM)-1:0]  allocated_port;
+   logic [$clog2(W_PORTS_NUM)-1:0]  released_port;
+   logic [W_PORTS_NUM-1:0][5:0]     vd_instr_in_progress;
+   logic [W_PORTS_NUM-1:0] 	    dependancy_issue;
+   logic [W_PORTS_NUM-1:0][3:0]     dependancy_issue_cnt;
 
 
    always@(posedge clk)
@@ -484,13 +491,6 @@ module v_cu #
       .instr_vld_i	(instr_vld_reg[11:0]));
    // Here we need to insert component which uses generated control signals to
    // Control the lanes.
-
-   /***************DEPENDANCY CHECK*************/
-   logic [$clog2(W_PORTS_NUM)-1:0]  allocated_port;
-   logic [$clog2(W_PORTS_NUM)-1:0]  released_port;
-   logic [W_PORTS_NUM-1:0][5:0]     vd_instr_in_progress;
-   logic [W_PORTS_NUM-1:0] 	    dependancy_issue;
-   logic [W_PORTS_NUM-1:0][3:0]     dependancy_issue_cnt;
    
    assign allocated_port =   start_o == 1 ? 0:
 			     start_o == 2 ? 1:

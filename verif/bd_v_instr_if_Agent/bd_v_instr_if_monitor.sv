@@ -70,7 +70,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	     end
 	  join_none
 
-	 if(vif.v_instruction==0)
+	 if(vif.v_instruction[6:0]==7'h13)
 	   watch_dog_cnt++;
 	 if (vif.start==0 && vif.ready==4'b1111 && watch_dog_cnt > 10 && drop_obj==0)
 	 begin

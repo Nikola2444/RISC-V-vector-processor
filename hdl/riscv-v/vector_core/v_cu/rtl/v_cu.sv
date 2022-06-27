@@ -188,15 +188,18 @@ module v_cu #
       end
       else
       begin
-	 vector_instr_reg 	   <= vector_instr_i;
-	 instr_vld_reg 		   <= instr_vld_i;
-	 scalar_rs1_reg 	   <= scalar_rs1_i;
-	 scalar_rs2_reg 	   <= scalar_rs2_i;
-	 instr_rdy_reg 		   <= instr_rdy_o;
-	 vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
-	 vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;
-	 vrf_starting_raddr1_reg   <= vrf_starting_raddr1_i;
-	 vrf_starting_addr_vld_reg <= vrf_starting_addr_vld_i;
+	 if (dependancy_issue==0)
+	 begin
+	    vector_instr_reg 	      <= vector_instr_i;	 
+	    instr_vld_reg 	      <= instr_vld_i;
+	    scalar_rs1_reg 	      <= scalar_rs1_i;
+	    scalar_rs2_reg 	      <= scalar_rs2_i;
+	    instr_rdy_reg 	      <= instr_rdy_o;
+	    vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
+	    vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;
+	    vrf_starting_raddr1_reg   <= vrf_starting_raddr1_i;
+	    vrf_starting_addr_vld_reg <= vrf_starting_addr_vld_i;
+	 end
 	 if(instr_vld_reg[11] && instr_rdy_reg[11]) // config instruction received
 	 begin
 	    vtype_reg <= vtype_next;	 
@@ -471,6 +474,7 @@ module v_cu #
       .store_driver_o   (store_driver_o),
       .op3_port_sel_o	(op3_sel_o),
       .alloc_port_vld_o	(alloc_port_vld),
+      .dependancy_issue_i(dependancy_issue),
       // Inputs
       .clk		(clk),
       .rstn		(rstn),
@@ -481,8 +485,68 @@ module v_cu #
    // Here we need to insert component which uses generated control signals to
    // Control the lanes.
 
+   /***************DEPENDANCY CHECK*************/
+   logic [$clog2(W_PORTS_NUM)-1:0]  allocated_port;
+   logic [$clog2(W_PORTS_NUM)-1:0]  released_port;
+   logic [W_PORTS_NUM-1:0][5:0]     vd_instr_in_progress;
+   logic [W_PORTS_NUM-1:0] 	    dependancy_issue;
+   logic [W_PORTS_NUM-1:0][3:0]     dependancy_issue_cnt;
+   
+   assign allocated_port =   start_o == 1 ? 0:
+			     start_o == 2 ? 1:
+			     start_o == 4 ? 2 : 3;
+   assign released_port =   port_group_ready_i == 1 ? 0:
+			     port_group_ready_i == 2 ? 1:
+			     port_group_ready_i == 4 ? 2 : 3;
+   always@(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 for (int i=0;i<W_PORTS_NUM;i++)
+	   vd_instr_in_progress[i] <= 6'b100000;;
+      end
+      else
+      begin
+	 for (int i=0;i<W_PORTS_NUM;i++)
+	   if (start_o[i] && port_group_ready_i[i])
+	     vd_instr_in_progress[i] <= {1'b0, v_instr_vd};
+	   else if (dependancy_issue_cnt[i]==0)
+	     vd_instr_in_progress[i] <= 6'b100000;//no valid instruction
+      end
+   end
 
-   /***************OUTPUTS*************/
+   always_comb
+   begin
+      for (int i=0; i<W_PORTS_NUM; i++)
+      begin
+	 if (vd_instr_in_progress[i][5]==1'b0 &&
+	     (vd_instr_in_progress[i][4:0]==v_instr_vs1 || vd_instr_in_progress[i][4:0]==v_instr_vs2))
+	   dependancy_issue[i]=1'b1;
+	 else
+	   dependancy_issue[i]=1'b0;
+      end
+   end
+
+   always@(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++) 
+	   dependancy_issue_cnt[i] <= 9; //depenancy delay
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++) 
+	   if (vd_instr_in_progress[i][5] != 1'b1)
+	     dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
+	   else 
+	     dependancy_issue_cnt[i]<=9;
+      end
+   end
+
+   
+   
+   /***************OUTPUTS**********************/
    assign lmul_o = vtype_reg[2:0];
    assign sew_o = vtype_reg[5:3];
    assign vl_o = vl_reg;

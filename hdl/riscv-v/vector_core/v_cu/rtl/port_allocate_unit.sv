@@ -8,6 +8,7 @@ module port_allocate_unit#
     output logic [11:0] 		   instr_rdy_o,
     input logic [11:0] 			   instr_vld_i,
     input logic 			   vrf_starting_addr_vld_i,
+    input logic [W_PORTS_NUM-1:0]          dependancy_issue_i,
     output logic [W_PORTS_NUM-1:0] 	   start_o,
     input logic [W_PORTS_NUM-1:0] 	   port_rdy_i,
     output logic [$clog2(R_PORTS_NUM)-1:0] op3_port_sel_o,
@@ -89,7 +90,7 @@ module port_allocate_unit#
    begin
       for (int i=0;i<W_PORTS_NUM;i++)
       begin
-	 start_o[i] = port_rdy_i[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld_o;
+	 start_o[i] = port_rdy_i[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld_o && dependancy_issue_i==0;
       end
    end
    assign alloc_port_vld_o = (instr_rdy_o[10:0] && instr_vld_i[10:0]) != 0 && vrf_starting_addr_vld_i ;
@@ -131,10 +132,10 @@ module port_allocate_unit#
 
    // Outputs
 
-   assign instr_rdy_o[1:0] = {2{port_rdy_i != 0}};
-   assign instr_rdy_o[3:2] = {2{port_rdy_i != 0 && store_in_progress_reg==0}};//store_rdy
-   assign instr_rdy_o[5:4] = {2{port_rdy_i != 0 && load_in_progress_reg==0 && instr_vld_i[3:2]==0}};//store_rdy
-   assign instr_rdy_o[10:6] = {5{port_rdy_i != 0}};
+   assign instr_rdy_o[1:0] = {2{port_rdy_i != 0 && dependancy_issue_i==0}};
+   assign instr_rdy_o[3:2] = {2{port_rdy_i != 0 && store_in_progress_reg==0 &&dependancy_issue_i==0}};//store_rdy
+   assign instr_rdy_o[5:4] = {2{port_rdy_i != 0 && load_in_progress_reg==0 && instr_vld_i[3:2]==0 && dependancy_issue_i==0}};//store_rdy
+   assign instr_rdy_o[10:6] = {5{port_rdy_i != 0 && dependancy_issue_i==0}};
    //Config instruction ready
    assign instr_rdy_o[11] = port_rdy_i == 4'hf; 
    

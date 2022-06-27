@@ -494,10 +494,11 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 		       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
 		       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data);
 	      match_num++;
-	      match = 1;	
+	      if (match==0)
+		match = 1;	
 	   end
 	 else
-	 begin
+	 begin	    
 	    match = 0;
 	    `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
 						     vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result

@@ -22,6 +22,7 @@ module riscv_v_w_mem_subsystem #
   `endif
   `ifdef INCLUDE_DBG_SIGNALS
   lane0_load_dvalid,lane0_load_data,lane0_store_data,lane0_store_dvalid,
+  vrf0_wdata,vrf0_waddr,vrf0_bwen,vrf0_rdata,vrf0_raddr,vrf0_ren,vrf0_oreg_ren,
   `endif
   /*AUTOARG*/
 	// Outputs
@@ -157,21 +158,41 @@ module riscv_v_w_mem_subsystem #
     `endif
 
     `ifdef INCLUDE_DBG_SIGNALS
-    output logic [31:0] 			     lane0_store_data;           // will be just a way to see from sogtware where the PC is currently
-    output logic         			     lane0_store_dvalid;           // will be just a way to see from sogtware where the PC is currently
-    output logic [31:0] 			     lane0_load_data;           // will be just a way to see from sogtware where the PC is currently
-    output logic         			     lane0_load_dvalid;           // will be just a way to see from sogtware where the PC is currently
+    output logic [31:0] 			     lane0_store_data; 
+    output logic         			     lane0_store_dvalid;
+    output logic [31:0] 			     lane0_load_data;  
+    output logic         			     lane0_load_dvalid;
 
     assign lane0_store_data   = riscv_v_inst.vector_core_inst.mcu_store_data[0];
     assign lane0_store_dvalid = riscv_v_inst.vector_core_inst.vlane_mcu_store_dvalid;
     assign lane0_load_data    = riscv_v_inst.vector_core_inst.mcu_load_data[0];
     assign lane0_load_dvalid  = riscv_v_inst.vector_core_inst.vlane_load_dvalid;
+
+    output logic [31:0] 			     vrf0_raddr; 
+    output logic         			     vrf0_ren;
+    output logic         			     vrf0_oreg_ren;
+    output logic [31:0] 			     vrf0_rdata;  
+
+    output logic [31:0]  			     vrf0_waddr;
+    output logic [3 :0]  			     vrf0_bwen;
+    output logic [31:0]  			     vrf0_wdata;
+
+    assign vrf0_raddr     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i;
+    assign vrf0_ren       = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_ren_i;
+    assign vrf0_oreg_ren  = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_oreg_ren_i;
+    assign vrf0_rdata     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata;
+
+    assign vrf0_waddr     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr;
+    assign vrf0_bwen      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen;
+    assign vrf0_wdata     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata;
+
     `endif
 
     `ifdef INCLUDE_AXIL_IF 
     logic 				         ce ; // will be clock enable to start/stop processor
     logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
     logic [31:0] 			     pc_reg; // will be just a way to see from sogtware where the PC is currently
+
     `endif
 
    // SCALAR CACHE <=> SCALAR AXI FULL CONTROLLER

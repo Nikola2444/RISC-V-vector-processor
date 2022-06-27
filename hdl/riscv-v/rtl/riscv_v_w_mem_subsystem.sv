@@ -1,4 +1,5 @@
-//`define INCLUDE_AXIL_IF
+`define INCLUDE_AXIL_IF
+`define INCLUDE_DBG_SIGNALS
 
 module riscv_v_w_mem_subsystem #
   (  
@@ -18,6 +19,9 @@ module riscv_v_w_mem_subsystem #
     s_axi_rvalid,
   `else 
     ce, axi_base_address, pc_reg,
+  `endif
+  `ifdef INCLUDE_DBG_SIGNALS
+  lane0_load_dvalid,lane0_load_data,lane0_store_data,lane0_store_dvalid,
   `endif
   /*AUTOARG*/
 	// Outputs
@@ -150,6 +154,18 @@ module riscv_v_w_mem_subsystem #
     input  logic 				           ce;               // will be clock enable to start/stop processor
     input  logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
     output logic [31:0] 			     pc_reg;           // will be just a way to see from sogtware where the PC is currently
+    `endif
+
+    `ifdef INCLUDE_DBG_SIGNALS
+    output logic [31:0] 			     lane0_store_data;           // will be just a way to see from sogtware where the PC is currently
+    output logic         			     lane0_store_dvalid;           // will be just a way to see from sogtware where the PC is currently
+    output logic [31:0] 			     lane0_load_data;           // will be just a way to see from sogtware where the PC is currently
+    output logic         			     lane0_load_dvalid;           // will be just a way to see from sogtware where the PC is currently
+
+    assign lane0_store_data   = riscv_v_inst.vector_core_inst.mcu_store_data[0];
+    assign lane0_store_dvalid = riscv_v_inst.vector_core_inst.vlane_mcu_store_dvalid;
+    assign lane0_load_data    = riscv_v_inst.vector_core_inst.mcu_load_data[0];
+    assign lane0_load_dvalid  = riscv_v_inst.vector_core_inst.vlane_load_dvalid;
     `endif
 
     `ifdef INCLUDE_AXIL_IF 

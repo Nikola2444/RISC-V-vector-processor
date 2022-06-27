@@ -22,7 +22,7 @@ Disassembly of section .text:
   38:	96806457          	vmul.vx	v8,v8,zero
   3c:	000572d7          	vsetvli	t0,a0,e8,m1,tu,mu,d1
   40:	02038007          	vle8.v	v0,(t2)
-  44:	ee012257          	vwmul.vv	v4,v0,v2
+  44:	96012257          	vmul.vv	v4,v0,v2
   48:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
   4c:	02432357          	vredsum.vs	v6,v4,v6
   50:	40550533          	sub	a0,a0,t0

@@ -110,6 +110,7 @@ logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 2 : 0][31 : 0] lane_result;
 
 // Driver - Interconnect signals
 logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew_di;
+logic [W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_di;
 logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_di;                              // TO BE CHECKED
 logic [W_PORTS_NUM - 1 : 0] vrf_ren_di;
 logic [W_PORTS_NUM - 1 : 0] vrf_oreg_ren_di;
@@ -143,6 +144,7 @@ logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_di;
 
 // Interconnect - Vector lane signals
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] vsew_il;
+logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_il;
 logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] read_data_valid_il;
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_ren_il;
 logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0] vrf_oreg_ren_il;
@@ -180,7 +182,8 @@ logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_il;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_b;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_c;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 	  alu_res;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0] 	  alu_sew;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0] 	  alu_read_sew;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0] 	  alu_write_sew;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_in_vld;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1:0] 		  alu_op2_sel;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 		  alu_reduction;
@@ -209,6 +212,7 @@ generate
                 .vl_i(vl_i),
                 .vsew_i(vsew_i[1 : 0]),
                 .vsew_o(vsew_di[0]),
+                .wdata_width_o(wdata_width_di[0]),
                 .vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
                 .start_i(start_i[0]),
@@ -284,6 +288,7 @@ generate
                 .rst_i(rst_i),
                 .vl_i(vl_i),
                 .vsew_o(vsew_di[i]),
+                .wdata_width_o(wdata_width_di[i]),
                 .vsew_i(vsew_i[1 : 0]),
                 //.vlmul_i(vlmul_i),
                 .inst_type_i(inst_type_i),
@@ -351,6 +356,8 @@ Driver_vlane_interconnect_inst
     .clk_i(clk_i),
     .rst_i(rst_i),
     .vsew_i(vsew_di),
+    .wdata_width_i(wdata_width_di),
+    .wdata_width_o(wdata_width_il),
     .vsew_o(vsew_il),
     .read_data_valid_i(read_data_valid_di),
     .read_data_valid_o(read_data_valid_il),
@@ -432,6 +439,7 @@ generate
 		   .clk2_i(clk2_i),
 		   .rst_i(rst_i),
 		   .vsew_i(vsew_il[i]),
+		   .wdata_width_i(wdata_width_il[i]),
 		   .vrf_ren_i(vrf_ren_il[i]),
 		   .vrf_oreg_ren_i(vrf_oreg_ren_il[i]),
 		   .vrf_raddr_i(vrf_raddr_il[i]),
@@ -471,7 +479,8 @@ generate
     		   .vs3_data_o(vs3_data[i]),
 		   .alu_reduction_o(alu_reduction[i]),
      		   .alu_vld_o(alu_in_vld[i]),
-     		   .alu_sew_o(alu_sew[i]),
+     		   .alu_read_sew_o(alu_read_sew[i]),
+     		   .alu_write_sew_o(alu_write_sew[i]),
      		   .alu_vld_i(alu_out_vld[i]),
      		   .alu_res_i(alu_res_reordered[i]),
      		   .ALU_mask_vector_i(alu_mask_vector[i])
@@ -561,7 +570,7 @@ endgenerate;
 	begin
 	   case(op2_sel[i][VRF_DELAY-1])
 	      0:begin
-		 case (alu_sew[lane][i])
+		 case (alu_read_sew[lane][i])
 		    0: alu_b[lane][i] = vs2_data[lane][i];
 		    1: alu_b[lane][i] = alu_b_16bit[lane][i];
 		    2: alu_b[lane][i] = alu_b_32bit[lane][i];
@@ -574,10 +583,10 @@ endgenerate;
               3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
               default: alu_b[lane][i] = vs2_data[lane][i];
            endcase // case (op2_sel[i][VRF_DELAY-1])
-	   alu_a[lane][i] = alu_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
-			    alu_sew[lane][i] == 2'b01 ? alu_a_16bit[lane][i] : alu_a_32bit[lane][i];
-	   alu_c[lane][i] = alu_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
-			    alu_sew[lane][i] == 2'b01 ? alu_c_16bit[lane][i] : alu_c_32bit[lane][i];
+	   alu_a[lane][i] = alu_read_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
+			    alu_read_sew[lane][i] == 2'b01 ? alu_a_16bit[lane][i] : alu_a_32bit[lane][i];
+	   alu_c[lane][i] = alu_read_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
+			    alu_read_sew[lane][i] == 2'b01 ? alu_c_16bit[lane][i] : alu_c_32bit[lane][i];
       end
    end
 
@@ -601,7 +610,8 @@ endgenerate;
 		  .alu_a_i(alu_a[i]),
 		  .alu_b_i(alu_b[i]),
 		  .alu_c_i(alu_c[i]),
-		  .sew_i(alu_sew[i]),
+		  .input_sew_i(alu_read_sew[i]),
+		  .output_sew_i(alu_write_sew[i]),
 		  .alu_vld_i(alu_in_vld[i]),
 		  .alu_vld_o(alu_out_vld[i]),
 		  .alu_o(alu_res[i]),
@@ -624,34 +634,34 @@ endgenerate;
       begin
 	   for (int port=0; port<W_PORTS_NUM; port++)
 	   begin
-	      if (alu_sew[lane+0][port]==2'b10)
+	      if (alu_write_sew[lane+0][port]==2'b10)
 		alu_res_reordered[lane+0][port] = {alu_res[lane+3][port][7:0], alu_res[lane+2][port][7:0],
 						   alu_res[lane+1][port][7:0], alu_res[lane+0][port][7:0]}; // take byte 0, from ALU0,1,2,3
-	      else if (alu_sew[lane+0][port]==2'b01)
+	      else if (alu_write_sew[lane+0][port]==2'b01)
 		alu_res_reordered[lane+0][port] = {2{alu_res[lane+1][port][7:0], alu_res[lane+0][port][7:0]}}; // take byte 0, from ALU0,1
 	      else
 		alu_res_reordered[lane+0][port] = {4{alu_res[lane+0][port][7:0]}}; //take byte 0 FROM ALU0
 
-	      if (alu_sew[lane+1][port]==2'b10)
+	      if (alu_write_sew[lane+1][port]==2'b10)
 		alu_res_reordered[lane+1][port] = {alu_res[lane+3][port][15:8], alu_res[lane+2][port][15:8], //take byte 1, from ALU0,1,2,3
 						   alu_res[lane+1][port][15:8], alu_res[lane+0][port][15:8]};
-	      else if (alu_sew[lane+1][port]==2'b01)
+	      else if (alu_write_sew[lane+1][port]==2'b01)
 		alu_res_reordered[lane+1][port] = {2{alu_res[lane+1][port][15:8], alu_res[lane+0][port][15:8]}}; //take byte 1, from ALU0,1
 	      else
 		alu_res_reordered[lane+1][port] = {4{alu_res[lane+1][port][7:0]}}; //take byte 0 FROM ALU1
 
-	      if (alu_sew[lane+2][port]==2'b10)
+	      if (alu_write_sew[lane+2][port]==2'b10)
 		alu_res_reordered[lane+2][port] = {alu_res[lane+3][port][23:16], alu_res[lane+2][port][23:16],//take byte 2, from ALU0,1,2,3
 						   alu_res[lane+1][port][23:16], alu_res[lane+0][port][23:16]};
-	      else if (alu_sew[lane+2][port]==2'b01)
+	      else if (alu_write_sew[lane+2][port]==2'b01)
 		alu_res_reordered[lane+2][port] = {2{alu_res[lane+3][port][7:0], alu_res[lane+2][port][7:0]}};//take byte 0, from ALU2,3
 	      else
 		alu_res_reordered[lane+2][port] = {4{alu_res[lane+2][port][7:0]}}; //take byte 0 FROM ALU2
 
-	      if (alu_sew[lane+3][port]==2'b10)
+	      if (alu_write_sew[lane+3][port]==2'b10)
 		alu_res_reordered[lane+3][port] = {alu_res[lane+3][port][31:24], alu_res[lane+2][port][31:24],//take byte 3, from ALU0,1,2,3
 					   alu_res[lane+1][port][31:24], alu_res[lane+0][port][31:24]};
-	      else if (alu_sew[lane+3][port]==2'b01)
+	      else if (alu_write_sew[lane+3][port]==2'b01)
 		alu_res_reordered[lane+3][port] = {2{alu_res[lane+3][port][15:8], alu_res[lane+2][port][15:8]}}; //take byte 1, from ALU2,3
 	      else
 		alu_res_reordered[lane+3][port] = {4{alu_res[lane+3][port][7:0]}}; //take byte 0 FROM ALU3

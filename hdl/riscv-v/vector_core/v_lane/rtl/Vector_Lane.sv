@@ -18,6 +18,7 @@ module Vector_Lane
    
     // Config and status signals
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] 			       vsew_i,
+    input logic [W_PORTS_NUM - 1 : 0][1 : 0] 			       wdata_width_i,
    
     // VRF
     input logic [R_PORTS_NUM - 1 : 0] 				       vrf_ren_i,
@@ -71,7 +72,8 @@ module Vector_Lane
     output logic [W_PORTS_NUM - 1 : 0] 				       alu_vld_o,
     output logic [W_PORTS_NUM - 1 : 0] 				       alu_reduction_o,
     // output logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       alu_reduction_data_o,
-    output logic [W_PORTS_NUM - 1 : 0][1:0] 			       alu_sew_o,
+    output logic [W_PORTS_NUM - 1 : 0][1:0] 			       alu_read_sew_o,
+    output logic [W_PORTS_NUM - 1 : 0][1:0] 			       alu_write_sew_o,
     input logic [W_PORTS_NUM - 1 : 0] 				       alu_vld_i,
     input logic [W_PORTS_NUM - 1 : 0][31:0] 			       alu_res_i,
     input logic [W_PORTS_NUM - 1 : 0] 				       ALU_mask_vector_i
@@ -154,6 +156,7 @@ module Vector_Lane
       logic [W_PORTS_NUM - 1 : 0] 							    store_load_index_valid;
       logic [W_PORTS_NUM - 1 : 0] 							    read_data_valid;
       logic [W_PORTS_NUM - 1 : 0][1 : 0] 						    sew;
+      logic [W_PORTS_NUM - 1 : 0][1 : 0] 						    wdata_width;
       
    } ALU_packet; 
 
@@ -266,7 +269,11 @@ module Vector_Lane
    
    generate
       for (genvar i=0; i<W_PORTS_NUM; i++)
-	assign alu_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].sew[i];
+	assign alu_read_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].sew[i];
+   endgenerate
+   generate
+      for (genvar i=0; i<W_PORTS_NUM; i++)
+	assign alu_write_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].wdata_width[i];
    endgenerate
    assign alu_vld_o = ALU_signals_reg[VRF_DELAY-1].read_data_valid;
    
@@ -329,6 +336,7 @@ module Vector_Lane
       ALU_signals_next[0].store_load_index_valid = store_load_index_valid_i;
       ALU_signals_next[0].read_data_valid = read_data_valid_i;
       ALU_signals_next[0].sew = vsew_i;
+      ALU_signals_next[0].wdata_width = wdata_width_i;
       
    end
 

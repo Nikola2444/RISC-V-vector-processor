@@ -8,14 +8,14 @@ use work.util_pkg.all;
 entity data_path is
   port(
     -- global synchronization ports
-    clk                 : in  std_logic;
-    ce                  : in  std_logic;
-    reset               : in  std_logic;
-    pc_reg_o            : out std_logic_vector(31 downto 0);
-    instr_ready_i       : in  std_logic;
-    data_ready_i        : in  std_logic;
+    clk           : in  std_logic;
+    ce            : in  std_logic;
+    reset         : in  std_logic;
+    pc_reg_o      : out std_logic_vector(31 downto 0);
+    instr_ready_i : in  std_logic;
+    data_ready_i  : in  std_logic;
 
-    
+
     -- instruction memory interface
     instr_mem_address_o : out std_logic_vector (31 downto 0);
     instr_mem_read_i    : in  std_logic_vector(31 downto 0);
@@ -57,9 +57,9 @@ end entity;
 architecture Behavioral of data_path is
 
   --*********  INSTRUCTION FETCH  **************
-  signal pc_reg_if_s   : std_logic_vector (31 downto 0);
-  signal pc_next_if_s  : std_logic_vector (31 downto 0);
-  signal pc_adder_if_s : std_logic_vector (31 downto 0);
+  signal pc_reg_if_s             : std_logic_vector (31 downto 0);
+  signal pc_next_if_s            : std_logic_vector (31 downto 0);
+  signal pc_adder_if_s           : std_logic_vector (31 downto 0);
   -- 
   --*********  INSTRUCTION DECODE **************
   signal pc_adder_id_s           : std_logic_vector (31 downto 0);
@@ -105,7 +105,7 @@ architecture Behavioral of data_path is
 begin
 
 
-  
+
   --***********  Sequential logic  ******************
   --Program Counter
   pc_proc : process (clk) is
@@ -134,12 +134,12 @@ begin
   begin
     if (rising_edge(clk)) then
       if (reset = '0' or (if_id_flush_i = '1' and data_ready_i = '1' and instr_ready_i = '1'))then
-        pc_reg_id_s   <= (others => '0');
-        pc_adder_id_s <= (others => '0');
+        pc_reg_id_s    <= (others => '0');
+        pc_adder_id_s  <= (others => '0');
         instr_mem_id_s <= (others => '0');
       elsif (if_id_en_i = '1' and data_ready_i = '1' and instr_ready_i = '1' and ce = '1')then
-        pc_reg_id_s   <= pc_reg_if_s;
-        pc_adder_id_s <= pc_adder_if_s;
+        pc_reg_id_s    <= pc_reg_if_s;
+        pc_adder_id_s  <= pc_adder_if_s;
         instr_mem_id_s <= instr_mem_read_i;
       end if;
     end if;
@@ -155,28 +155,29 @@ begin
         rs2_data_ex_s           <= (others => '0');
         immediate_extended_ex_s <= (others => '0');
         rd_address_ex_s         <= (others => '0');
+       
       elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1')then
         pc_adder_ex_s           <= pc_adder_id_s;
         rs1_data_ex_s           <= rs1_data_id_s;
         rs2_data_ex_s           <= rs2_data_id_s;
         immediate_extended_ex_s <= immediate_extended_id_s;
         rd_address_ex_s         <= rd_address_id_s;
-
+       
       end if;
     end if;
   end process;
 
   --ID/VECTOR_CORE
-  process(clk)is
-  begin
-    if (rising_edge(clk))then
-      if (reset = '0')then
-        instr_mem_ex_s <= (others => '0');
-      elsif (not(vector_stall_i) = '1' and ce = '1') then
-        instr_mem_ex_s <= instr_mem_id_s;
-      end if;
-    end if;
-  end process;
+   process(clk)is
+   begin
+     if (rising_edge(clk))then
+       if (reset = '0' or (id_ex_flush_i = '1' or data_ready_i = '0' or instr_ready_i = '0'))then
+         instr_mem_ex_s <= (others => '0');
+       elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1')then
+         instr_mem_ex_s <= instr_mem_id_s;
+       end if;
+     end if;
+   end process;
   --EX/MEM register
   ex_mem : process (clk) is
   begin

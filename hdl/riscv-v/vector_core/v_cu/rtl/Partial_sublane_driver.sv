@@ -17,6 +17,7 @@ module Partial_sublane_driver
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
     input logic [1 : 0] vsew_i,
     output logic [1 : 0] vsew_o,
+    output logic [1 : 0] wdata_width_o,
     // Control Flow signals
     input logic [$clog2(INST_TYPE_NUM) - 1 : 0] inst_type_i,                    // 0 - normal, 1 - reduction, 2 - load, ...
     
@@ -188,6 +189,7 @@ logic [5 : 0] inst_type_comp;
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
 assign vsew_o = dp0_reg.sew;
+assign wdata_width_o = element_width_write;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;

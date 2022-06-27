@@ -10,10 +10,12 @@ module alu #
     // Interfaces towards DSPs in ALU. If alu_en_32bit_mul_i==1
     // then only [0] interface is used
     input [PARALLEL_IF_NUM-1:0][8:0] 		     alu_opmode_i,
+
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] 	     alu_a_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] 	     alu_b_i,
     input [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] 	     alu_c_i,
-    input [PARALLEL_IF_NUM-1:0][1:0] 		     sew_i,
+    input [PARALLEL_IF_NUM-1:0][1:0] 		     input_sew_i,
+    input [PARALLEL_IF_NUM-1:0][1:0] 		     output_sew_i,
     input [PARALLEL_IF_NUM-1:0] 		     alu_reduction_i,
     output logic [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
     input [PARALLEL_IF_NUM-1:0] 		     alu_vld_i,
@@ -40,7 +42,8 @@ module alu #
     .clk		(clk),
     .reduction_op_i     (alu_reduction_i[0]),
     .rstn		(rstn),
-    .sew_i		(sew_i[0]),
+    .input_sew_i	(input_sew_i[0]),
+    .output_sew_i	(output_sew_i[0]),
     .alu_opmode_i	(alu_opmode_i[0][8:0]),
     .op1_i		(alu_a_i[0]),
     .op2_i		(alu_b_i[0]),
@@ -57,7 +60,8 @@ module alu #
     .clk		(clk),
     .reduction_op_i     (alu_reduction_i[1]),
     .rstn		(rstn),
-    .sew_i		(sew_i[1]),
+    .input_sew_i	(input_sew_i[1]),
+    .output_sew_i	(output_sew_i[1]),
     .alu_opmode_i	(alu_opmode_i[1][8:0]),
     .op1_i		(alu_a_i[1]),
     .op2_i		(alu_b_i[1]),
@@ -74,7 +78,8 @@ module alu #
     // Inputs
     .clk		(clk),
     .rstn		(rstn),
-    .sew_i		(sew_i[2]),
+    .input_sew_i	(input_sew_i[2]),
+    .output_sew_i	(output_sew_i[2]),
     .reduction_op_i     (alu_reduction_i[2]),
     .alu_opmode_i	(alu_opmode_i[2][8:0]),
     .op1_i		(alu_a_i[2]),
@@ -91,7 +96,8 @@ module alu #
     // Inputs
     .clk		(clk),
     .rstn		(rstn),
-    .sew_i		(sew_i[3]),
+    .input_sew_i	(input_sew_i[3]),
+    .output_sew_i	(output_sew_i[3]),
     .reduction_op_i     (alu_reduction_i[3]),
     .alu_opmode_i	(alu_opmode_i[3][8:0]),
     .op1_i		(alu_a_i[3]),
@@ -104,7 +110,9 @@ module alu #
       for (int i=0; i<4; i++)
 	alu_mask_vector_o[i] = alu_out[i][0];
    end
+   assign alu_o=alu_out;
 
+/* -----\/----- EXCLUDED -----\/-----
    always_comb
    begin
       for (int i=0; i<4;i++)
@@ -127,6 +135,7 @@ module alu #
 	 end
       end
    end
+ -----/\----- EXCLUDED -----/\----- */
    
 endmodule
 

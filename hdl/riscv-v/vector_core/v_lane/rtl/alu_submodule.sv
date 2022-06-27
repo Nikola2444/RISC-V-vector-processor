@@ -6,8 +6,8 @@ module alu_submodule #
    // Outputs
    alu_vld_o, result_o,
    // Inputs
-   clk, rstn, sew_i, alu_opmode_i, op1_i, op2_i, op3_i, alu_vld_i,
-   reduction_op_i
+   clk, rstn, input_sew_i, output_sew_i, alu_opmode_i, op1_i, op2_i,
+   op3_i, alu_vld_i, reduction_op_i
    );
    import typedef_pkg::*;
    localparam LP_MAX_PIPE_STAGES=4;
@@ -31,7 +31,8 @@ module alu_submodule #
 
    input clk;
    input rstn;
-   input [1:0] sew_i;
+   input [1:0]  input_sew_i;
+   input [1:0]  output_sew_i;
    input [ 8:0] alu_opmode_i;
    input [31:0] op1_i;
    input [31:0] op2_i;
@@ -85,7 +86,8 @@ module alu_submodule #
    logic [31:0] 		  op2_reg;
    logic [31:0] 		  op2_reg2;
    logic [1:0][31:0] 		  op3_reg;
-   logic [1:0]			  sew_reg;
+   logic [1:0]			  input_sew_reg;
+   logic [1:0]			  output_sew_reg;
    logic [2:0][8:0] 		  alu_opmode_reg;
    logic [3:0] 			  reduction_op_reg;                      
    logic [15:0] 		  dsp_A_upper_bits;
@@ -137,7 +139,8 @@ module alu_submodule #
 	 op3_reg <= '{default:'0};
 	 alu_opmode_reg <='{default:'0};
 	 comp_out_reg <= 'h0;
-	 sew_reg <= 2'b0;
+	 input_sew_reg <= 2'b0;
+	 output_sew_reg <= 2'b0;
 	 reduction_op_reg <= 'h0;
       end
       else
@@ -187,7 +190,8 @@ module alu_submodule #
 
 	 alu_opmode_reg[2] <= alu_opmode_reg[1];
 	 comp_out_reg <= {comp_out_reg[0], comp_out_next};
-	 sew_reg <= sew_i;
+	 input_sew_reg <= input_sew_i;
+	 output_sew_reg <= output_sew_i;
       end
    end
 
@@ -197,18 +201,18 @@ module alu_submodule #
       op1_reg_sign_ext = op1_reg;
       if (alu_opmode_reg[0][7])
       begin
-	 if (sew_reg==2'b00)
+	 if (input_sew_reg==2'b00)
 	   op1_reg_sign_ext = {{24{op1_reg[7]}}, op1_reg[7:0]};
-	 if (sew_reg==2'b01)
+	 if (input_sew_reg==2'b01)
 	   op1_reg_sign_ext = {{16{op1_reg[15]}}, op1_reg[15:0]};
       end
       
       op2_reg_sign_ext = op2_reg;
       if (alu_opmode_reg[0][7])
       begin
-	 if (sew_reg==2'b00)
+	 if (input_sew_reg==2'b00)
 	   op2_reg_sign_ext = {{24{op2_reg[7]}}, op2_reg[7:0]};
-	 if (sew_reg==2'b01)
+	 if (input_sew_reg==2'b01)
 	   op2_reg_sign_ext = {{16{op2_reg[15]}}, op2_reg[15:0]};
       end      
    end
@@ -267,7 +271,7 @@ module alu_submodule #
    begin
       if (res_vld_reg[2])begin
 	 result_reg = alu_opmode_reg[2][6:5]==2'b01 && !reduction_op_i ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
-	 if (sew_reg == 2'b00)
+	 if (output_sew_reg == 2'b00)
 	 begin
 	    if (alu_opmode_reg[2][6:5]==2'b10) // take the value from dsp
 	    begin
@@ -275,7 +279,7 @@ module alu_submodule #
 		 result_reg[7:0] = dsp_P[15:8];
 	    end	 
 	 end
-	 if (sew_reg == 2'b01)
+	 if (output_sew_reg == 2'b01)
 	 begin	 
 	    if (alu_opmode_reg[2][6:5]==2'b10)
 	    begin

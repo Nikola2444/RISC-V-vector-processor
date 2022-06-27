@@ -14,6 +14,8 @@ module Driver_vlane_interconnect
     // Config signals
     output logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew_i,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] vsew_o,
+    input logic [W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_i,
+    output logic [VLANE_NUM-1:0][W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_o,
     
     // Read data valid for ALU
     input logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid_i,
@@ -105,6 +107,7 @@ typedef struct packed
 {
     // Config signals
     logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew;
+    logic [W_PORTS_NUM - 1 : 0][1 : 0] wdata_width;
 
     // Read data valid for ALU
     logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] read_data_valid;
@@ -157,6 +160,7 @@ input_layer input_reg, input_next;
 
 // Config signals
 assign input_next.vsew = vsew_i;
+assign input_next.wdata_width = wdata_width_i;
 
 // Read data valid for ALU
 assign input_next.read_data_valid = read_data_valid_i;
@@ -209,6 +213,8 @@ generate
         assign alu_en_32bit_mul_o[i] = input_reg.alu_en_32bit_mul;
         assign load_data_o[i] = input_reg.load_data[i];
         assign vsew_o[i] = input_reg.vsew;
+        assign wdata_width_o[i] = input_reg.wdata_width;
+
     
         for(genvar j = 0; j < W_PORTS_NUM; j++) begin
             assign read_data_valid_o[i][j] = input_reg.read_data_valid[j][i];

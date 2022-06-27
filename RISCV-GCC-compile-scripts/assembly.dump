@@ -16,18 +16,19 @@ Disassembly of section .text:
   20:	20000413          	li	s0,512
   24:	7d000493          	li	s1,2000
   28:	01000313          	li	t1,16
-  2c:	02000613          	li	a2,32
+  2c:	04000613          	li	a2,64
   30:	04000693          	li	a3,64
-  34:	02838457          	vadd.vv	v8,v8,v7
-  38:	000572d7          	vsetvli	t0,a0,e8,m1,tu,mu,d1
-  3c:	0203e007          	vle32.v	v0,(t2)
-  40:	ee012257          	vwmul.vv	v4,v0,v2
-  44:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
-  48:	02432357          	vredsum.vs	v6,v4,v6
-  4c:	40550533          	sub	a0,a0,t0
-  50:	005383b3          	add	t2,t2,t0
-  54:	00d00e33          	add	t3,zero,a3
-  58:	00000eb3          	add	t4,zero,zero
-  5c:	00000013          	nop
+  34:	00c00533          	add	a0,zero,a2
+  38:	96806457          	vmul.vx	v8,v8,zero
+  3c:	000572d7          	vsetvli	t0,a0,e8,m1,tu,mu,d1
+  40:	02038007          	vle8.v	v0,(t2)
+  44:	ee012257          	vwmul.vv	v4,v0,v2
+  48:	005572d7          	vsetvli	t0,a0,e16,m2,tu,mu,d1
+  4c:	02432357          	vredsum.vs	v6,v4,v6
+  50:	40550533          	sub	a0,a0,t0
+  54:	005383b3          	add	t2,t2,t0
+  58:	00d00e33          	add	t3,zero,a3
+  5c:	00000eb3          	add	t4,zero,zero
   60:	00000013          	nop
   64:	00000013          	nop
+  68:	00000013          	nop

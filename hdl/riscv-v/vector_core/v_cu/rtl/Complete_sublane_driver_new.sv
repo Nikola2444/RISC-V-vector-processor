@@ -17,6 +17,7 @@ module Complete_sublane_driver_new
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
     input logic [1 : 0] vsew_i,
     output logic [1 : 0] vsew_o,
+    output logic [1 : 0] wdata_width_o,
     input logic [2 : 0] vlmul_i,                                                // NEW SIGNAL
     
     // Control Flow signals
@@ -260,6 +261,7 @@ logic [6 : 0] inst_type_comp;
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
 assign vrf_waddr_o = (current_state == SLIDE) ? slide_waddr : normal_waddr;
+assign wdata_width_o = element_width_write;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
 assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;

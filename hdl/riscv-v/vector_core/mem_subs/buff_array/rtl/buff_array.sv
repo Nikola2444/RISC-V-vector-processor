@@ -566,7 +566,7 @@ module buff_array #(
       lbuff_word_cnt <= 0;
     end
     else if(load_cfg_update_i) begin
-      lbuff_word_cnt = cfg_vl_i;
+      lbuff_word_cnt <= cfg_vl_i;
     end
   end
   assign ldbuff_byte_cnt     = lbuff_word_cnt << cfg_load_data_sew_i[1:0];

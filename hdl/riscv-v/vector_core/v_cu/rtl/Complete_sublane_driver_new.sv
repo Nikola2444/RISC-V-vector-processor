@@ -184,6 +184,7 @@ typedef struct packed
 } dataPacket0;
 
 dataPacket0 dp0_reg, dp0_next;
+logic waddr_cnt_en;
 // bwen //
 logic [3 : 0] shift4_reg, shift4_next;
 logic [1 : 0] shift2_reg, shift2_next;

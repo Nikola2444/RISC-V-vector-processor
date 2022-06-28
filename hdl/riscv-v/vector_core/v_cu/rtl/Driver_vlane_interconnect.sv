@@ -12,7 +12,7 @@ module Driver_vlane_interconnect
     input rst_i,
     
     // Config signals
-    output logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew_i,
+    input logic [W_PORTS_NUM - 1 : 0][1 : 0] vsew_i,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] vsew_o,
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_i,
     output logic [VLANE_NUM-1:0][W_PORTS_NUM - 1 : 0][1 : 0] wdata_width_o,

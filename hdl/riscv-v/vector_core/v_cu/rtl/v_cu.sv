@@ -175,7 +175,7 @@ module v_cu #
    logic [$clog2(W_PORTS_NUM)-1:0]  released_port;
    logic [W_PORTS_NUM-1:0][5:0]     vd_instr_in_progress;
    logic [W_PORTS_NUM-1:0] 	    dependancy_issue;
-   logic [W_PORTS_NUM-1:0][3:0]     dependancy_issue_cnt;
+   logic [W_PORTS_NUM-1:0][4:0]     dependancy_issue_cnt;
 
 
    always@(posedge clk)
@@ -532,7 +532,7 @@ module v_cu #
       if (!rstn)
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++) 
-	   dependancy_issue_cnt[i] <= 9; //depenancy delay
+	   dependancy_issue_cnt[i] <= 11; //depenancy delay
       end
       else
       begin
@@ -540,7 +540,7 @@ module v_cu #
 	   if (vd_instr_in_progress[i][5] != 1'b1)
 	     dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
 	   else 
-	     dependancy_issue_cnt[i]<=9;
+	     dependancy_issue_cnt[i]<=11;
       end
    end
 

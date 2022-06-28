@@ -137,7 +137,7 @@ module vrf #
 
    always @(posedge clk2)
    begin
-      if(!rstn || (MULTIPUMP_READ < 2) || (MULTIPUMP_WRITE < 2))
+      if(!rstn)
       begin
 	 multipump_sel_reg <=0;
       end
@@ -239,15 +239,12 @@ module vrf #
       //xoring input data with data read from LVT brams
       for (genvar i=0; i<W_PORTS_NUM; i+=MULTIPUMP_WRITE )	 
       begin
-	 if (MULTIPUMP_WRITE > 1)
-	   assign lvt_write_xor_in[i/MULTIPUMP_WRITE][i/MULTIPUMP_WRITE]= multipump_sel_reg == 0 ? din_reg[i][LP_INPUT_REG_NUM-1] : din_reg[i+1][LP_INPUT_REG_NUM-1];
-	 else
-	   assign lvt_write_xor_in[i/MULTIPUMP_WRITE][i/MULTIPUMP_WRITE]= din_reg[i][LP_INPUT_REG_NUM-1];
+	 assign lvt_write_xor_in[i/2][i/2]= multipump_sel_reg == 0 ? din_reg[i][LP_INPUT_REG_NUM-1] : din_reg[i+1][LP_INPUT_REG_NUM-1];
 	 for (genvar j=0; j<LP_BANK_NUM;j++)
 	 begin
 	    for (genvar k = 0;k<LP_LVT_BRAM_PER_BANK;k++)
 	      if (j!=(i/MULTIPUMP_WRITE) && i==lvt_raddr_array[j][k])//TODO: enable mulitpumpa
-		assign lvt_write_xor_in[i/MULTIPUMP_WRITE][j] = lvt_ram_dout[j][k];
+		assign lvt_write_xor_in[i/2][j] = lvt_ram_dout[j][k];
 	 end
       end
 

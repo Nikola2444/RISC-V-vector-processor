@@ -41,7 +41,7 @@
    logic [4:0] 	v_instr_vs2;
    logic [4:0] 	v_instr_vd;
 
-   assign v_instr_vs1 = instr_vld_i[2] || instr_vld_i[3] ? vector_instr_i[11:7] : vector_instr_i[19:15];
+   assign v_instr_vs1 = instr_vld_i[2] || instr_vld_i[3] ? vector_instr_i[11:7] :  instr_vld_i[10] || instr_vld_i[7] || instr_vld_i[9] ? vector_instr_i[24:20] : vector_instr_i[19:15];
    assign v_instr_vs2 = vector_instr_i[24:20];
    assign v_instr_vd = vector_instr_i[11:7];
    

@@ -225,14 +225,23 @@ assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.w
 
 /////////////////////////////////////////////////////////////////////////////////
 always_comb begin
+   
     if(current_state == REDUCTION_WRITE_MODE) begin
         for(int i = 4; i < VLANE_NUM; i++) begin
             bwen[i] = 0;
-        end
+        end       
+       bwen[1] = 0;
+       bwen[2] = 0;
+       bwen[3] = 0;
        bwen[0] = {3'b0, bwen_mux[0]};
-       bwen[1] = {3'b0, bwen_mux[0]};
-       bwen[2] = {3'b0, bwen_mux[0]};
-       bwen[3] = {3'b0, bwen_mux[0]};
+       if (dp0_reg.sew==2'b01)
+	 bwen[1] = {3'b0, bwen_mux[0]};
+       else if (dp0_reg.sew==2'b10)
+       begin
+	  bwen[1] = {3'b0, bwen_mux[0]};
+	  bwen[2] = {3'b0, bwen_mux[0]};
+	  bwen[3] = {3'b0, bwen_mux[0]};
+       end
     end
     else begin
         for(int i = 0; i < VLANE_NUM; i++) begin

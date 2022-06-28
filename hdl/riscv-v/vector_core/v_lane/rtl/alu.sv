@@ -110,19 +110,21 @@ module alu #
       for (int i=0; i<4; i++)
 	alu_mask_vector_o[i] = alu_out[i][0];
    end
+
    assign alu_o=alu_out;
+
 
 /* -----\/----- EXCLUDED -----\/-----
    always_comb
    begin
       for (int i=0; i<4;i++)
       begin
-	 if (sew_i==2'b00)
+	 if (output_sew_i==2'b00)
 	   for (int j=0; j<4; j++)
 	   begin
 	      alu_o[i][j*8 +: 8] = alu_out[i][7:0];
 	   end	
-	 else if (sew_i==2'b01)
+	 else if (output_sew_i==2'b01)
 	 begin
 	    for (int j=0; j<2; j++)
 	    begin
@@ -136,6 +138,7 @@ module alu #
       end
    end
  -----/\----- EXCLUDED -----/\----- */
+
    
 endmodule
 

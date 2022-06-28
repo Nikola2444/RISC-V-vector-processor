@@ -29,7 +29,7 @@ begin
    -- synchronous write, reset
    reg_bank_write : process (clk) is
    begin
-      if (rising_edge(clk))then
+      if (falling_edge(clk))then
          if (reset = '0')then
             reg_bank_s <= (others => (others => '0'));
          elsif (rd_we_i = '1') then

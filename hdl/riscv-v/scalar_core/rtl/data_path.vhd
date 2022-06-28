@@ -29,7 +29,7 @@ entity data_path is
     v_instruction_o    : out std_logic_vector (31 downto 0);
     rs1_o              : out std_logic_vector(31 downto 0);
     rs2_o              : out std_logic_vector(31 downto 0);
-    vector_stall_i     :     std_logic;
+    vector_stall_i     : in  std_logic;
     -- control signals that are forwarded from data_path
     mem_to_reg_i       : in  std_logic_vector(1 downto 0);
     load_type_i        : in  std_logic_vector(2 downto 0);
@@ -156,7 +156,7 @@ begin
         immediate_extended_ex_s <= (others => '0');
         rd_address_ex_s         <= (others => '0');
        
-      elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1')then
+      elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1' and vector_stall_i='0')then
         pc_adder_ex_s           <= pc_adder_id_s;
         rs1_data_ex_s           <= rs1_data_id_s;
         rs2_data_ex_s           <= rs2_data_id_s;
@@ -173,7 +173,7 @@ begin
      if (rising_edge(clk))then
        if (reset = '0' or (id_ex_flush_i = '1' or data_ready_i = '0' or instr_ready_i = '0'))then
          instr_mem_ex_s <= (others => '0');
-       elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1')then
+       elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1' and vector_stall_i='0')then
          instr_mem_ex_s <= instr_mem_id_s;
        end if;
      end if;

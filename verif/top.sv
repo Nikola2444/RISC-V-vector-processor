@@ -150,14 +150,19 @@ module riscv_v_verif_top;
       ce <= 1'b1;
       
    end
-
+   logic[31:0] LVT0_xor_LVT1;
+   logic [31:0] LVT1_in;
+   logic [31:0] LVT0_out;
+   assign LVT0_out = DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.doutb;
+   assign LVT1_in = DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.dina;
+   assign LVT0_xor_LVT1 = LVT0_out ^ LVT1_in;
    //Initialize VRF
    initial
    begin
       //init DDR
       read_instr_from_dump_file(assembly_file_path, ddr_mem);
       for (int i=2048; i < `DDR_DEPTH; i++)
-	ddr_mem[i] = i*10;
+	ddr_mem[i] = i-2048;
       //init lvt_rams
 
       vrf_vlane_col = 0;

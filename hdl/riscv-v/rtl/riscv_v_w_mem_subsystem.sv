@@ -4,7 +4,7 @@
 module riscv_v_w_mem_subsystem #
   (  
      parameter integer VLEN = 4096,
-     parameter integer V_LANES = 8,
+     parameter integer V_LANES = 4,
      parameter integer CHAINING = 4,
      parameter integer C_BLOCK_SIZE = 64,
      parameter integer C_LVL1_CACHE_SIZE = (1024*1),
@@ -22,6 +22,15 @@ module riscv_v_w_mem_subsystem #
   `endif
   `ifdef INCLUDE_DBG_SIGNALS
   lane0_load_dvalid,lane0_load_data,lane0_store_data,lane0_store_dvalid,
+  vrf0_wdata0,vrf0_wdata1,vrf0_wdata2,vrf0_wdata3,
+  vrf0_waddr0,vrf0_waddr1,vrf0_waddr2,vrf0_waddr3,
+  vrf0_bwen0,vrf0_bwen1,vrf0_bwen2,vrf0_bwen3,
+  vrf0_rdata0,vrf0_rdata1,vrf0_rdata2,vrf0_rdata3,vrf0_rdata4,vrf0_rdata5,vrf0_rdata6,vrf0_rdata7,
+  vrf0_raddr0,vrf0_raddr1,vrf0_raddr2,vrf0_raddr3,vrf0_raddr4,vrf0_raddr5,vrf0_raddr6,vrf0_raddr7,
+  vrf0_ren,vrf0_oreg_ren,
+  vlane0_st_data0,vlane0_st_data1,vlane0_st_data2,vlane0_st_data3,vlane0_st_drvr,
+  vlane0_store_data_out2,sew,lmul,vl,vlane0_store_data_mux2_4,vlane0_store_data_mux_sel2,
+  vlane0_read_data_mux4,vlane0_read_data_prep_reg,
   `endif
   /*AUTOARG*/
 	// Outputs
@@ -157,21 +166,119 @@ module riscv_v_w_mem_subsystem #
     `endif
 
     `ifdef INCLUDE_DBG_SIGNALS
-    output logic [31:0] 			     lane0_store_data;           // will be just a way to see from sogtware where the PC is currently
-    output logic         			     lane0_store_dvalid;           // will be just a way to see from sogtware where the PC is currently
-    output logic [31:0] 			     lane0_load_data;           // will be just a way to see from sogtware where the PC is currently
-    output logic         			     lane0_load_dvalid;           // will be just a way to see from sogtware where the PC is currently
+    output logic [31:0] 			     lane0_store_data; 
+    output logic         			     lane0_store_dvalid;
+    output logic [31:0] 			     lane0_load_data;  
+    output logic         			     lane0_load_dvalid;
+
+
+    output logic [9:0]	       vrf0_raddr0; 
+    output logic [9:0]	       vrf0_raddr1; 
+    output logic [9:0]	       vrf0_raddr2; 
+    output logic [9:0]	       vrf0_raddr3; 
+    output logic [9:0]	       vrf0_raddr4; 
+    output logic [9:0]	       vrf0_raddr5; 
+    output logic [9:0]	       vrf0_raddr6; 
+    output logic [9:0]	       vrf0_raddr7; 
+    output logic         			 vrf0_ren;
+    output logic         			 vrf0_oreg_ren;
+    output logic [31:0]        vrf0_rdata0;  
+    output logic [31:0]        vrf0_rdata1;  
+    output logic [31:0]        vrf0_rdata2;  
+    output logic [31:0]        vrf0_rdata3;  
+    output logic [31:0]        vrf0_rdata4;  
+    output logic [31:0]        vrf0_rdata5;  
+    output logic [31:0]        vrf0_rdata6;  
+    output logic [31:0]        vrf0_rdata7;  
+
+    output logic [9:0]        vrf0_waddr0;
+    output logic [9:0]        vrf0_waddr1;
+    output logic [9:0]        vrf0_waddr2;
+    output logic [9:0]        vrf0_waddr3;
+    output logic [3:0]        vrf0_bwen0;
+    output logic [3:0]        vrf0_bwen1;
+    output logic [3:0]        vrf0_bwen2;
+    output logic [3:0]        vrf0_bwen3;
+    output logic [31:0]       vrf0_wdata0;
+    output logic [31:0]       vrf0_wdata1;
+    output logic [31:0]       vrf0_wdata2;
+    output logic [31:0]       vrf0_wdata3;
+    output logic [31:0]       vlane0_st_data0;
+    output logic [31:0]       vlane0_st_data1;
+    output logic [31:0]       vlane0_st_data2;
+    output logic [31:0]       vlane0_st_data3;
+    output logic [1:0]        vlane0_st_drvr;
+    output logic [31:0]       vlane0_store_data_out2;
+    output logic [31:0]       vlane0_store_data_mux2_4;
+    output logic [2:0]        vlane0_store_data_mux_sel2;
+    output logic [31:0]       vlane0_read_data_mux4;
+    output logic [95:0]       vlane0_read_data_prep_reg;
+
+    output logic [2:0]        sew;
+    output logic [2:0]        lmul;
+    output logic [31:0]       vl;
+    
 
     assign lane0_store_data   = riscv_v_inst.vector_core_inst.mcu_store_data[0];
     assign lane0_store_dvalid = riscv_v_inst.vector_core_inst.vlane_mcu_store_dvalid;
     assign lane0_load_data    = riscv_v_inst.vector_core_inst.mcu_load_data[0];
     assign lane0_load_dvalid  = riscv_v_inst.vector_core_inst.vlane_load_dvalid;
+
+    assign vrf0_raddr0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[0];
+    assign vrf0_raddr1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[1];
+    assign vrf0_raddr2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[2];
+    assign vrf0_raddr3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[3];
+    assign vrf0_raddr4     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[4];
+    assign vrf0_raddr5     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[5];
+    assign vrf0_raddr6     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[6];
+    assign vrf0_raddr7     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[7];
+    assign vrf0_ren       = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_ren_i;
+    assign vrf0_oreg_ren  = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_oreg_ren_i;
+    assign vrf0_rdata0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[0];
+    assign vrf0_rdata1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[1];
+    assign vrf0_rdata2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[2];
+    assign vrf0_rdata3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[3];
+    assign vrf0_rdata4     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[4];
+    assign vrf0_rdata5     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[5];
+    assign vrf0_rdata6     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[6];
+    assign vrf0_rdata7     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[7];
+
+    assign vrf0_waddr0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[0];
+    assign vrf0_waddr1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[1];
+    assign vrf0_waddr2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[2];
+    assign vrf0_waddr3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[3];
+    assign vrf0_bwen0      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[0];
+    assign vrf0_bwen1      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[1];
+    assign vrf0_bwen2      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[2];
+    assign vrf0_bwen3      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[3];
+    assign vrf0_wdata0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[0];
+    assign vrf0_wdata1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[1];
+    assign vrf0_wdata2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[2];
+    assign vrf0_wdata3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[3];
+
+    assign vlane0_st_data0   = riscv_v_inst.vector_core_inst.vlane_store_data[0][0];
+    assign vlane0_st_data1   = riscv_v_inst.vector_core_inst.vlane_store_data[0][1];
+    assign vlane0_st_data2   = riscv_v_inst.vector_core_inst.vlane_store_data[0][2];
+    assign vlane0_st_data3   = riscv_v_inst.vector_core_inst.vlane_store_data[0][3];
+    assign vlane0_st_drvr   = riscv_v_inst.vector_core_inst.vlane_store_driver_reg;
+
+    assign vlane0_store_data_out2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_o[2];
+    assign vlane0_store_data_mux2_4   = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_mux[2][4];
+    assign vlane0_store_data_mux_sel2 = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_mux_sel[2];
+    assign vlane0_read_data_mux4      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.read_data_mux[4];
+    assign vlane0_read_data_prep_reg  = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.read_data_prep_reg[4];
+
+    assign vl   = riscv_v_inst.vector_core_inst.v_cu_inst.vl_o;
+    assign sew  = riscv_v_inst.vector_core_inst.v_cu_inst.sew_o;
+    assign lmul = riscv_v_inst.vector_core_inst.v_cu_inst.lmul_o;
+   
     `endif
 
     `ifdef INCLUDE_AXIL_IF 
     logic 				         ce ; // will be clock enable to start/stop processor
     logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
     logic [31:0] 			     pc_reg; // will be just a way to see from sogtware where the PC is currently
+
     `endif
 
    // SCALAR CACHE <=> SCALAR AXI FULL CONTROLLER

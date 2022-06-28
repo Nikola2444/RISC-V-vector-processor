@@ -28,9 +28,9 @@ module Vector_Lane
     input logic [W_PORTS_NUM - 1 : 0][3 : 0] 			       vrf_bwen_i,
    
     // Options for write data and slide-related signals
-    input logic [31 : 0] 					       load_data_i, // UPDATED
-    input logic [31 : 0] 					       slide_data_i, // UPDATED
-    output logic [31 : 0] 					       slide_data_o,
+    input logic  [31 : 0] 					       load_data_i, // UPDATED
+    input logic  [31 : 0] 					       slide_data_i, // UPDATED
+    output logic [31 : 0] 					     slide_data_o,
    
     // Vector mask register file
     input logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_i,
@@ -84,7 +84,7 @@ module Vector_Lane
    
    // Loacal parameters //
      ////////////////////////////////////////////////
-     localparam VRF_DELAY = 3;
+   localparam VRF_DELAY = 3;
    localparam VMRF_DELAY = 2;
    localparam SLIDE_PORT_ID = 1;
    ////////////////////////////////////////////////

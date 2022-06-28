@@ -86,18 +86,18 @@ make_wrapper -files [get_files /home/fouste/RISC-V-vector-processor/scripts/resu
 add_files -norecurse /home/fouste/RISC-V-vector-processor/scripts/result/RISCV_AXI_system/RISCV_V_AXI_project.gen/sources_1/bd/riscv_v_axi_bd/hdl/riscv_v_axi_bd_wrapper.v
 
 
-launch_runs synth_1 -jobs 4
+#launch_runs synth_1 -jobs 4
 
-launch_runs impl_1 -to_step write_bitstream -jobs 4
+#launch_runs impl_1 -to_step write_bitstream -jobs 4
 
 #wait on implementation
-wait_on_run impl_1
+#wait_on_run impl_1
 
-puts "* Synthesis & Implementation Finished *"
+#puts "* Synthesis & Implementation Finished *"
 
-update_compile_order -fileset sources_1
+#update_compile_order -fileset sources_1
 
-write_hw_platform -fixed -include_bit -force -file /home/fouste/RISC-V-vector-processor/scripts/release/RISCV_AXI_system/riscv_v_axi_bd_wrapper.xsa
+#write_hw_platform -fixed -include_bit -force -file /home/fouste/RISC-V-vector-processor/scripts/release/RISCV_AXI_system/riscv_v_axi_bd_wrapper.xsa
 
 
 

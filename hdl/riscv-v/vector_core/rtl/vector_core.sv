@@ -4,7 +4,7 @@ module vector_core #
    parameter R_PORTS_NUM = 8,
    parameter W_PORTS_NUM = 4,
    parameter MULTIPUMP_WRITE = 2,
-   parameter MULTIPUMP_READ = 2,
+   parameter MULTIPUMP_READ  = 2,
    parameter MEM_WIDTH =32,
    parameter C_M_AXI_ADDR_WIDTH       = 32,
    parameter C_M_AXI_DATA_WIDTH       = 32,
@@ -137,7 +137,7 @@ module vector_core #
    logic 					vlane_load_rdy       ;
    logic 					vlane_load_last      ;
    logic 					vlane_load_dvalid    ;
-   logic[1:0] 					vlane_store_driver;
+   logic [1:0] 					vlane_store_driver;
    logic [1:0] 					vlane_store_driver_reg;
    logic [1:0] 					vlane_idx_driver_reg;
    logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 	vlane_store_dvalid;
@@ -342,9 +342,9 @@ module vector_core #
       for (int i=0;i<VLANE_NUM;i++)
       begin
 	 if (vlane_store_dvalid[i][vlane_store_driver_reg] == 1'b0)
-	   vlane_mcu_store_dvalid <= 1'b0;
+	   vlane_mcu_store_dvalid = 1'b0;
 	 else
-	   vlane_mcu_store_dvalid <= 1'b1;
+	   vlane_mcu_store_dvalid = 1'b1;
       end
    end
    
@@ -353,9 +353,9 @@ module vector_core #
    begin
       for(int i=0;i<VLANE_NUM;i++) begin
          if (vlane_store_load_ivalid[i][vlane_idx_driver_reg] == 1'b0)
-           vlane_mcu_idx_ivalid <= 1'b0;
+           vlane_mcu_idx_ivalid = 1'b0;
          else
-           vlane_mcu_idx_ivalid <= 1'b1;
+           vlane_mcu_idx_ivalid = 1'b1;
       end
    end
 

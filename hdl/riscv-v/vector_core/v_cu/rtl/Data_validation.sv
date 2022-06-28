@@ -36,7 +36,7 @@ always_comb begin
         end
     end
     
-    valid_o <= ((base_counter == div) ? last_valid : {VLANE_NUM{1'b1}}) & {VLANE_NUM{shift_en_i}};
+    valid_o = ((base_counter == div) ? last_valid : {VLANE_NUM{1'b1}}) & {VLANE_NUM{shift_en_i}};
 end
 
 always_ff@(posedge clk_i) begin

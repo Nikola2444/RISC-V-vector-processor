@@ -161,8 +161,8 @@ module riscv_v_verif_top;
    begin
       //init DDR
       read_instr_from_dump_file(assembly_file_path, ddr_mem);
-      for (int i=2048; i < `DDR_DEPTH; i++)
-	ddr_mem[i] = i-2048;
+      for (int i=256; i < `DDR_DEPTH; i++)
+	ddr_mem[i] = i-256;
       //init lvt_rams
 
       vrf_vlane_col = 0;

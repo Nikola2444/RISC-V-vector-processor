@@ -21,32 +21,19 @@ loop4:
 		
 		loop2:
 			add x10, x0, x12			# x10 = M
-			# slli x15, x11, 2 			# Needed in case of 32-bit data
-			# slli x15, x11, 1 			# Needed in case of 16-bit data
 			vsetvli x5, x10, e16, m2	# 16-bit data
 			vmul.vx v6, v6, x0			# Initializing v6 with zeros
 			
 			loop1:
-                                vsetvli x5, x10, e8, m1		# 8-bit data	
-	                        vle8.v v0, (x7)  			# Load a vector form the first matrix
-				vle8.v v2, (x8) 		# Load a vector from the second matrix, if 16-bit or 32-bit data is used, then instead of x11 x15 should be used
+				vsetvli x5, x10, e8, m1		# 8-bit data	
+				vle8.v v0, (x7)  			# Load a vector form the first matrix
+				vle8.v v2, (x8) 			# Load a vector from the second matrix, if 16-bit or 32-bit data is used, then instead of x11 x15 should be used
 				vwmul.vv v4, v0, v2   		# Multiply two vectors
 				vsetvli x5, x10, e16, m2 	# 16-bit data
 				vredsum.vs v6, v4, v6		# Sum reduction
 				sub x10, x10, x5			# Calculate how many elements are left to process
-				# slli x5, x5, 2 			# Needed if 32-bit date used
-				# slli x5, x5, 1 			# Needed if 16-bit date used
 				add x7, x7, x5 				# Increment pointer for X
-				add x28, x0, x13			# x28 = P
-				add x29, x0, x0				# x29 = 0
-				
-				multiply:
-					add x29, x29, x5	        # x29 += x5
-					addi x30, x0, 1
-					sub x28, x28, x30
-					bnez x28, multiply
-					
-				add x8, x8, x29				# Increment pointer for Y
+				add x8, x8, x5				# Increment pointer for Y
 				bgtz x10, loop1				# Checks if x6 is zero. It should check if x6 is less than zero	
 			
 			vsetvli x16, x11, e16, m2	# To get the proper vector length

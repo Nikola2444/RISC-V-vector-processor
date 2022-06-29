@@ -171,9 +171,10 @@ begin
    process(clk)is
    begin
      if (rising_edge(clk))then
-       if (reset = '0' or (id_ex_flush_i = '1' or data_ready_i = '0' or instr_ready_i = '0'))then
+       --if (reset = '0' or (id_ex_flush_i = '1' or data_ready_i = '0' or instr_ready_i = '0'))then
+       if (reset = '0' or ((vector_stall_i='0' and instr_ready_i = '0') or id_ex_flush_i = '1' or data_ready_i = '0'))then
          instr_mem_ex_s <= (others => '0');
-       elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1' and vector_stall_i='0')then
+       elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1')then
          instr_mem_ex_s <= instr_mem_id_s;
        end if;
      end if;

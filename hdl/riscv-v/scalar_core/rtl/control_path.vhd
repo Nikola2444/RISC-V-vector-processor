@@ -62,7 +62,8 @@ architecture behavioral of control_path is
 
   signal scalar_load_req_id  : std_logic;
   signal scalar_store_req_id : std_logic;
-  signal vector_instr_s      : std_logic;
+  signal vector_instr_id_s   : std_logic;
+  signal vector_instr_ex_s   : std_logic;
 
   signal branch_type_id_s : std_logic_vector(1 downto 0);
   signal funct3_id_s      : std_logic_vector(2 downto 0);
@@ -82,7 +83,7 @@ architecture behavioral of control_path is
   signal rs1_address_id_s : std_logic_vector (4 downto 0);
   signal rs2_address_id_s : std_logic_vector (4 downto 0);
   signal rd_address_id_s  : std_logic_vector (4 downto 0);
-  
+
   signal fencei_id_s : std_logic;
   --*********       EXECUTE       **************
 
@@ -180,7 +181,8 @@ begin
   id_ex : process (clk) is
   begin
     if (rising_edge(clk)) then
-      if (reset = '0' or ((control_pass_s = '0' or id_ex_flush_s = '1') and data_ready_i = '1' and instr_ready_i = '1'))then
+      if (reset = '0' or ((control_pass_s = '0' or id_ex_flush_s = '1') and data_ready_i = '1' and instr_ready_i = '1' and
+                          (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0'))))then
         branch_type_ex_s    <= (others => '0');
         funct3_ex_s         <= (others => '0');
         funct7_ex_s         <= (others => '0');
@@ -196,8 +198,9 @@ begin
         data_mem_we_ex_s    <= '0';
         scalar_load_req_ex  <= '0';
         scalar_store_req_ex <= '0';
-
-      elsif(data_ready_i = '1' and instr_ready_i = '1' and ce = '1')then
+        vector_instr_ex_s   <= '0';
+      elsif(data_ready_i = '1' and instr_ready_i = '1' and ce = '1' and
+            (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0')))then
         branch_type_ex_s    <= branch_type_id_s;
         funct7_ex_s         <= funct7_id_s;
         funct3_ex_s         <= funct3_id_s;
@@ -213,6 +216,19 @@ begin
         data_mem_we_ex_s    <= data_mem_we_id_s;
         scalar_load_req_ex  <= scalar_load_req_id;
         scalar_store_req_ex <= scalar_store_req_id;
+        vector_instr_ex_s   <= vector_instr_id_s;
+      end if;
+      if (reset = '0' or ((control_pass_s = '0' or id_ex_flush_s = '1') and data_ready_i = '1' and instr_ready_i = '1' and
+                          (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0'))))then
+        vector_instr_ex_s <= '0';
+      elsif(data_ready_i = '1' and instr_ready_i = '1' and ce = '1' and
+            (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0')))then
+        vector_instr_ex_s <= vector_instr_id_s;
+      elsif (vector_instr_ex_s = '1' and vector_stall_i='0' and instr_ready_i = '0') then
+        vector_instr_ex_s <= '0';
+      elsif (vector_instr_ex_s = '1' and vector_stall_i = '0') then
+        vector_instr_ex_s <= vector_instr_id_s;
+
       end if;
     end if;
   end process;
@@ -282,7 +298,7 @@ begin
       -- Signals going to hazard unit and vector core
       scalar_load_req_o  => scalar_load_req_id,
       scalar_store_req_o => scalar_store_req_id,
-      vector_instr_o     => vector_instr_s
+      vector_instr_o     => vector_instr_id_s
       );
 
   -- ALU decoder
@@ -321,7 +337,7 @@ begin
       vector_stall_i          => vector_stall_i,
       scalar_load_req_i       => scalar_load_req_id,
       scalar_store_req_i      => scalar_store_req_id,
-      vector_instr_i          => vector_instr_s,
+      vector_instr_i          => vector_instr_ex_s,
       ---------------------------------------------------
       pc_en_o                 => pc_en_s,
       if_id_en_o              => if_id_en_s,

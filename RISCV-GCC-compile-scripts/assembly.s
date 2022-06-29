@@ -7,14 +7,16 @@ addi x9, x0, 1536	# Z
 addi x6, x0, 16		# N
 addi x12, x0, 32	# M
 addi x13, x0, 64	# P
-
+addi x5, x5, 32
+addi x16, x16, 16	
 vmul.vx v8, v8, x0	# Initializing v8 with zeros
 
 loop4:
 	add x11, x0, x13	# x11 = P
 	
 	loop3:
-		vsetvli x16, x11, e16, m2	# 16-bit data
+	        vsetvli x16, x11, e16, m2	# 16-bit data
+	        addi x16, x16, 16	
 		add x18, x0, x16
 		
 		loop2:
@@ -25,8 +27,8 @@ loop4:
 			vmul.vx v6, v6, x0			# Initializing v6 with zeros
 			
 			loop1:
-				vsetvli x5, x10, e8, m1		# 8-bit data
-				vle8.v v0, (x7)  			# Load a vector form the first matrix
+                                vsetvli x5, x10, e8, m1		# 8-bit data	
+	                        vle8.v v0, (x7)  			# Load a vector form the first matrix
 				vle8.v v2, (x8) 		# Load a vector from the second matrix, if 16-bit or 32-bit data is used, then instead of x11 x15 should be used
 				vwmul.vv v4, v0, v2   		# Multiply two vectors
 				vsetvli x5, x10, e16, m2 	# 16-bit data

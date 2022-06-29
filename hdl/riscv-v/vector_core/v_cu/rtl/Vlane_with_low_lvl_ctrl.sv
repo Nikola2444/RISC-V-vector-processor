@@ -539,9 +539,9 @@ endgenerate;
 	       alu_a_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
 	       alu_c_16bit[byte_sel*LP_16bit_ALU_GROUPS+lane/2][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
 	       -----/\----- EXCLUDED -----/\----- */
-	      alu_b_16bit[byte_sel*4+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
-	      alu_a_16bit[byte_sel*4+lane/2][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
-	      alu_c_16bit[byte_sel*4+lane/2][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
+	      alu_b_16bit[byte_sel*VLANE_NUM/2+lane/2][port] = {16'b0, vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
+	      alu_a_16bit[byte_sel*VLANE_NUM/2+lane/2][port] = {16'b0, vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
+	      alu_c_16bit[byte_sel*VLANE_NUM/2+lane/2][port] = {16'b0, vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
 	   end
 	end
 
@@ -550,11 +550,11 @@ endgenerate;
 	begin
 	   for (int port=0; port<W_PORTS_NUM; port++)
 	   begin
-	      alu_b_32bit[byte_sel*2 + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
+	      alu_b_32bit[byte_sel*VLANE_NUM/4 + lane/4][port] = {vs2_data[lane+3][port][byte_sel*8 +:8], vs2_data[lane+2][port][byte_sel*8 +:8],
 									  vs2_data[lane+1][port][byte_sel*8 +:8], vs2_data[lane][port][byte_sel*8 +:8]};
-	      alu_a_32bit[byte_sel*2 + lane/4][port] = {vs1_data[lane+3][port][byte_sel*8 +:8], vs1_data[lane+2][port][byte_sel*8 +:8],
+	      alu_a_32bit[byte_sel*VLANE_NUM/4 + lane/4][port] = {vs1_data[lane+3][port][byte_sel*8 +:8], vs1_data[lane+2][port][byte_sel*8 +:8],
 									  vs1_data[lane+1][port][byte_sel*8 +:8], vs1_data[lane][port][byte_sel*8 +:8]};
-	      alu_c_32bit[byte_sel*2 + lane/4][port] = {vs3_data[lane+3][port][byte_sel*8 +:8], vs3_data[lane+2][port][byte_sel*8 +:8],
+	      alu_c_32bit[byte_sel*VLANE_NUM/4 + lane/4][port] = {vs3_data[lane+3][port][byte_sel*8 +:8], vs3_data[lane+2][port][byte_sel*8 +:8],
 									  vs3_data[lane+1][port][byte_sel*8 +:8], vs3_data[lane][port][byte_sel*8 +:8]};
 	   end 
 	end            

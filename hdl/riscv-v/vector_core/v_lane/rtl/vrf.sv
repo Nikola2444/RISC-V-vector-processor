@@ -135,8 +135,10 @@ module vrf #
 	end	
    end
    
-   //assign multipump_sel_reg = ~clk;
+   assign multipump_sel_reg = ~clk;
    
+
+/* -----\/----- EXCLUDED -----\/-----
    logic reset_value;
    always @(negedge clk2)
    begin
@@ -152,7 +154,20 @@ module vrf #
       else
 	multipump_sel_reg <= ~multipump_sel_reg;
    end	
+ -----/\----- EXCLUDED -----/\----- */
 
+
+/* -----\/----- EXCLUDED -----\/-----
+   always @(posedge clk2)
+   begin
+      if(!rstn)
+      begin
+	 multipump_sel_reg <=0;
+      end
+      else
+	multipump_sel_reg <= ~multipump_sel_reg;
+   end	
+ -----/\----- EXCLUDED -----/\----- */
    
    //generating LVT brams per bank
    generate

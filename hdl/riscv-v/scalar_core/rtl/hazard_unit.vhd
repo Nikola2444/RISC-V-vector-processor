@@ -46,7 +46,7 @@ begin
                (scalar_store_req_i = '1' and (not(all_v_stores_executed_i) = '1' or not(all_v_loads_executed_i ) = '1'))) then 
             -- defualt, dont do anything
             en_s <= '0';
-        elsif (vector_stall_i = '1' and vector_instr_i = '1') then
+        elsif (vector_stall_i = '1' and vector_instr_i = '1') then --we are_checking_ex_phase_instr
             en_s <= '0';
         else
             en_s <= '1';

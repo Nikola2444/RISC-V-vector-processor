@@ -134,12 +134,20 @@ module vrf #
 	   end
 	end	
    end
-
+   
+   //assign multipump_sel_reg = ~clk;
+   
+   logic reset_value;
+   always @(negedge clk2)
+   begin
+      reset_value <= clk;
+   end
+   
    always @(posedge clk2)
    begin
       if(!rstn)
       begin
-	 multipump_sel_reg <=0;
+	 multipump_sel_reg <= reset_value;
       end
       else
 	multipump_sel_reg <= ~multipump_sel_reg;

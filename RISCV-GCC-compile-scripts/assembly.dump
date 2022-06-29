@@ -5,9 +5,9 @@ assembly.o:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 <loop4-0x1c>:
-   0:	00000393          	li	t2,0
-   4:	20000413          	li	s0,512
-   8:	40000493          	li	s1,1024
+   0:	40000393          	li	t2,1024
+   4:	50000413          	li	s0,1280
+   8:	60000493          	li	s1,1536
    c:	01000313          	li	t1,16
   10:	02000613          	li	a2,32
   14:	04000693          	li	a3,64

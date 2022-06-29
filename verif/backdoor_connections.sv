@@ -9,7 +9,7 @@ assign DUT.instr_ready = backdoor_instr_vif.instr_ready;
 assign DUT.instr_mem_read=backdoor_instr_vif.instr_mem_read;
 assign backdoor_instr_vif.instr_mem_address = DUT.instr_mem_address;
 assign backdoor_instr_vif.instr_mem_flush = DUT.instr_mem_flush;
-assign backdoor_instr_vif.instr_mem_en = DUT.riscv_v_inst.scalar_core_inst.instr_mem_en_s;
+// assign backdoor_instr_vif.instr_mem_en = DUT.riscv_v_inst.scalar_core_inst.instr_mem_en_s;
 
 // Register bank backdoor connections
 assign backdoor_register_bank_vif.rd_we_i=DUT.riscv_v_inst.scalar_core_inst.data_path_1.register_bank_1.white_box_inst.rd_we_i;

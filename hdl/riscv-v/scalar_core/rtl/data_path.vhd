@@ -156,7 +156,7 @@ begin
         immediate_extended_ex_s <= (others => '0');
         rd_address_ex_s         <= (others => '0');
        
-      elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1' and vector_stall_i='0')then
+      elsif (data_ready_i = '1' and instr_ready_i = '1' and if_id_en_i = '1' and ce = '1')then
         pc_adder_ex_s           <= pc_adder_id_s;
         rs1_data_ex_s           <= rs1_data_id_s;
         rs2_data_ex_s           <= rs2_data_id_s;

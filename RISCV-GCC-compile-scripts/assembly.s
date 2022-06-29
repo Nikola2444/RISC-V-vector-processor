@@ -1,8 +1,8 @@
 # x6 = N, x12 = M, x13 = P, x7 = X pointer, x8 = Y pointer, x9 = Z pointer
 
-addi x7, x0, 0		# X
-addi x8, x0, 512	# Y
-addi x9, x0, 1024	# Z
+addi x7, x0, 1024		# X
+addi x8, x0, 1280	# Y
+addi x9, x0, 1536	# Z
 
 addi x6, x0, 16		# N
 addi x12, x0, 32	# M

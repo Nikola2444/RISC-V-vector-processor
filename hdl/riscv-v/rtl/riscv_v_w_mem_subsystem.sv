@@ -58,7 +58,7 @@ module riscv_v_w_mem_subsystem #
     localparam C_M_AXI_DATA_WIDTH = 32;
     localparam C_M_AXI_ADDR_WIDTH = 32;
     localparam C_M_AXI_ID_WIDTH   = 4;
-    localparam C_XFER_SIZE_WIDTH  = 32;
+   localparam C_XFER_SIZE_WIDTH  = 32;
     localparam C_M_AXI_BURST_LEN  = (C_BLOCK_SIZE/4);
 
     localparam C_PHY_ADDR_WIDTH   = 32;

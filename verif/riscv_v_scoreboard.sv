@@ -57,14 +57,14 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	   //byte_sel=j[3:2];
 	   vreg_to_read=i*(`VLEN/32/`V_LANES);
 	   vreg_addr_offset = j[$clog2(`V_LANES) + 2 +: 27];
-	   $display ("vrf_vlane=%0d, \t vreg_to_read+vreg_addr_offset=%0d", vrf_vlane, vreg_to_read+vreg_addr_offset);	   
+	   // $display ("vrf_vlane=%0d, \t vreg_to_read+vreg_addr_offset=%0d", vrf_vlane, vreg_to_read+vreg_addr_offset);	   
 	   vrf_read_ram[i][j[31:2]][j[1:0]*8 +: 8] = backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][0][0][vreg_to_read+vreg_addr_offset][byte_sel*8+:8] ^ 
 						     backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_read+vreg_addr_offset][byte_sel*8+:8];
 
 	end
-      foreach(vrf_read_ram[i])
-	foreach(vrf_read_ram[i][j])
-	  $display ("vrf_read_ram[%0d][%0d]=%0d", i, j, vrf_read_ram[i][j]);
+      // foreach(vrf_read_ram[i])
+	// foreach(vrf_read_ram[i][j])
+	  // $display ("vrf_read_ram[%0d][%0d]=%0d", i, j, vrf_read_ram[i][j]);
    endfunction
 
    function write_v (bd_v_instr_if_seq_item tr);

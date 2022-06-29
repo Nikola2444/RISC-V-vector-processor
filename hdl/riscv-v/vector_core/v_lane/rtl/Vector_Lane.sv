@@ -311,10 +311,7 @@ module Vector_Lane
       for(int i = 0; i < VRF_DELAY - 1; i++) begin
          ALU_signals_next[i + 1] = ALU_signals_reg[i]; 
       end
-      // op2_sel = ALU_signals_reg[VRF_DELAY - 1].op2_sel;
       op3_sel = ALU_signals_reg[VRF_DELAY - 1].op3_sel;
-      // ALU_x_data = ALU_signals_reg[VRF_DELAY - 1].ALU_x_data;
-      // ALU_reduction_data = ALU_signals_reg[VRF_DELAY - 1].ALU_reduction_data;
       
       store_data_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_data_mux_sel;
       store_load_index_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_load_index_mux_sel;
@@ -323,11 +320,7 @@ module Vector_Lane
       store_data_valid_o = ALU_signals_reg[VRF_DELAY - 1].store_data_valid;
       store_load_index_valid_o = ALU_signals_reg[VRF_DELAY - 1].store_load_index_valid;
       
-      // ALU_signals_next[0].op2_sel = op2_sel_i;
       ALU_signals_next[0].op3_sel = op3_sel_i;
-      // ALU_signals_next[0].ALU_x_data = ALU_x_data_i;
-      // ALU_signals_next[0].ALU_imm = ALU_imm_i;
-      // ALU_signals_next[0].ALU_reduction_data = ALU_reduction_data_i;
       ALU_signals_next[0].ALU_reduction = reduction_op_i;
       ALU_signals_next[0].store_data_mux_sel = store_data_mux_sel_i;
       ALU_signals_next[0].store_load_index_mux_sel = store_load_index_mux_sel_i;
@@ -346,13 +339,10 @@ module Vector_Lane
          
          always_comb begin
             // Mux for choosing the right byte
-            //read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen] << 3 +: 8];
 	    read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen]*8 +: 8];
             // Mux for choosing the right halfword
-            //read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen] << 4 +: 16];
 	    read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen]*16 +: 16];
             // Mux for choosing the right data
-            //read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen] << 5 +: 32] : 0;
 	    read_data_mux[i_gen] = (read_data_mux_sel[i_gen] != 3) ? read_data_prep_reg[i_gen][read_data_mux_sel[i_gen]*32 +: 32] : 0;
             
          end

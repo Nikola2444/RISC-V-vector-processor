@@ -1,5 +1,5 @@
-//`define INCLUDE_AXIL_IF
-//`define INCLUDE_DBG_SIGNALS
+`define INCLUDE_AXIL_IF
+`define INCLUDE_DBG_SIGNALS
 
 module riscv_v_w_mem_subsystem #
   (  
@@ -30,7 +30,7 @@ module riscv_v_w_mem_subsystem #
   vrf0_ren,vrf0_oreg_ren,
   vlane0_st_data0,vlane0_st_data1,vlane0_st_data2,vlane0_st_data3,vlane0_st_drvr,
   vlane0_store_data_out2,sew,lmul,vl,vlane0_store_data_mux2_4,vlane0_store_data_mux_sel2,
-  vlane0_read_data_mux4,vlane0_read_data_prep_reg,
+  vlane0_read_data_mux4,vlane0_read_data_prep_reg,multipump_sel_reg,
   `endif
   /*AUTOARG*/
 	// Outputs
@@ -217,7 +217,7 @@ module riscv_v_w_mem_subsystem #
     output logic [2:0]        sew;
     output logic [2:0]        lmul;
     output logic [31:0]       vl;
-    
+    output logic              multipump_sel_reg;
 
     assign lane0_store_data   = riscv_v_inst.vector_core_inst.mcu_store_data[0];
     assign lane0_store_dvalid = riscv_v_inst.vector_core_inst.vlane_mcu_store_dvalid;
@@ -232,8 +232,8 @@ module riscv_v_w_mem_subsystem #
     assign vrf0_raddr5     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[5];
     assign vrf0_raddr6     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[6];
     assign vrf0_raddr7     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[7];
-    assign vrf0_ren       = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_ren_i;
-    assign vrf0_oreg_ren  = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_oreg_ren_i;
+    assign vrf0_ren        = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_ren_i;
+    assign vrf0_oreg_ren   = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_oreg_ren_i;
     assign vrf0_rdata0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[0];
     assign vrf0_rdata1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[1];
     assign vrf0_rdata2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[2];
@@ -260,7 +260,7 @@ module riscv_v_w_mem_subsystem #
     assign vlane0_st_data1   = riscv_v_inst.vector_core_inst.vlane_store_data[0][1];
     assign vlane0_st_data2   = riscv_v_inst.vector_core_inst.vlane_store_data[0][2];
     assign vlane0_st_data3   = riscv_v_inst.vector_core_inst.vlane_store_data[0][3];
-    assign vlane0_st_drvr   = riscv_v_inst.vector_core_inst.vlane_store_driver_reg;
+    assign vlane0_st_drvr    = riscv_v_inst.vector_core_inst.vlane_store_driver_reg;
 
     assign vlane0_store_data_out2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_o[2];
     assign vlane0_store_data_mux2_4   = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_mux[2][4];
@@ -271,6 +271,8 @@ module riscv_v_w_mem_subsystem #
     assign vl   = riscv_v_inst.vector_core_inst.v_cu_inst.vl_o;
     assign sew  = riscv_v_inst.vector_core_inst.v_cu_inst.sew_o;
     assign lmul = riscv_v_inst.vector_core_inst.v_cu_inst.lmul_o;
+
+    assign multipump_sel_reg = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.multipump_sel_reg;
    
     `endif
 

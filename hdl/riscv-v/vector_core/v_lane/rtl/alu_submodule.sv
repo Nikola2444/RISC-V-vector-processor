@@ -270,13 +270,13 @@ module alu_submodule #
    always @(posedge clk)
    begin
       if (res_vld_reg[2])begin
-	 result_reg = alu_opmode_reg[2][6:5]==2'b01 && !reduction_op_i ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
+	 result_reg <= alu_opmode_reg[2][6:5]==2'b01 && !reduction_op_i ? {dsp_P[31:1], comp_out_reg[1]} : dsp_P;
 	 if (output_sew_reg == 2'b00)
 	 begin
 	    if (alu_opmode_reg[2][6:5]==2'b10) // take the value from dsp
 	    begin
 	       if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
-		 result_reg[7:0] = dsp_P[15:8];
+		 result_reg[7:0] <= dsp_P[15:8];
 	    end	 
 	 end
 	 if (output_sew_reg == 2'b01)
@@ -284,7 +284,7 @@ module alu_submodule #
 	    if (alu_opmode_reg[2][6:5]==2'b10)
 	    begin
 	       if (alu_opmode_reg[2][4:3]==2'b11) //switch high bits for low (mulh, mulhu, ...)
-		 result_reg[15:0] = dsp_P[31:16];
+		 result_reg[15:0] <= dsp_P[31:16];
 	    end	 
 	 end
       end

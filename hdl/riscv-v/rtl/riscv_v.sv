@@ -33,7 +33,7 @@ module riscv_v #
    input  				 ctrl_rdone_i ,
    input  [C_M_AXI_DATA_WIDTH-1:0]  rd_tdata_i ,
    input  				 rd_tvalid_i ,
-   output  			 rd_tready_o ,
+   output  			 rd_tready_o,
    input  				 rd_tlast_i ,
    // MCU <=> AXIM CONTROL IF [write channel]
    output  [C_M_AXI_ADDR_WIDTH-1:0] ctrl_waddr_offset_o ,

@@ -98,7 +98,7 @@ generate
                     if(shift) begin
                         for(int i = 1; i < 8; i++)
                             shift_reg[i - 1] <= shift_reg[i];
-                        shift_reg[7] = 0;    
+                        shift_reg[7] <= 0;    
                     end
                 end 
             end

@@ -520,7 +520,7 @@ module v_cu #
       for (int i=0; i<W_PORTS_NUM; i++)
       begin
 	 if (vd_instr_in_progress[i][5]==1'b0 &&
-	     (vd_instr_in_progress[i][4:0]==v_instr_vs1 || vd_instr_in_progress[i][4:0]==v_instr_vs2))
+	     (vd_instr_in_progress[i][4:0]==v_instr_vs1 || vd_instr_in_progress[i][4:0]==v_instr_vs2) || (slide_instr_check && !port_group_ready_i[0]))
 	   dependancy_issue[i]=1'b1;
 	 else
 	   dependancy_issue[i]=1'b0;
@@ -560,7 +560,7 @@ module v_cu #
    
    assign store_data_mux_sel_o=start_o == 1 ? 0 :
 			       start_o == 2 ? 2 :
-			       start_o == 4 ? 4 : 8;
+			       start_o == 4 ? 4 : 6;
 
 
    

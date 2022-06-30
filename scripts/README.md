@@ -28,3 +28,7 @@ After sourcing each script, new directories will appear under:
   i.e. packaged IP core for riscv-v_package_ip.tcl and 
   a bitstream file for riscv-v_bd_synth_impl_binary.tcl
 
+## USE .XSA
+
+If you dont want to go through these steps riscv_v_axi_bd_wrapper.xsa file can be used for
+of the board.

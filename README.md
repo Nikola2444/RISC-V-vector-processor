@@ -14,14 +14,14 @@ more flexibility because of its open-source nature.
 This project is a work in progress and in time it may be updated.
 
 ## Directories
-Markup : * hdl - Contains hardware source files and also some simple test benches used to verify
+* hdl - Contains hardware source files and also some simple test benches used to verify
          basic functionality of some modules.
-Markup : * RISCV-GCC_compile-scripts - contains scripts used to compile RISCV assembly code.
+* RISCV-GCC_compile-scripts - contains scripts used to compile RISCV assembly code.
                                Check sections COMPILE SCRIPTS for more information
-Markup : * synth-Contains scripts which enable vivado synthesis and implementation of hardware
+* synth-Contains scripts which enable vivado synthesis and implementation of hardware
          from bash
-Markup : * verif-Contains main source file used to create the verification environment
-Markup : * vivado_pjt-Contains scripts used to create vivado project and add all hardware and verification files.
+* verif-Contains main source file used to create the verification environment
+* vivado_pjt-Contains scripts used to create vivado project and add all hardware and verification files.
               Check section SIMULATION.
 	      
 ## SIMULATION

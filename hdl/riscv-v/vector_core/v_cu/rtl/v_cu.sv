@@ -568,13 +568,13 @@ module v_cu #
 	 for (int i=0; i<W_PORTS_NUM; i++)
 	   if (start_o[i])
 	     if (sew_o[1:0] == 2'b00)
-	       store_dependencie_cnt[i] <= 44;
+	       store_dependencie_cnt[i] <= 88;
 	     else if (sew_o[1:0] == 2'b01)
-	       store_dependencie_cnt[i] <= 22;
+	       store_dependencie_cnt[i] <= 44;
 	     else
-	       store_dependencie_cnt[i] <= 11;
+	       store_dependencie_cnt[i] <= 22;
 	   else if (!port_group_ready_i[i])
-	     store_dependencie_cnt[i] <= store_dependencie_cnt[i]-1;
+	     store_dependencie_cnt[i] <= store_dependencie_cnt[i];
 	   else
 	     store_dependencie_cnt[i] <= 0;
       end	

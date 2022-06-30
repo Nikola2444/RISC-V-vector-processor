@@ -23,6 +23,10 @@ This project is a work in progress and in time it may be updated.
 * verif-Contains main source file used to create the verification environment
 * vivado_pjt-Contains scripts used to create vivado project and add all hardware and verification files.
               Check section SIMULATION.
+* Software - Contains assembly and .c examples
+* Vitis_test_app - contains example software used for programming of Zedboard from Vitis.
+* Scripts - .tcl files used for packaging of all the hardware files
+
 	      
 ## SIMULATION
 

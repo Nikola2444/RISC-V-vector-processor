@@ -17,7 +17,7 @@
    localparam LP_VECTOR_REG_SIZE=VLEN/LP_V_REGISTER_WORD_LEN/VLANE_NUM;
    //input clk,
    //input 					 rstn,
-   input [11:0]	instr_vld_i;
+   input [12:0]	instr_vld_i;
    input [31:0] vector_instr_i;
 
    // We concatanate 8 pointers to max eight registers, because that is the worst

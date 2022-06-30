@@ -74,11 +74,11 @@ module vector_core #
    // logic 				 mcu_st_rdy=1'b1;       // ALEKSA HAS CHANGED THIS
 
    //Scheduler-V_CU interconnections
-   logic [11:0] 			 instr_vld;		// From scheduler_inst of scheduler.v
+   logic [12:0] 			 instr_vld;		// From scheduler_inst of scheduler.v
    logic [31:0] 			 vector_instr;		// From scheduler_inst of scheduler.v
    logic [2:0] 				 sew;
    logic [2:0] 				 lmul;
-   logic [11:0] 			 instr_rdy;
+   logic [12:0] 			 instr_rdy;
    logic [31:0] 			 scalar_rs1;
    logic [31:0] 			 scalar_rs2;
 
@@ -150,7 +150,7 @@ module vector_core #
      (/*AUTO_INST*/
       // Outputs
       .vector_stall_o			(vector_stall_o),
-      .instr_vld_o			(instr_vld[11:0]),
+      .instr_vld_o			(instr_vld[12:0]),
       .vector_instr_o			(vector_instr[31:0]),
       .mcu_ld_vld_o			(mcu_ld_vld),
       .mcu_st_vld_o			(mcu_st_vld),
@@ -235,7 +235,7 @@ module vector_core #
 	     // Inputs
 	     .clk			(clk),
 	     .rstn			(rstn),
-	     .instr_vld_i		(instr_vld[11:0]),
+	     .instr_vld_i		(instr_vld[12:0]),
 	     .scalar_rs1_i		(scalar_rs1[31:0]),
 	     .scalar_rs2_i		(scalar_rs2[31:0]),
 	     .vector_instr_i		(vector_instr[31:0]),

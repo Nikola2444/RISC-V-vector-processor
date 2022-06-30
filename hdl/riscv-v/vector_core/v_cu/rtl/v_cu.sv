@@ -34,8 +34,8 @@ module v_cu #
    input rstn;
 
    // interface with scheduler
-   input [11:0] instr_vld_i;
-   output [11:0] instr_rdy_o;
+   input [12:0] instr_vld_i;
+   output [12:0] instr_rdy_o;
    input [31:0]  scalar_rs1_i;
    input [31:0]  scalar_rs2_i;
    input [31:0]  vector_instr_i;
@@ -118,6 +118,7 @@ module v_cu #
    logic [1:0] 								  v_instr_mop;
    logic [4:0] 								  v_instr_rs1;
    logic 								  widening_instr_check;
+   logic 								  store_instr_check;
    logic 								  reduction_instr_check;
    logic 								  slide_instr_check;
    logic 								  vector_vector_check;
@@ -152,8 +153,8 @@ module v_cu #
 
    //renaming unit
    logic [31:0] 			  vector_instr_reg;
-   logic [11:0] 			  instr_vld_reg;
-   logic [11:0] 			  instr_rdy_reg;
+   logic [12:0] 			  instr_vld_reg;
+   logic [12:0] 			  instr_rdy_reg;
    logic [31:0] 			  scalar_rs1_reg;
    logic [31:0] 			  scalar_rs2_reg;
    logic [4:0] 				  v_instr_vs1;
@@ -197,20 +198,32 @@ module v_cu #
       begin
 	 if (dependancy_issue==0)
 	 begin
-	    vector_instr_reg 	      <= vector_instr_i;	 
-	    instr_vld_reg 	      <= instr_vld_i;
-	    scalar_rs1_reg 	      <= scalar_rs1_i;
-	    scalar_rs2_reg 	      <= scalar_rs2_i;
-	    instr_rdy_reg 	      <= instr_rdy_o;
-	    vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
-	    vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;
-	    vrf_starting_raddr1_reg   <= vrf_starting_raddr1_i;
-	    vrf_starting_addr_vld_reg <= vrf_starting_addr_vld_i;
+	    if(instr_vld_i[12:0] & instr_rdy_o[12:0])// config instruction received
+	    begin
+	       vector_instr_reg	      <= vector_instr_i;
+	       instr_vld_reg 	      <= instr_vld_i;
+	       scalar_rs1_reg 	      <= scalar_rs1_i;
+	       scalar_rs2_reg 	      <= scalar_rs2_i;
+	       instr_rdy_reg 	      <= instr_rdy_o;
+	       vrf_starting_waddr_reg    <= vrf_starting_waddr_i;
+	       vrf_starting_raddr0_reg   <= vrf_starting_raddr0_i;
+	       vrf_starting_raddr1_reg   <= vrf_starting_raddr1_i;
+	       vrf_starting_addr_vld_reg <= vrf_starting_addr_vld_i;
+	    end
+	    else if (start_o!=0)
+	    begin
+	       instr_vld_reg 	      <= 0;
+	       instr_rdy_reg 	      <= 0;
+	    end
 	 end
-	 if(instr_vld_reg[11] && instr_rdy_reg[11]) // config instruction received
+	 
+	 if(instr_vld_reg[12] && instr_rdy_reg[12]) // config instruction received
 	 begin
-	    vtype_reg <= vtype_next;	 
-	    vl_reg    <= vl_next;
+	    vector_instr_reg <= vector_instr_i;
+	    instr_vld_reg    <= instr_vld_i;
+	    instr_rdy_reg    <= instr_rdy_o;
+	    vtype_reg 	     <= vtype_next;	 
+	    vl_reg 	     <= vl_next;
 	 end
       end	
    end
@@ -262,8 +275,9 @@ module v_cu #
 
    assign reduction_instr_check = ((instr_vld_reg[6] || instr_vld_reg[7]) && v_instr_funct6_upper == 3'b000) ||
 				  instr_vld_reg[8] && v_instr_funct6_upper == 3'b110;
+   assign store_instr_check = instr_vld_reg[3:2]!=0;
    assign reduction_op_o = reduction_instr_check;
-   assign slide_instr_check     = !instr_vld_reg[11] && (v_instr_funct6 == 6'b001111 || v_instr_funct6 == 6'b001110);
+   assign slide_instr_check     = !instr_vld_reg[12] && (v_instr_funct6 == 6'b001111 || v_instr_funct6 == 6'b001110);
    assign slide_type_o = (sew_o == 2'b00 && (scalar_rs1_reg == VLANE_NUM*4)) || 
 			 (sew_o == 2'b01 && (scalar_rs1_reg == VLANE_NUM*2)) || 
 			 (sew_o == 2'b10 && (scalar_rs1_reg == VLANE_NUM)) ? LP_FAST_SLIDE : LP_SLOW_SLIDE;
@@ -277,7 +291,7 @@ module v_cu #
 			instr_vld_reg[4] ? 5 : // indexed load
 			reduction_instr_check ? 1 :// reduction instruction
 			slide_instr_check ? 6 : //slide instructions
-			!instr_vld_reg[11] ? 0 : // Normal instruction
+			!instr_vld_reg[12] ? 0 : // Normal instruction
 			7; // invalid instrucion
 
    // this will chenge when renaming is inserted
@@ -287,8 +301,8 @@ module v_cu #
 			 slide_instr_check ? LP_VRF_DELAY : 4'h7;
    
    // instructions that dont read from VRF are load and config
-   assign vrf_ren      = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
-   assign vrf_oreg_ren = !instr_vld_reg[11] && !instr_vld_reg[5] && instr_vld_reg != 0;
+   assign vrf_ren      = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
+   assign vrf_oreg_ren = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
    assign wdata_width_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b01 :
 			   widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
@@ -476,19 +490,20 @@ module v_cu #
    port_allocate_unit_inst     
      (/*AUTO_INST*/
       // Outputs
-      .instr_rdy_o	(instr_rdy_o[11:0]),
+      .instr_rdy_o	(instr_rdy_o[12:0]),
       .start_o		(start_o),
       .store_driver_o   (store_driver_o),
       .op3_port_sel_o	(op3_sel_o),
       .alloc_port_vld_o	(alloc_port_vld),
+      .slide_instr_check_i(slide_instr_check),
       .dependancy_issue_i(dependancy_issue),
       // Inputs
       .clk		(clk),
       .rstn		(rstn),
       .port_rdy_i	(port_group_ready_i),
-
+       
       .vrf_starting_addr_vld_i(vrf_starting_addr_vld_reg),
-      .instr_vld_i	(instr_vld_reg[11:0]));
+      .instr_vld_i	(instr_vld_reg[12:0]));
    // Here we need to insert component which uses generated control signals to
    // Control the lanes.
    
@@ -498,6 +513,49 @@ module v_cu #
    assign released_port =   port_group_ready_i == 1 ? 0:
 			     port_group_ready_i == 2 ? 1:
 			     port_group_ready_i == 4 ? 2 : 3;
+
+   logic                           slide_in_progress_reg;
+   always@(posedge clk)
+   begin
+      if (!rstn)
+	slide_in_progress_reg <= 0;
+      else if (!slide_in_progress_reg)
+	slide_in_progress_reg <= slide_instr_check;
+      else if (port_group_ready_i[0])
+	slide_in_progress_reg <= 0;
+   end
+
+   logic[W_PORTS_NUM-1:0]     reduction_wait_cnt_en;
+   logic[W_PORTS_NUM-1:0][2:0]reduction_wait_cnt;
+   always@(posedge clk)
+   begin
+      if (!rstn)
+	reduction_wait_cnt_en <= '{default:'0};
+      else
+	for(int i=0; i<W_PORTS_NUM; i++)
+	begin
+	   if (reduction_wait_cnt[i]==2 && port_group_ready_i[i])
+	     reduction_wait_cnt_en[i] <= 1'b1;
+	   else if (reduction_wait_cnt[i] == 1)
+	     reduction_wait_cnt_en[i] <= 1'b0;
+	end      
+   end
+
+   always@(posedge clk)
+   begin
+      if (!rstn)
+	for (int i=0; i<W_PORTS_NUM; i++)
+	  reduction_wait_cnt[i] <= 0;
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	   if (reduction_instr_check && start_o[i])
+	     reduction_wait_cnt[i] <= 2;
+	   else if (reduction_wait_cnt_en[i])
+	     reduction_wait_cnt[i] <= reduction_wait_cnt[i]-1;
+      end	
+   end
+
    always@(posedge clk)
    begin
       if (!rstn)
@@ -510,20 +568,34 @@ module v_cu #
 	 for (int i=0;i<W_PORTS_NUM;i++)
 	   if (start_o[i] && port_group_ready_i[i])
 	     vd_instr_in_progress[i] <= {1'b0, v_instr_vd};
-	   else if (dependancy_issue_cnt[i]==0)
+	   else if (dependancy_issue_cnt[i]==0 && reduction_wait_cnt[i] == 0)
 	     vd_instr_in_progress[i] <= 6'b100000;//no valid instruction
       end
    end
 
+   
    always_comb
    begin
       for (int i=0; i<W_PORTS_NUM; i++)
       begin
-	 if (vd_instr_in_progress[i][5]==1'b0 &&
-	     (vd_instr_in_progress[i][4:0]==v_instr_vs1 || vd_instr_in_progress[i][4:0]==v_instr_vs2) || (slide_instr_check && !port_group_ready_i[0]))
-	   dependancy_issue[i]=1'b1;
+	 dependancy_issue[i]=1'b0;
+	 if (i == 0)
+	 begin
+	    if (slide_in_progress_reg)
+	      dependancy_issue[i]=1'b1;
+	    else if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
+		  ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2 ||
+		   (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check)))
+	      dependancy_issue[i]=1'b1;
+	 end
 	 else
-	   dependancy_issue[i]=1'b0;
+	 begin
+	    if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
+		((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2 ||
+		 (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check)))
+	      dependancy_issue[i]=1'b1;
+	 end
+	 
       end
    end
 
@@ -543,7 +615,27 @@ module v_cu #
 	     dependancy_issue_cnt[i]<=11;
       end
    end
+/* -----\/----- EXCLUDED -----\/-----
 
+   always@(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++) 
+	   reduction_dependancy[i] <= 0; //depenancy delay
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++) 
+	   if (reduction_instr_check)
+	     reduction_dependancy[allocated_port] <= reduction_dependancy[i]-1;
+	   else 
+	     reduction_dependancy[i]<=11;
+      end
+   end
+ -----/\----- EXCLUDED -----/\----- */
+
+   
    
    
    /***************OUTPUTS**********************/

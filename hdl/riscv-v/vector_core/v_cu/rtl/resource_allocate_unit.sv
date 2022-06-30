@@ -241,7 +241,7 @@ module resource_allocate_unit#
    assign instr_rdy_o[8] =  vv_group_rdy != 0; //OPIVV_rdy
    assign instr_rdy_o[9] =  vi_vx_group_rdy != 0; //OPIVI_rdy
    assign instr_rdy_o[10] =  vi_vx_group_rdy != 0; //OPIVX_rdy
-   assign instr_rdy_o[11] =  1'b1; //OPCFG TODO, get info from lane if this can be updated.
+   assign instr_rdy_o[12] =  1'b1; //OPCFG TODO, get info from lane if this can be updated.
 
 endmodule // resource_allocate_unit
 

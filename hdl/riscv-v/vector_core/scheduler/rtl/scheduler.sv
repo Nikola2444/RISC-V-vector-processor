@@ -14,8 +14,8 @@ module scheduler
    input logic [ 1:0]  sew_i,
    output logic        vector_stall_o,
    //*** Scheduler-V_CU interface****
-   input logic [11:0]  instr_rdy_i,
-   output logic [11:0] instr_vld_o,
+   input logic [12:0]  instr_rdy_i,
+   output logic [12:0] instr_vld_o,
    output logic [31:0] vector_instr_o,
    output logic [31:0] scalar_rs1_o,
    output logic [31:0] scalar_rs2_o,
@@ -63,6 +63,7 @@ module scheduler
    logic [6:0] 	       v_instr_opcode;
    logic [2:0] 	       v_instr_funct6_upper;
    logic [2:0] 	       v_instr_funct3;
+   logic [5:0] 	       v_instr_funct6;
    logic [1:0] 	       v_instr_mop;   
 
    logic 	       next_instr_rdy;
@@ -72,6 +73,7 @@ module scheduler
 
    assign v_instr_opcode       = vector_instr_reg[6:0];
    assign v_instr_funct3       = vector_instr_reg[14:12];
+   assign v_instr_funct6       = vector_instr_reg[31:25];
    assign v_instr_mop          = vector_instr_reg[27:26];
    assign v_instr_funct6_upper = vector_instr_reg[31:29];
 
@@ -232,6 +234,8 @@ module scheduler
 	     instr_vld_o = OPMVX_vld;
 	 if (v_OPCFG_check)
 	   instr_vld_o = OPCFG_vld;
+	 if (v_instr_funct6==6'b001110 || v_instr_funct6==6'b001111)
+	   instr_vld_o = SLIDE_vld;
       end            
    end
 

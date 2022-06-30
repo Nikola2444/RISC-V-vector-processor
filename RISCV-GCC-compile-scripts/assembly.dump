@@ -5,7 +5,7 @@ assembly.o:     file format elf64-littleriscv
 Disassembly of section .text:
 
 0000000000000000 <l_image_loop-0x48>:
-   0:	04050513          	addi	a0,a0,64
+   0:	10050513          	addi	a0,a0,256
    4:	40058593          	addi	a1,a1,1024
    8:	40060613          	addi	a2,a2,1024
    c:	40060613          	addi	a2,a2,1024
@@ -39,13 +39,12 @@ Disassembly of section .text:
   6c:	00000013          	nop
   70:	02060407          	vle8.v	v8,(a2)
   74:	03c40e57          	vadd.vv	v28,v28,v8
-  78:	00057fd7          	vsetvli	t6,a0,e8,m1,tu,mu,d1
-  7c:	02070e27          	vse8.v	v28,(a4)
+  78:	02070e27          	vse8.v	v28,(a4)
 
-0000000000000080 <l_finished>:
+000000000000007c <l_finished>:
+  7c:	00000013          	nop
   80:	00000013          	nop
   84:	00000013          	nop
   88:	00000013          	nop
   8c:	00000013          	nop
-  90:	00000013          	nop
-  94:	fedff0ef          	jal	ra,80 <l_finished>
+  90:	fedff0ef          	jal	ra,7c <l_finished>

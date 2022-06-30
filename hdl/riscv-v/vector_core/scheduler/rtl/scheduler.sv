@@ -69,6 +69,7 @@ module scheduler
    logic 	       next_instr_rdy;
 
    logic               mcu_ld_buffering_reg;
+   logic               mcu_ld_buffered_reg;
    logic [31:0]        v_idx_ld_part2;
 
    assign v_instr_opcode       = vector_instr_reg[6:0];
@@ -209,7 +210,7 @@ module scheduler
       end
       if (v_ld_instr_check)
       begin
-	 if ((v_strided_check || v_unit_check) && mcu_ld_buffered_i)
+	 if ((v_strided_check || v_unit_check) && mcu_ld_buffered_reg)
 	   instr_vld_o = LOAD_vld;
 	 else if ((v_idx_ordered_check || v_idx_unordered_check))
 	   instr_vld_o = LOAD_IDX_vld;	
@@ -240,7 +241,7 @@ module scheduler
    end
 
    //logic that checks if there is a load being buffered by M_CU
-   assign mcu_ld_vld_o = (!mcu_ld_buffering_reg && v_ld_instr_check && !v_OPCFG_check_reg);
+   assign mcu_ld_vld_o = (!mcu_ld_buffering_reg && !mcu_ld_buffered_reg && v_ld_instr_check && !v_OPCFG_check_reg);
    always @(posedge clk)
    begin
       if (!rstn)
@@ -258,11 +259,23 @@ module scheduler
       end
    end
 
+   always @(posedge clk)
+   begin
+      if(!rstn)begin
+	 mcu_ld_buffered_reg <=0;
+      end
+      else
+	if (!mcu_ld_buffered_reg)
+	  mcu_ld_buffered_reg <= mcu_ld_buffered_i;
+	else if (instr_rdy_i[5:4]!=0)
+	  mcu_ld_buffered_reg <= 0;
+   end
+
    assign mcu_st_vld_o = v_st_instr_check && !v_idx_unordered_check && instr_rdy_i[3:2]!=0;
 
    //check handshake between scheduler and V_CU
    
-   assign next_instr_rdy = ((instr_vld_o & instr_rdy_i) != 'h0 || instr_vld_o == 0) && !(v_ld_instr_check && !mcu_ld_buffered_i);
+   assign next_instr_rdy = ((instr_vld_o & instr_rdy_i) != 'h0 || instr_vld_o == 0) && !(v_ld_instr_check && !mcu_ld_buffered_reg);
 
    // maybe extented
    // Stall if new instructions is valid but v_cu is not ready,
@@ -271,7 +284,7 @@ module scheduler
 
    assign vector_stall_o   = (!next_instr_rdy && (v_st_instr_check | v_ld_instr_check | v_arith_instr_check)) | 
 			     (mcu_st_vld_o && !mcu_st_rdy_i) | 
-			     (v_ld_instr_check && !mcu_ld_buffered_i);
+			     (v_ld_instr_check && !mcu_ld_buffered_reg);
 
 
    assign mcu_rs1_o        = scalar_rs1_reg;

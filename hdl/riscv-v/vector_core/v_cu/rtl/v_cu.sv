@@ -527,6 +527,8 @@ module v_cu #
 
    logic[W_PORTS_NUM-1:0]     reduction_wait_cnt_en;
    logic[W_PORTS_NUM-1:0][2:0]reduction_wait_cnt;
+
+   logic [W_PORTS_NUM-1:0][6:0] store_dependencie_cnt;
    always@(posedge clk)
    begin
       if (!rstn)
@@ -559,6 +561,28 @@ module v_cu #
    always@(posedge clk)
    begin
       if (!rstn)
+	for (int i=0; i<W_PORTS_NUM; i++)
+	  store_dependencie_cnt[i] <= 0;
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	   if (start_o[i])
+	     if (sew_o[1:0] == 2'b00)
+	       store_dependencie_cnt[i] <= 44;
+	     else if (sew_o[1:0] == 2'b01)
+	       store_dependencie_cnt[i] <= 22;
+	     else
+	       store_dependencie_cnt[i] <= 11;
+	   else if (!port_group_ready_i[i])
+	     store_dependencie_cnt[i] <= store_dependencie_cnt[i]-1;
+	   else
+	     store_dependencie_cnt[i] <= 0;
+      end	
+   end
+
+   always@(posedge clk)
+   begin
+      if (!rstn)
       begin
 	 for (int i=0;i<W_PORTS_NUM;i++)
 	   vd_instr_in_progress[i] <= 6'b100000;;
@@ -568,11 +592,12 @@ module v_cu #
 	 for (int i=0;i<W_PORTS_NUM;i++)
 	   if (start_o[i] && port_group_ready_i[i])
 	     vd_instr_in_progress[i] <= {1'b0, v_instr_vd};
-	   else if (dependancy_issue_cnt[i]==0 && reduction_wait_cnt[i] == 0)
+	   else if (dependancy_issue_cnt[i]==0 && reduction_wait_cnt[i] == 0 && store_dependencie_cnt[i]==0)
 	     vd_instr_in_progress[i] <= 6'b100000;//no valid instruction
       end
    end
 
+   
    
    always_comb
    begin
@@ -584,15 +609,15 @@ module v_cu #
 	    if (slide_in_progress_reg)
 	      dependancy_issue[i]=1'b1;
 	    else if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
-		  ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2 ||
-		   (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check)))
+		     (dependancy_issue_cnt != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
+		     (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check))
 	      dependancy_issue[i]=1'b1;
 	 end
 	 else
 	 begin
 	    if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
-		((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2 ||
-		 (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check)))
+		(dependancy_issue_cnt != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
+		 (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check))
 	      dependancy_issue[i]=1'b1;
 	 end
 	 
@@ -608,9 +633,12 @@ module v_cu #
       end
       else
       begin
-	 for (int i=0; i<W_PORTS_NUM; i++) 
+	 for (int i=0; i<W_PORTS_NUM; i++)
 	   if (vd_instr_in_progress[i][5] != 1'b1)
-	     dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
+	   begin
+	      if (dependancy_issue_cnt[i] != 0)
+		dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
+	   end
 	   else 
 	     dependancy_issue_cnt[i]<=11;
       end

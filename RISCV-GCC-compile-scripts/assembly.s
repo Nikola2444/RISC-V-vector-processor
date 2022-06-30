@@ -2,7 +2,7 @@
     .balign 4                 # align 4 byte instructions by 4 bytes
 
   
-addi x10, x10, 64   # Number of Pixels/Weights
+addi x10, x10, 256   # Number of Pixels/Weights
 addi x11, x11, 1024 # Pointer to start of image
 addi x12, x12, 1024 # Pointer to start of biases
 addi x12, x12, 1024 # Pointer to start of biases	
@@ -46,7 +46,6 @@ l_image_loop_exit:nop
 
 vle8.v v8, (x12)          # load biases in v8 ~ fixed for all output pixels
 vadd.vv v28, v28, v8
-vsetvli x31, x10, e8, m1	# 8-bit data
 vse8.v v28, (x14)          # load image in v0
 
 

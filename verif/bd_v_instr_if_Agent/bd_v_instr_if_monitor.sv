@@ -93,11 +93,11 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 fork
 	    begin
 	       driver_processing[idx] = 0;
-	       for (int i=0; i<8; i++ ) // wait for VECTOR core to finish with the processing, max 8 clk needed
+	       for (int i=0; i<8; i++) // wait for VECTOR core to finish with the processing, max 8 clk needed
 	       begin
 		  @(negedge vif.clk);
 	       end
-	       $display("READY DRIVER IDX IS: %d", idx);	       
+
 	       curr_it[idx]=bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
 	       curr_it[idx].v_instruction = instr_queue[idx].pop_front();
 	       curr_it[idx].sew = sew_queue[idx].pop_front();
@@ -107,12 +107,13 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	       curr_it[idx].scalar2 = scalar2_queue[idx].pop_front();
 	       curr_it[idx].vrf_read_ram = vif.vrf_read_ram;
 	       item_collected_port.write(curr_it[idx]);
+	       $display("READY DRIVER IDX IS: %d, v_instruction:%x", idx, curr_it[idx].v_instruction);	       
 	    end
 	 join_none
       end
-      if (vif.start[idx] && vif.ready[idx] )
+      if (vif.start[idx] && vif.ready[idx])
       begin
-	 $display("START DRIVER IDX IS: %d", idx);
+	 $display("START DRIVER IDX IS: %d, v_instruction:%x", idx, vif.v_instruction);
 	 driver_processing[idx] = 1;
 	 instr_queue[idx].push_back(vif.v_instruction);
 	 sew_queue[idx].push_back( vif.sew);
@@ -120,9 +121,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 vl_queue[idx].push_back(vif.vl);
 	 scalar_queue[idx].push_back(vif.v_rs1_scalar);
 	 scalar2_queue[idx].push_back(vif.v_rs2_scalar);
-      end
-      
-      
+      end            
    endtask
 
    

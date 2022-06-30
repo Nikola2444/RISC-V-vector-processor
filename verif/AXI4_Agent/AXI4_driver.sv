@@ -110,7 +110,7 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
 		  i++;
 		  if (vif.m_axi_wlast)
 		    axi_write_channel = resp_phase;
-		  $display("vif.ddr_mem[%d]=%d",wr_transfer_base_addr+i, vif.ddr_mem[wr_transfer_base_addr+i]);
+		  //$display("vif.ddr_mem[%d]=%d",wr_transfer_base_addr+i, vif.ddr_mem[wr_transfer_base_addr+i]);
                end
             end
             resp_phase:begin

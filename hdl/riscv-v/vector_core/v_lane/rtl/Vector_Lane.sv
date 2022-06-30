@@ -412,7 +412,8 @@ module Vector_Lane
             
             // Store data mux
             for(int i = 0; i < R_PORTS_NUM; i++) begin
-               store_data_mux[j_gen][i] = read_data_mux[i];
+               //store_data_mux[j_gen][i] = read_data_mux[i];
+	       store_data_mux[j_gen][i]=read_data_prep_reg[i][95:64]; //take all 32 bits, sew doesnt matter.
             end
             store_data_o[j_gen] = store_data_mux[j_gen][store_data_mux_sel[j_gen]];
 

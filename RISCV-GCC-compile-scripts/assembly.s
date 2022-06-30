@@ -2,12 +2,18 @@
     .balign 4                 # align 4 byte instructions by 4 bytes
 
   
-li x10, 64   # Number of Pixels/Weights
-li x11, 1024 # Pointer to start of image
-li x12, 2048 # Pointer to start of biases
-li x13, 4096 # Pointer to start of result
-li x14, 3072 # Pointer to start of weights
-li x16, 1 # Pointer to start of weights
+addi x10, x10, 64   # Number of Pixels/Weights
+addi x11, x11, 1024 # Pointer to start of image
+addi x12, x12, 1024 # Pointer to start of biases
+addi x12, x12, 1024 # Pointer to start of biases	
+addi x13, x13, 1024 # Pointer to start of result
+addi x13, x13, 1024 # Pointer to start of result
+addi x13, x13, 1024 # Pointer to start of result
+addi x13, x13, 1024 # Pointer to start of result		
+addi x14, x14, 1024 # Pointer to start of weights
+addi x14, x14, 1024 # Pointer to start of weights
+addi x14, x14, 1024 # Pointer to start of weights
+addi x16, x16, 1 # Pointer to start of weights
 addi x15, x0, 0
 vsetvli x31, x10, e8, m1	# 8-bit data
 
@@ -40,6 +46,7 @@ l_image_loop_exit:nop
 
 vle8.v v8, (x12)          # load biases in v8 ~ fixed for all output pixels
 vadd.vv v28, v28, v8
+vsetvli x31, x10, e8, m1	# 8-bit data
 vse8.v v28, (x14)          # load image in v0
 
 

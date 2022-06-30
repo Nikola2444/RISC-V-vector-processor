@@ -599,9 +599,10 @@ always_comb begin
                     end                                   
                 end
                 4'b0010 : begin                                           // STORE
+		    element_width_read = 2'b10; // we read all bytes no matter the sew
                     if(read_limit_comp) begin                               
                         next_state = IDLE;
-		        element_width_read = 2'b10; // we read all bytes no matter the sew
+		        
                         dp0_next.store_data_valid = 0;
                     end
                 end
@@ -667,6 +668,7 @@ always_comb begin
             
             if(dp0_reg.en_write) begin
                 next_state = IDLE;
+	        dp0_next.reduction_op=0;
                 dp0_next.en_write = 0;
                 dp0_next.vmrf_wen = 0;
             end

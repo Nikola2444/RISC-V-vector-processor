@@ -1,6 +1,29 @@
 # RISC-V-vector-processor-for-the-acceleration-of-Machine-learning-algorithms
 
+Project description
 
+In the last ten years the emergence of highly advanced machine learning algorithms
+and especially neural networks has caused major changes in many engineering disciplines.
+For that reason we  wanted to create a piece of hardware that would be general enough
+to execute various types of machine learning algorithms.
+With the introduction of the vector extension to the RISC-V ISA, this option has become
+even more interesting, because hard work of creating a meaningful set of instructions has
+already been done in advance and additionally it gives engineers who want to work with it
+more flexibility because of its open-source nature.
+
+This project is a work in progress and in time it may be updated.
+
+## Directories
+   hdl - Contains hardware source files and also some simple test benches used to verify
+         basic functionality of some modules.
+   RISCV-GCC_compile-scripts - contains scripts used to compile RISCV assembly code.
+                               Check sections COMPILE SCRIPTS for more information
+   synth-Contains scripts which enable vivado synthesis and implementation of hardware
+         from bash
+   verif-Contains main source file used to create the verification environment
+   vivado_pjt-Contains scripts used to create vivado project and add all hardware and verification files.
+              Check section SIMULATION.
+	      
 ## SIMULATION
 
 To simulate the design in Vivado next .tcl script needs to be sourced to it.

@@ -42,7 +42,7 @@ Beacuse this project is a work in progress it is susceptible to further changes.
           
 ## SIMULATION
 
-To simulate the design in Vivado next .tcl script needs to be sourced to it.
+To simulate the design in Vivado next .tcl script needs to be sourced to it:
 
   vivado_pjt/create_pjt.tcl
 

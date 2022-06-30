@@ -31,14 +31,14 @@ Beacuse this project is a work in progress it is susceptible to further changes.
 
 * Sheet of implemented and verified instructions can be found on the next [link:](https://docs.google.com/spreadsheets/d/1fCqdjVGNh2V0TndOiQdK-zKLkYkHDLEMYcRyQqehwq8/edit?usp=sharing)
 
-## Steps to Run the test hardware on the board
+## Steps to Run and test the hardware on the board
 
 * Open Vitis and create new board platform using .xca file from scripts directory. If you
   want to generate your own .xca file follow steps from README in scripts directory.
 * Create new application project and use source files from Vitis_test_app_directory.
 * Program FPGA and run the application. It will compare results that application calculated
   and results core outputed.
-* The application will run a assembly.s code in RISCV-GCC_compile-scripts directory
+* The application will by default run an assembly.s code in RISCV-GCC_compile-scripts directory
           
 ## SIMULATION
 
@@ -87,7 +87,7 @@ is used by the simulator
 ## TOOLS USED
 
 * Vivado: used for hardware simulation and implementation.
-* Vitis: used for tesitng hardware on board.
+* Vitis: used for testing hardware on board.
 * RISCV-GCC compiler: used for compiling assembly code.
 
 

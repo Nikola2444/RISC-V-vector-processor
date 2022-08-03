@@ -9,7 +9,7 @@ to execute various types of machine learning algorithms.
 With the introduction of the vector extension to the RISC-V ISA, this option has become
 even more interesting, because hard work of creating a meaningful set of instructions has
 already been done in advance and additionally it gives engineers who want to work with it
-more flexibility because of its open-source nature.
+more flexibility because of its open-source nature .
 
 Beacuse this project is a work in progress it is susceptible to further changes.
 

@@ -5,8 +5,9 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
    // control fileds
    bit checks_enable = 1;
    bit coverage_enable = 1;
-   int num_of_tr;
-   int match_num;
+   int num_of_sc_instr;
+   int match_num=0;
+   int missmatch_num=0;
    // This TLM port is used to connect the scoreboard to the monitor
    uvm_analysis_imp_s#(bd_instr_if_seq_item, riscv_sc_scoreboard) item_collected_imp_s;
    
@@ -92,7 +93,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       op2 = sc_reg_bank[rs2];
       $cast(tr_clone, tr.clone());
       
-      num_of_tr++;
+      num_of_sc_instr++;
       if (opcode == sc_arith_imm)
       begin
 	 sc_reg_bank[rd]=sc_calculate_arith (op1, immediate, funct3, funct7, 1);
@@ -103,8 +104,11 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	      match_num++;
 	   end
 	 else
-	   `uvm_error("SC_MISSMATCH_IMM", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
-						rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
+	 begin
+	    `uvm_error("SC_MISSMATCH_IMM", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction,
+						     rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
+	    missmatch_num++;
+	 end
       end
       else if (opcode == sc_arith)
       begin
@@ -116,8 +120,11 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	      match_num++;
 	   end
 	 else
-	   `uvm_error("SC_MISSMATCH_ARITH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
-						rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
+	 begin
+	    `uvm_error("SC_MISSMATCH_ARITH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
+						       rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
+	    missmatch_num++;
+	 end
       end
       else if (opcode == sc_store)
       begin
@@ -131,6 +138,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	 begin
 	    `uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr_clone.instruction, 
 						 rd, sc_reg_bank[rd], rd, tr_clone.scalar_reg_bank_new[rd]))
+	    missmatch_num++;
 	 end
       end
       
@@ -183,7 +191,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       rs1 = tr.instruction[19:15];		       
       rs2 = tr.instruction[24:20];
       funct3 = tr.instruction[14:12];
-      num_of_tr++;
+      num_of_sc_instr++;
       case (funct3)
 	 000: res = signed'(sc_reg_bank[rs1]) == signed'(sc_reg_bank[rs2]);
 	 001: res = signed'(sc_reg_bank[rs1]) != signed'(sc_reg_bank[rs2]);
@@ -210,8 +218,9 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       logic [4:0] 	rs2 = tr.instruction[24:20];
       logic [4:0] 	rd = tr.instruction[11:7];
       logic [2:0] 	funct3 = tr.instruction[14:12];
-      num_of_tr++;
-      jump_addr = signed'(jal_imm) + signed'(tr.instruction_addr) + 4;
+      num_of_sc_instr++;
+      //jump_addr = signed'(jal_imm) + signed'(tr.instruction_addr) + 4;
+      jump_addr = signed'(tr.instruction_addr) + 4;
       if (rd != 0)
 	sc_reg_bank[rd]= jump_addr;
       else
@@ -224,8 +233,11 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	   match_num++;
 	end
       else
-	`uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr.instruction, 
-					     rd, sc_reg_bank[rd], rd, tr.scalar_reg_bank_new[rd]))
+      begin
+	 `uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr.instruction, 
+					      rd, sc_reg_bank[rd], rd, tr.scalar_reg_bank_new[rd]))
+	 missmatch_num++;
+      end
       
 
       
@@ -238,7 +250,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       logic [4:0]  rs2 = tr.instruction[24:20];
       logic [4:0]  rd = tr.instruction[11:7];
       logic [2:0]  funct3 = tr.instruction[14:12];
-      num_of_tr++;
+      num_of_sc_instr++;
       jump_addr = signed'(jalr_imm) + signed'(sc_reg_bank[rs1]);
       if (rd != 0)
 	sc_reg_bank[rd]= {jump_addr[31:1], 1'b0};
@@ -252,8 +264,11 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	   match_num++;
 	end
       else
-	`uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr.instruction, 
-					     rd, sc_reg_bank[rd], rd, tr.scalar_reg_bank_new[rd]))
+      begin
+	 `uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr.instruction, 
+					      rd, sc_reg_bank[rd], rd, tr.scalar_reg_bank_new[rd]))
+	 missmatch_num++;
+      end
       
 
       
@@ -261,7 +276,8 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 
 
    function void report_phase(uvm_phase phase);
-      `uvm_info(get_type_name(), $sformatf("RISCV scoreboard examined: %0d TRANSACTIONS", num_of_tr), UVM_LOW);
-      `uvm_info(get_type_name(), $sformatf("Calc scoreboard examined: %0d MATCHES", match_num), UVM_LOW);
+      `uvm_info(get_type_name(), $sformatf("RISCV SCALAR SCOREBOARD EXAMINED: %0d SCALAR_INSTRUCTION", num_of_sc_instr), UVM_LOW);
+      `uvm_info(get_type_name(), $sformatf("RISCV SCALAR SCOREBOARD EXAMINED: %0d SCALAR_INSTR_MATCHES", match_num), UVM_LOW);
+      `uvm_info(get_type_name(), $sformatf("RISCV SCALAR SCOREBOARD EXAMINED: %0d SCALAR_INSTR_MISSMATCHES", missmatch_num), UVM_LOW);
    endfunction : report_phase
 endclass : riscv_sc_scoreboard

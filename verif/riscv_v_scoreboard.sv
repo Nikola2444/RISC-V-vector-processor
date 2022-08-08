@@ -6,8 +6,9 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    // control fileds
    bit checks_enable = 1;
    bit coverage_enable = 1;
-   int num_of_tr;
-   int match_num;
+   int num_of_vector_instr;
+   int match_num=0;
+   int missmatch_num=0;
 
    const logic [2 : 0] OPIVV = 3'b000;
    const logic [2 : 0] OPIVX = 3'b100;
@@ -62,9 +63,6 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 						     backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_read+vreg_addr_offset][byte_sel*8+:8];
 
 	end
-      // foreach(vrf_read_ram[i])
-	// foreach(vrf_read_ram[i][j])
-	  // $display ("vrf_read_ram[%0d][%0d]=%0d", i, j, vrf_read_ram[i][j]);
    endfunction
 
    function write_v (bd_v_instr_if_seq_item tr);
@@ -73,8 +71,8 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 
       `uvm_info(get_type_name(),
                 $sformatf("V_SCBD:vMonitor sent...\n%s", tr_clone.sprint()),
-                UVM_MEDIUM)
-      num_of_tr++;
+                UVM_FULL)
+      num_of_vector_instr++;
       if (tr_clone.v_instruction[6:0]==v_load)
 	load_instr_check(tr_clone);
       if (tr_clone.v_instruction[6:0]==v_arith && (tr_clone.v_instruction[31:26]==6'b001110 || tr_clone.v_instruction[31:26]==6'b001111)) // slides
@@ -470,17 +468,16 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	 dut_vrf_data = backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][0][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8] ^
 			backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8];
 	 //$display("vrf_addr_offset=%0d, vreg_to_update=%0d",vrf_addr_offset, vreg_to_update);
-	 assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)
-	    
+	 assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)	    
 	   begin
-/* -----\/----- EXCLUDED -----\/-----
+	      /* -----\/----- EXCLUDED -----\/-----
 	      $display("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
 		       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
 		       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data);
- -----/\----- EXCLUDED -----/\----- */
-	      match_num++;
-	      if (match==0)
-		match = 1;	
+	       -----/\----- EXCLUDED -----/\----- */
+	      if (match==0)begin
+		 match = 1;
+	      end
 	   end
 	 else
 	 begin	    
@@ -488,16 +485,19 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	    `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
 						     vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
 						     vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data)) // dut result
+	    missmatch_num++;
 	 end	   
       end
       if (match == 1)
       begin
-	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_LOW)
+	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)
+	 match_num++;
       end
    endfunction
    function void report_phase(uvm_phase phase);
-      `uvm_info(get_type_name(), $sformatf("RISCV scoreboard examined: %0d TRANSACTIONS", num_of_tr), UVM_LOW);
-      `uvm_info(get_type_name(), $sformatf("Calc scoreboard examined: %0d MATCHES", match_num), UVM_LOW);
+      `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD INSTRUCTION NUMBER: %0d", num_of_vector_instr), UVM_LOW);
+      `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD MATCH NUMBER: %0d", match_num), UVM_LOW);
+      `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD MISSMATCH NUMBER: %0d ", missmatch_num), UVM_LOW);
    endfunction : report_phase
 
    

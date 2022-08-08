@@ -50,9 +50,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
       
    endfunction : connect_phase
 
-   task main_phase(uvm_phase phase);
-      int drop_obj=0;
-      phase.raise_objection(this);
+   task main_phase(uvm_phase phase);      
       forever begin
 	 @(negedge vif.clk);
 	  fork
@@ -69,25 +67,14 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 		lane_driver(3);
 	     end
 	  join_none
+      end
 
-	 if(vif.v_instruction[6:0]==7'h13)
-	   watch_dog_cnt++;
-	 if (vif.start==0 && vif.ready==4'b1111 && watch_dog_cnt > 10 && drop_obj==0)
-	 begin
-	    drop_obj = 1;
-	    phase.drop_objection(this);
-	 end
-	  // ...
-	  // collect transactions
-	  // ...
-	  // item_collected_port.write(curr_it);
-	  
-       end
+	 	  
    endtask : main_phase
 
    task lane_driver(int idx);
 
-
+      
       if (driver_processing[idx]==1 && vif.ready[idx])
       begin
 	 fork
@@ -107,13 +94,17 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	       curr_it[idx].scalar2 = scalar2_queue[idx].pop_front();
 	       curr_it[idx].vrf_read_ram = vif.vrf_read_ram;
 	       item_collected_port.write(curr_it[idx]);
-	       $display("READY DRIVER IDX IS: %d, v_instruction:%x", idx, curr_it[idx].v_instruction);	       
+	       `uvm_info(get_type_name(),
+			 $sformatf("V_MONITOR: FINISHED V_INSTR_DRIVER IDX IS: %d, v_instruction:%x", idx, vif.v_instruction),
+			 UVM_HIGH)
 	    end
 	 join_none
       end
       if (vif.start[idx] && vif.ready[idx])
       begin
-	 $display("START DRIVER IDX IS: %d, v_instruction:%x", idx, vif.v_instruction);
+	 `uvm_info(get_type_name(),
+                $sformatf("V_MONITOR: START V_INSTR_DRIVER IDX IS: %d, v_instruction:%x", idx, vif.v_instruction),
+                UVM_HIGH)
 	 driver_processing[idx] = 1;
 	 instr_queue[idx].push_back(vif.v_instruction);
 	 sew_queue[idx].push_back( vif.sew);

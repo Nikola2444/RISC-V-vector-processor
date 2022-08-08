@@ -35,7 +35,7 @@ class bd_instr_if_driver extends uvm_driver#(bd_instr_if_seq_item);
             seq_item_port.get_next_item(req);
             `uvm_info(get_type_name(),
                       $sformatf("Driver sending...\n%s", req.sprint()),
-                      UVM_HIGH)
+                      UVM_FULL)
 	    backdoor_instr_vif.instr_mem_read = req.instruction;
 	    backdoor_instr_vif.instr_ready = 1'b1;
             // do actual driving here

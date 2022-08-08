@@ -5,8 +5,8 @@
 // for automated checking.
 
 // Instruction interface backdoor connections
-assign DUT.instr_ready = backdoor_instr_vif.instr_ready; 
-assign DUT.instr_mem_read=backdoor_instr_vif.instr_mem_read;
+assign backdoor_instr_vif.instr_ready = DUT.instr_ready; 
+assign backdoor_instr_vif.instr_mem_read=DUT.instr_mem_read;
 assign backdoor_instr_vif.instr_mem_address = DUT.instr_mem_address;
 assign backdoor_instr_vif.instr_mem_flush = DUT.instr_mem_flush;
 // assign backdoor_instr_vif.instr_mem_en = DUT.riscv_v_inst.scalar_core_inst.instr_mem_en_s;

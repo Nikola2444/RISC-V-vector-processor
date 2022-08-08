@@ -3,12 +3,12 @@ module riscv_v_verif_top;
    `include "defines.sv"
    import uvm_pkg::*;     // import the UVM library
 `include "uvm_macros.svh" // Include the UVM macros
-   function automatic void read_instr_from_dump_file (string assembly_file_path, ref logic[31:0]ddr_mem[`DDR_DEPTH]);
+   function automatic int read_instr_from_dump_file (string assembly_file_path, ref logic[31:0]ddr_mem[`DDR_DEPTH]);
       logic [31:0] instr;
       logic [31 : 0] instr_queue_1[$];
       string       instr_string;
       int 	   fd = $fopen (assembly_file_path, "r");
-
+      int 	   instr_num=0;
       while (!$feof(fd)) begin
 	 $fgets(instr_string, fd);
 	 for (int i = 0; i < instr_string.len(); i++)
@@ -28,7 +28,9 @@ module riscv_v_verif_top;
       begin
 	 $display("instruction[%d]: %h", i, instr_queue_1[i]);
 	 ddr_mem[i]=instr_queue_1[i];
-      end 
+	 instr_num++;
+      end
+      return instr_num;
    endfunction
 
 
@@ -50,6 +52,7 @@ module riscv_v_verif_top;
    logic 	clk;
    logic 	clk2;
    logic 	rstn;
+   int          num_of_instr;
    string 	assembly_file_path = "../../../../../../RISCV-GCC-compile-scripts/assembly.dump";
       
    
@@ -129,7 +132,13 @@ module riscv_v_verif_top;
    
 
    // run test
-   initial begin      
+   initial begin
+      //init DDR
+      num_of_instr=read_instr_from_dump_file(assembly_file_path, ddr_mem);
+      for (logic[31:0] i=256; i < `DDR_DEPTH; i++)
+	ddr_mem[i[31:2]][i[1:0]*8+:8] = (i-256)%64;
+
+      //send data to configuration database
       uvm_config_db#(virtual axi4_if)::set(null, "uvm_test_top.env", "v_axi4_if", v_axi4_vif);
       uvm_config_db#(virtual axi4_if)::set(null, "uvm_test_top.env", "s_axi4_if", s_axi4_vif);
       uvm_config_db#(virtual backdoor_instr_if)::set(null, "uvm_test_top.env", "backdoor_instr_if", backdoor_instr_vif);
@@ -137,6 +146,8 @@ module riscv_v_verif_top;
       uvm_config_db#(virtual backdoor_register_bank_if)::set(null, "uvm_test_top.env", "backdoor_register_bank_if", backdoor_register_bank_vif);
       uvm_config_db#(virtual backdoor_sc_data_if)::set(null, "uvm_test_top.env", "backdoor_sc_data_if", backdoor_sc_data_vif);
       uvm_config_db#(virtual backdoor_v_data_if)::set(null, "uvm_test_top.env", "backdoor_v_data_if", backdoor_v_data_vif);
+      uvm_config_db#(int)::set(null, "uvm_test_top.env", "num_of_instr", num_of_instr);
+      
       run_test();
    end
 
@@ -147,22 +158,19 @@ module riscv_v_verif_top;
       clk2 <= 1;
       rstn <= 0;
       #950 rstn <= 1;
-      ce <= 1'b1;
-      
+      ce <= 1'b1;      
    end
    logic[31:0] LVT0_xor_LVT1;
    logic [31:0] LVT1_in;
    logic [31:0] LVT0_out;
-   assign LVT0_out = DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.doutb;
-   assign LVT1_in = DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.dina;
-   assign LVT0_xor_LVT1 = LVT0_out ^ LVT1_in;
+   //assign LVT0_out = DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.doutb;
+   //assign LVT1_in = DUT.riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.dina;
+   //assign LVT0_xor_LVT1 = LVT0_out ^ LVT1_in;
    //Initialize VRF
    initial
    begin
-      //init DDR
-      read_instr_from_dump_file(assembly_file_path, ddr_mem);
-      for (logic[31:0] i=256; i < `DDR_DEPTH; i++)
-	ddr_mem[i[31:2]][i[1:0]*8+:8] = (i-256)%64;
+      
+      
       //init lvt_rams
 
       vrf_vlane_col = 0;
@@ -176,9 +184,7 @@ module riscv_v_verif_top;
 	 end
       end
       //init read_rams
-
-	 
-	 
+	 	 
       for (logic[31:0] j=0; j<`VRF_DEPTH*4; j++)
       begin
 	 for (int i=0;i<`V_LANES;i++)

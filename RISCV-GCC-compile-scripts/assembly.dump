@@ -40,11 +40,4 @@ Disassembly of section .text:
   70:	02060407          	vle8.v	v8,(a2)
   74:	03c40e57          	vadd.vv	v28,v28,v8
   78:	02070e27          	vse8.v	v28,(a4)
-
-000000000000007c <l_finished>:
   7c:	00000013          	nop
-  80:	00000013          	nop
-  84:	00000013          	nop
-  88:	00000013          	nop
-  8c:	00000013          	nop
-  90:	fedff0ef          	jal	ra,7c <l_finished>

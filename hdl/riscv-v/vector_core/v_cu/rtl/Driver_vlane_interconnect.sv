@@ -82,7 +82,7 @@ module Driver_vlane_interconnect
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] el_extractor_i,                                                            // READ RELATED SIGNAL
     input logic [W_PORTS_NUM - 1 : 0] vector_mask_i,
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_i,
-    output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] el_extractor_o,                                        // HAS TO BE DONE
+    output logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][1 : 0] el_extractor_o,                                        // HAS TO BE DONE. WHYYYY
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vector_mask_o,
     output logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][1 : 0] write_data_sel_o,
     

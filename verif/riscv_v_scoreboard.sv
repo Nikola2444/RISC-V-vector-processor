@@ -455,6 +455,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       logic [4:0]  vs1;
       logic [4:0] vs2;
       logic [4:0] vd;
+      int 	  missmatchess;
       vs1=tr.v_instruction[19:15];
       vs2=tr.v_instruction[24:20];
       vd=tr.v_instruction[11:7];
@@ -468,31 +469,22 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	 dut_vrf_data = backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][0][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8] ^
 			backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8];
 	 //$display("vrf_addr_offset=%0d, vreg_to_update=%0d",vrf_addr_offset, vreg_to_update);
-	 assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)	    
-	   begin
-	      /* -----\/----- EXCLUDED -----\/-----
-	      $display("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
-		       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
-		       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data);
-	       -----/\----- EXCLUDED -----/\----- */
-	      if (match==0)begin
-		 match = 1;
-	      end
-	   end
-	 else
+	 assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)	    	 
+	   else
 	 begin	    
-	    match = 0;
 	    `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
 						     vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
 						     vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data)) // dut result
-	    missmatch_num++;
+	    missmatchess++;
 	 end	   
       end
-      if (match == 1)
+      if (missmatchess == 0)
       begin
 	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)
 	 match_num++;
       end
+      else
+	missmatch_num++;
    endfunction
    function void report_phase(uvm_phase phase);
       `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD INSTRUCTION NUMBER: %0d", num_of_vector_instr), UVM_LOW);

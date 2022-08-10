@@ -81,7 +81,7 @@ module Partial_sublane_driver
 
     // Misc signals
     input vector_mask_i,
-    output logic[1 : 0] el_extractor_o,
+    output logic[1:0][1 : 0] vrf_read_byte_sel_o,
     output logic vector_mask_o,
     output logic [1 : 0] write_data_sel_o
 );
@@ -210,7 +210,8 @@ assign op2_sel_o = (current_state == REDUCTION_MODE) ? 2'b11 : dp0_reg.op2_sel;
 assign op3_sel_o = dp0_reg.op3_sel;
 assign ALU_x_data_o = dp0_reg.ALU_x_data;
 assign ALU_imm_o = dp0_reg.ALU_imm;
-assign el_extractor_o = main_cnt[1 : 0];
+assign vrf_read_byte_sel_o[0] = main_cnt[1 : 0];
+assign vrf_read_byte_sel_o[1] = main_cnt[1 : 0];
 assign vector_mask_o = dp0_reg.vector_mask;
 assign write_data_sel_o = dp0_reg.write_data_sel;
 assign read_data_valid_o[VLANE_NUM - 1 : 1] = read_data_valid[VLANE_NUM - 1 : 1];

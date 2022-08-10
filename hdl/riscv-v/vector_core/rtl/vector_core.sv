@@ -123,7 +123,7 @@ module vector_core #
    // SHEDULER-MEM_SUBSYS interconnections
    logic [31:0] 			  mcu_store_data[0:VLANE_NUM-1];
    logic [31:0] 			  mcu_store_load_idx  [0:VLANE_NUM-1];
-   logic [31:0]	        mcu_load_data[0:VLANE_NUM-1];
+   logic [31:0] 			  mcu_load_data[0:VLANE_NUM-1];
    logic [3:0] 				  mcu_load_bwe[0:VLANE_NUM-1];
    // V_LANE-MEM_SUBSYS interconnections
 
@@ -265,9 +265,9 @@ module vector_core #
      (/*AUTO_INST*/
       // Outputs
       .ready_for_load_o			    (vlane_load_rdy),
-      .store_data_o			        (vlane_store_data),
-      .store_load_index_o		    (vlane_store_load_idx),
-      .store_data_valid_o		    (vlane_store_dvalid),
+      .store_data_o			    (vlane_store_data),
+      .store_load_index_o		    (vlane_mcu_idx_ivalid),
+      .store_data_valid_o		    (vlane_mcu_store_dvalid),
       // TODO: rename store_load_index_valid to load index valid - as store_data_valid should be for both index and data
       .store_load_index_valid_o	(vlane_store_load_ivalid),
       .load_valid_i			        (vlane_load_dvalid),
@@ -305,9 +305,10 @@ module vector_core #
       .slide_amount_i			(slide_amount[31:0]),
       .vector_mask_i			(vector_mask),
       .read_port_allocation_i		(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this
-      .primary_read_data_i		(8'hff));//TODO: what is this
+      .use_3_read_ports_i		(8'h00));//TODO: what is this
 
 
+/* -----\/----- EXCLUDED -----\/-----
    always @(posedge clk)
    begin
       if (!rstn)
@@ -325,18 +326,20 @@ module vector_core #
 	   vlane_idx_driver_reg <= vlane_store_driver;
       end
    end
+ -----/\----- EXCLUDED -----/\----- */
    
    always_comb
    begin
       for (int i=0; i<VLANE_NUM; i++)
       begin
-	 mcu_store_data[i] = vlane_store_data[i][vlane_store_driver_reg];
-	 mcu_store_load_idx[i] = vlane_store_load_idx[i][vlane_idx_driver_reg];
+	 mcu_store_data[i] = vlane_store_data[i];
+	 mcu_store_load_idx[i] = vlane_store_load_idx[i];
 	 vlane_load_data[i] = mcu_load_data[i];
 	 vlane_load_bwen[i] = mcu_load_bwe[i];
       end       
    end
-
+   
+/* -----\/----- EXCLUDED -----\/-----
    always_comb
    begin
       for (int i=0;i<VLANE_NUM;i++)
@@ -347,8 +350,10 @@ module vector_core #
 	   vlane_mcu_store_dvalid = 1'b1;
       end
    end
+ -----/\----- EXCLUDED -----/\----- */
    
    // For indices of indexed loads and stores
+/* -----\/----- EXCLUDED -----\/-----
    always_comb
    begin
       for(int i=0;i<VLANE_NUM;i++) begin
@@ -358,6 +363,7 @@ module vector_core #
            vlane_mcu_idx_ivalid = 1'b1;
       end
    end
+ -----/\----- EXCLUDED -----/\----- */
 
    // Instantiate MEM_SUBSYS
    mem_subsys #(

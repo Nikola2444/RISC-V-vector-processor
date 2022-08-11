@@ -1,4 +1,4 @@
-module Complete_sublane_driver_new
+module complete_sublane_driver
 #(
     parameter MEM_DEPTH = 512,
     parameter MAX_VL_PER_LANE = 4 * 8 * 8,                                      // The biggest number of elements in one lane
@@ -573,7 +573,7 @@ end
 assign slide_waddr_offset = dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[31 : $clog2(VLANE_NUM*4)] :
 			    !dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[31 : $clog2(VLANE_NUM*4)] : 'h0;
 
-Address_counter
+address_counter
 #(
     .MEM_DEPTH(MEM_DEPTH),
     .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
@@ -597,7 +597,7 @@ waddr_cnt
 
 generate
     for(genvar i = 0; i < 3; i++) begin
-        Address_counter
+        address_counter
         #(
             .MEM_DEPTH(MEM_DEPTH),
             .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
@@ -623,7 +623,7 @@ endgenerate;
 /////////////////////////////////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////////////////////////////////
-Data_validation
+data_validation
 #(
     .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
     .VLANE_NUM(VLANE_NUM)
@@ -646,12 +646,12 @@ data_validation_inst
 
 /////////////////////////////////////////////////////////////////////////////////
 /* -----\/----- EXCLUDED -----\/-----
-Column_offset_register
+column_offset_register
 #(
     .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
     .VLANE_NUM(VLANE_NUM)
 )
-Column_offset_register_inst
+column_offset_register_inst
 (
     .clk_i(clk_i),
     .rst_i(rst_i),

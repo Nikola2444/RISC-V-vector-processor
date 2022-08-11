@@ -1,4 +1,4 @@
-module Column_offset_register
+module column_offset_register
 #(
     parameter VREG_LOC_PER_LANE = 8,
     parameter VLANE_NUM = 8

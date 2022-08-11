@@ -1,4 +1,4 @@
-module Vlane_with_low_lvl_ctrl#
+module v_dpu#
   (
    parameter MEM_DEPTH = 512,
    parameter MAX_VL_PER_LANE = 4 * 8 * 8,
@@ -175,7 +175,7 @@ module Vlane_with_low_lvl_ctrl#
    generate
       for(genvar i = 0; i < W_PORTS_NUM; i++) begin
          if(i == 0) begin
-            Complete_sublane_driver_new
+            complete_sublane_driver
               #(
                 .MEM_DEPTH(MEM_DEPTH),
                 .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
@@ -185,7 +185,7 @@ module Vlane_with_low_lvl_ctrl#
                 .VLANE_NUM(VLANE_NUM),
                 .ALU_OPMODE(ALU_OPMODE)
 		)
-            Complete_sublane_driver_inst
+            complete_sublane_driver_inst
               (
                .clk_i(clk_i),
                .rst_i(rst_i),
@@ -251,7 +251,7 @@ module Vlane_with_low_lvl_ctrl#
                );
          end
          else begin
-            Partial_sublane_driver
+            partial_sublane_driver
               #(
                 .MEM_DEPTH(MEM_DEPTH),
                 .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
@@ -262,7 +262,7 @@ module Vlane_with_low_lvl_ctrl#
                 .ALU_OPMODE(ALU_OPMODE)
                 //.STRIDE_ENABLE("NO")
 		)
-            Partial_sublane_driver_inst
+            partial_sublane_driver_inst
               (
                .clk_i(clk_i),
                .rst_i(rst_i),
@@ -376,7 +376,7 @@ module Vlane_with_low_lvl_ctrl#
 		      .vrf_oreg_ren_i(8'hff),
 		      .vrf_raddr_i(vrf_raddr_il[i]),
 		      .vrf_waddr_i(vrf_waddr_il[i]), 
-		      .vrf_bwen_i(vrf_bwen_di[W_PORTS-1:0][i][3:0]),// is not the same for every lane
+		      .vrf_bwen_i(vrf_bwen_il[i]),// is not the same for every lane
 		      .load_data_i(load_data_i[i]),
 		      .slide_op_i (slide_op),
 		      .slide_data_i(slide_data_input[i]),

@@ -1,4 +1,4 @@
-module Address_counter
+module address_counter
 #(
     parameter MEM_DEPTH = 512,
     parameter VREG_LOC_PER_LANE = 8,

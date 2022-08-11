@@ -246,7 +246,7 @@ module vector_core #
    /*INSTANTIATE M_CU*/
 
    /*INSTANTIATE V_LANES*/
-   Vlane_with_low_lvl_ctrl # 
+   v_dpu # 
      (/*AUTO_INSTPARAM*/
       // Parameters
       . MEM_DEPTH			( MEM_DEPTH),
@@ -260,7 +260,7 @@ module vector_core #
       .MULTIPUMP_WRITE			(MULTIPUMP_WRITE),
       .MULTIPUMP_READ			(MULTIPUMP_READ),
       .MEM_WIDTH			(MEM_WIDTH))
-   Vlane_with_low_lvl_ctrl_inst
+   v_dpu_inst
      (/*AUTO_INST*/
       // Outputs
       .ready_for_load_o			    (vlane_load_rdy),

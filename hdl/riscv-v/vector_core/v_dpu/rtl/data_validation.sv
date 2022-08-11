@@ -1,4 +1,4 @@
-module Data_validation
+module data_validation
 #(
     parameter MAX_VL_PER_LANE = 4 * 8 * 8,
     parameter VLANE_NUM = 8

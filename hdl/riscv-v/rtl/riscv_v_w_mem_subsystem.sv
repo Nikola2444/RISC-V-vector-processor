@@ -224,37 +224,37 @@ module riscv_v_w_mem_subsystem #
     assign lane0_load_data    = riscv_v_inst.vector_core_inst.mcu_load_data[0];
     assign lane0_load_dvalid  = riscv_v_inst.vector_core_inst.vlane_load_dvalid;
 
-    assign vrf0_raddr0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[0];
-    assign vrf0_raddr1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[1];
-    assign vrf0_raddr2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[2];
-    assign vrf0_raddr3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[3];
-    assign vrf0_raddr4     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[4];
-    assign vrf0_raddr5     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[5];
-    assign vrf0_raddr6     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[6];
-    assign vrf0_raddr7     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[7];
-    assign vrf0_ren        = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_ren_i;
-    assign vrf0_oreg_ren   = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_oreg_ren_i;
-    assign vrf0_rdata0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[0];
-    assign vrf0_rdata1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[1];
-    assign vrf0_rdata2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[2];
-    assign vrf0_rdata3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[3];
-    assign vrf0_rdata4     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[4];
-    assign vrf0_rdata5     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[5];
-    assign vrf0_rdata6     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[6];
-    assign vrf0_rdata7     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[7];
+    assign vrf0_raddr0     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[0];
+    assign vrf0_raddr1     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[1];
+    assign vrf0_raddr2     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[2];
+    assign vrf0_raddr3     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[3];
+    assign vrf0_raddr4     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[4];
+    assign vrf0_raddr5     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[5];
+    assign vrf0_raddr6     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[6];
+    assign vrf0_raddr7     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_raddr_i[7];
+    assign vrf0_ren        = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_ren_i;
+    assign vrf0_oreg_ren   = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_oreg_ren_i;
+    assign vrf0_rdata0     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[0];
+    assign vrf0_rdata1     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[1];
+    assign vrf0_rdata2     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[2];
+    assign vrf0_rdata3     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[3];
+    assign vrf0_rdata4     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[4];
+    assign vrf0_rdata5     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[5];
+    assign vrf0_rdata6     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[6];
+    assign vrf0_rdata7     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_rdata[7];
 
-    assign vrf0_waddr0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[0];
-    assign vrf0_waddr1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[1];
-    assign vrf0_waddr2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[2];
-    assign vrf0_waddr3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[3];
-    assign vrf0_bwen0      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[0];
-    assign vrf0_bwen1      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[1];
-    assign vrf0_bwen2      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[2];
-    assign vrf0_bwen3      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[3];
-    assign vrf0_wdata0     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[0];
-    assign vrf0_wdata1     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[1];
-    assign vrf0_wdata2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[2];
-    assign vrf0_wdata3     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[3];
+    assign vrf0_waddr0     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[0];
+    assign vrf0_waddr1     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[1];
+    assign vrf0_waddr2     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[2];
+    assign vrf0_waddr3     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_waddr[3];
+    assign vrf0_bwen0      = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[0];
+    assign vrf0_bwen1      = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[1];
+    assign vrf0_bwen2      = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[2];
+    assign vrf0_bwen3      = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_bwen[3];
+    assign vrf0_wdata0     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[0];
+    assign vrf0_wdata1     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[1];
+    assign vrf0_wdata2     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[2];
+    assign vrf0_wdata3     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.vrf_wdata[3];
 
     assign vlane0_st_data0   = riscv_v_inst.vector_core_inst.vlane_store_data[0][0];
     assign vlane0_st_data1   = riscv_v_inst.vector_core_inst.vlane_store_data[0][1];
@@ -262,17 +262,17 @@ module riscv_v_w_mem_subsystem #
     assign vlane0_st_data3   = riscv_v_inst.vector_core_inst.vlane_store_data[0][3];
     assign vlane0_st_drvr    = riscv_v_inst.vector_core_inst.vlane_store_driver_reg;
 
-    assign vlane0_store_data_out2     = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_o[2];
-    assign vlane0_store_data_mux2_4   = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_mux[2][4];
-    assign vlane0_store_data_mux_sel2 = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.store_data_mux_sel[2];
-    assign vlane0_read_data_mux4      = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.read_data_mux[4];
-    assign vlane0_read_data_prep_reg  = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.read_data_prep_reg[4];
+    assign vlane0_store_data_out2     = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.store_data_o[2];
+    assign vlane0_store_data_mux2_4   = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.store_data_mux[2][4];
+    assign vlane0_store_data_mux_sel2 = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.store_data_mux_sel[2];
+    assign vlane0_read_data_mux4      = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.read_data_mux[4];
+    assign vlane0_read_data_prep_reg  = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.read_data_prep_reg[4];
 
     assign vl   = riscv_v_inst.vector_core_inst.v_cu_inst.vl_o;
     assign sew  = riscv_v_inst.vector_core_inst.v_cu_inst.sew_o;
     assign lmul = riscv_v_inst.vector_core_inst.v_cu_inst.lmul_o;
 
-    assign multipump_sel_reg = riscv_v_inst.vector_core_inst.Vlane_with_low_lvl_ctrl_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.multipump_sel_reg;
+    assign multipump_sel_reg = riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.multipump_sel_reg;
    
     `endif
 

@@ -645,6 +645,7 @@ data_validation_inst
 
 
 /////////////////////////////////////////////////////////////////////////////////
+/* -----\/----- EXCLUDED -----\/-----
 Column_offset_register
 #(
     .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
@@ -664,6 +665,7 @@ Column_offset_register_inst
     .slide_write_data_pattern_o(slide_write_data_pattern),
     .enable_write_slide_o(enable_write_slide)
 );
+ -----/\----- EXCLUDED -----/\----- */
 /////////////////////////////////////////////////////////////////////////////////
 
 

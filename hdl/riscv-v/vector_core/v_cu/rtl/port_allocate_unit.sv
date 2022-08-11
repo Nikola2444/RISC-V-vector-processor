@@ -98,7 +98,7 @@ module port_allocate_unit#
       for (int i=0;i<W_PORTS_NUM;i++)
       begin
 	 if (slide_instr_check_i && port_group_to_allocate_reg != 0)
-	   start_o[i] <= 1'b0;
+	   start_o[i] = 1'b0;
 	 else
 	   start_o[i] = port_rdy_i[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld_o && dependancy_issue_i==0;
       end

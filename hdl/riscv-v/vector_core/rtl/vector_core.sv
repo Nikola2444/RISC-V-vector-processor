@@ -127,8 +127,8 @@ module vector_core #
    logic [3:0] 				  mcu_load_bwe[0:VLANE_NUM-1];
    // V_LANE-MEM_SUBSYS interconnections
 
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] vlane_store_data;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]	vlane_store_load_idx;
+   logic [VLANE_NUM-1:0][31:0] vlane_store_data;
+   logic [VLANE_NUM-1:0][31:0]	vlane_store_load_idx;
    logic 					vlane_store_rdy; 
    logic [VLANE_NUM-1:0][31:0] 			vlane_load_data;
    
@@ -140,7 +140,6 @@ module vector_core #
    logic [1:0] 					vlane_store_driver;
    logic [1:0] 					vlane_store_driver_reg;
    logic [1:0] 					vlane_idx_driver_reg;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 	vlane_store_dvalid;
    logic 	              			vlane_mcu_store_dvalid;
    logic 	              			vlane_mcu_idx_ivalid;
    

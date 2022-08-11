@@ -376,7 +376,7 @@ module Vlane_with_low_lvl_ctrl#
 		      .vrf_oreg_ren_i(8'hff),
 		      .vrf_raddr_i(vrf_raddr_il[i]),
 		      .vrf_waddr_i(vrf_waddr_il[i]), 
-		      .vrf_bwen_i(vrf_bwen_il[i]),// is not the same for every lane
+		      .vrf_bwen_i(vrf_bwen_di[W_PORTS-1:0][i][3:0]),// is not the same for every lane
 		      .load_data_i(load_data_i[i]),
 		      .slide_op_i (slide_op),
 		      .slide_data_i(slide_data_input[i]),

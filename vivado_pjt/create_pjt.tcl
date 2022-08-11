@@ -48,7 +48,7 @@ add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/renaming_unit\/rtl\/renaming
 
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/address_counter.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/column_offset_register.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/complete_sublane_driver_new.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/complete_sublane_driver.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/data_validation.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/partial_sublane_driver.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/v_dpu.sv

@@ -110,6 +110,7 @@ module v_dpu#
    // Driver - Interconnect signals
    logic [W_PORTS_NUM - 1 : 0][1 : 0] 			  vsew_di;
    logic [W_PORTS_NUM - 1 : 0][1 : 0] 			  wdata_width_di;
+   logic [W_PORTS_NUM - 1 : 0][1 : 0] 			  vrf_read_width_di;
    logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] 	  read_data_valid_di;                              // TO BE CHECKED
    logic [W_PORTS_NUM - 1 : 0] 				  vrf_ren_di;
    logic [W_PORTS_NUM - 1 : 0] 				  vrf_oreg_ren_di;
@@ -193,6 +194,7 @@ module v_dpu#
                .vsew_i(vsew_i[1 : 0]),
                .vsew_o(vsew_di[0]),
                .wdata_width_o(wdata_width_di[0]),
+               .vrf_read_width_o(vrf_read_width_di[0]),
                .vlmul_i(vlmul_i),
                .inst_type_i(inst_type_i),
                .start_i(start_i[0]),
@@ -238,7 +240,7 @@ module v_dpu#
                .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
                .alu_en_32bit_mul_o(alu_en_32bit_mul_di),                               
                .up_down_slide_i(up_down_slide_i),
-	       .slide_op_o (slide_op),
+	       //.slide_op_o (slide_op),
 	       .slide_data_mux_sel_o  (slide_data_mux_sel),
 	       // .slide_type_i   (slide_type),
                .slide_amount_i(slide_amount_i),
@@ -269,6 +271,7 @@ module v_dpu#
                .vl_i(vl_i),
                .vsew_o(vsew_di[i]),
                .wdata_width_o(wdata_width_di[i]),
+               .vrf_read_width_o(vrf_read_width_di[i]),
                .vsew_i(vsew_i[1 : 0]),
                //.vlmul_i(vlmul_i),
                .inst_type_i(inst_type_i),
@@ -370,15 +373,16 @@ module v_dpu#
 		      .clk_i(clk_i),
 		      .clk2_i(clk2_i),
 		      .rst_i(rst_i),
-		      .vsew_i(vsew_di),
+//		      .vsew_i(vsew_di),
 		      .wdata_width_i(wdata_width_di),
+		      .vrf_read_width_i(vrf_read_width_di),
 		      .vrf_ren_i(8'hff),
 		      .vrf_oreg_ren_i(8'hff),
 		      .vrf_raddr_i(vrf_raddr_il[i]),
 		      .vrf_waddr_i(vrf_waddr_il[i]), 
 		      .vrf_bwen_i(vrf_bwen_il[i]),// is not the same for every lane
 		      .load_data_i(load_data_i[i]),
-		      .slide_op_i (slide_op),
+		      //.slide_op_i (slide_op),
 		      .slide_data_i(slide_data_input[i]),
 		      .slide_data_o(slide_data_output[i]),
 		      .vmrf_addr_i(vmrf_addr_di),

@@ -78,7 +78,7 @@ module partial_sublane_driver
     output logic [31 : 0] ALU_reduction_data_o,
     output logic [ALU_OPMODE - 1 : 0] ALU_ctrl_o,                                   // Not yet finished
     output logic                      reduction_op_o,                              // Not yet finished
-
+    output logic [1:0]                vrf_read_width_o,                              // Not yet finished
     // Misc signals
     input vector_mask_i,
     output logic[1:0][1 : 0] vrf_read_byte_sel_o,
@@ -190,6 +190,7 @@ logic [5 : 0] inst_type_comp;
 // Assigments //
 assign vsew_o = dp0_reg.sew;
 assign wdata_width_o = element_width_write;
+assign vrf_read_width_o = element_width_read;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
@@ -221,6 +222,7 @@ assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 // Write address generation //
 assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
+
 
 /////////////////////////////////////////////////////////////////////////////////
 

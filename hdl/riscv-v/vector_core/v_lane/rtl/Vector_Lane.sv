@@ -17,7 +17,7 @@ module Vector_Lane
     input 							       rst_i,
    
     // Config and status signals
-    input logic [W_PORTS_NUM - 1 : 0][1 : 0] 			       vsew_i,
+
     input logic [W_PORTS_NUM - 1 : 0][1 : 0] 			       wdata_width_i,
    
     // VRF
@@ -59,7 +59,7 @@ module Vector_Lane
     input logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] 	       ALU_ctrl_i,
     input logic [W_PORTS_NUM - 1 : 0] 				       read_data_valid_i,
     output logic [W_PORTS_NUM - 1 : 0][31 : 0] 			       ALU_output_o,
-    input logic 						       slide_op_i,
+    input logic [W_PORTS_NUM - 1 : 0][1:0] 			       vrf_read_width_i,
     // ALU I/O
     output logic [W_PORTS_NUM - 1 : 0][ALU_CTRL_WIDTH - 1 : 0] 	       alu_opmode_o,
     output logic [W_PORTS_NUM - 1 : 0][ 31 : 0] 		       vs1_data_o,
@@ -149,7 +149,7 @@ module Vector_Lane
       logic [W_PORTS_NUM - 1 : 0] 							    ALU_reduction;
       logic [W_PORTS_NUM - 1 : 0] 							    store_load_index_valid;
       logic [W_PORTS_NUM - 1 : 0] 							    read_data_valid;
-      logic [W_PORTS_NUM - 1 : 0][1 : 0] 						    sew;
+      logic [W_PORTS_NUM - 1 : 0][1 : 0] 						    vrf_read_width;
       logic [W_PORTS_NUM - 1 : 0][1 : 0] 						    wdata_width;
       
    } ALU_packet; 
@@ -263,7 +263,7 @@ module Vector_Lane
    
    generate
       for (genvar i=0; i<W_PORTS_NUM; i++)
-	assign alu_read_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].sew[i];
+	assign alu_read_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].vrf_read_width[i];
    endgenerate
    generate
       for (genvar i=0; i<W_PORTS_NUM; i++)
@@ -288,7 +288,8 @@ module Vector_Lane
 	 store_data_o = 0;
 	 if (store_data_valid_i[i])
 	 begin
-	    store_data_o = vrf_read_data_prep_reg[store_data_mux_sel[i]][95:64]; //take all 32 bits, sew doesnt matter.
+	    //store_data_o = vrf_read_data_prep_reg[store_data_mux_sel[i]][95:64]; //take all 32 bits, vrf_read_width doesnt matter.
+	    store_data_o = read_data_mux_reg[store_data_mux_sel[i]];
 	    break;
 	 end
       end
@@ -298,7 +299,8 @@ module Vector_Lane
 	 store_load_index_o = 0;
 	 if (store_load_index_valid_i[i])
 	 begin
-	    store_load_index_o = vrf_read_data_prep_reg[store_load_index_mux_sel[i]][95:64]; //take all 32 bits, sew doesnt matter.
+	    //store_load_index_o = vrf_read_data_prep_reg[store_load_index_mux_sel[i]][95:64]; //take all 32 bits, vrf_read_width doesnt matter.
+	    store_load_index_o = read_data_mux_reg[store_load_index_mux_sel[i]];
 	    break;
 	 end
       end      
@@ -347,7 +349,7 @@ module Vector_Lane
       ALU_signals_next[0].store_data_valid = store_data_valid_i;
       ALU_signals_next[0].store_load_index_valid = store_load_index_valid_i;
       ALU_signals_next[0].read_data_valid = read_data_valid_i;
-      ALU_signals_next[0].sew = vsew_i;
+      ALU_signals_next[0].vrf_read_width = vrf_read_width_i;
       ALU_signals_next[0].wdata_width = wdata_width_i;
       
    end
@@ -408,13 +410,15 @@ module Vector_Lane
 
          assign read_data_prep_next[i_gen] = {vrf_rdata[i_gen], {{16{1'b0}}, read_data_hw_mux[i_gen]}, {{24{1'b0}}, read_data_byte_mux[i_gen]}};
 	 
+/* -----\/----- EXCLUDED -----\/-----
 	 if (i_gen == SLIDE_PORT_ID)
-           assign read_data_mux_sel[SLIDE_PORT_ID] = slide_op_i ? 2'b10 : ALU_signals_reg[VRF_DELAY - 2].sew[0];
+           assign read_data_mux_sel[SLIDE_PORT_ID] = slide_op_i ? 2'b10 : ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[0];
 	 else
-           assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 2].sew[i_gen/2];
+           assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[i_gen/2];
+ -----/\----- EXCLUDED -----/\----- */
 
-	 assign read_data_mux_next[i_gen] = read_data_mux_sel[i_gen] == 2'b00 ? read_data_byte_mux[i_gen] : // we chose byte
-					    read_data_mux_sel[i_gen] == 2'b01 ? read_data_hw_mux[i_gen] : // we chose half word
+	 assign read_data_mux_next[i_gen] = ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[i_gen/2] == 2'b00 ? read_data_byte_mux[i_gen] : // we chose byte
+					    ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[i_gen/2] == 2'b01 ? read_data_hw_mux[i_gen] : // we chose half word
 					    vrf_rdata[i_gen]; // we chose the whole word
 
 	 //assign read_data_mux_reg[i_gen] = (read_data_mux_sel[i_gen] != 3) ? vrf_read_data_prep_reg[i_gen][read_data_mux_sel[i_gen]*32 +: 32] : 0;

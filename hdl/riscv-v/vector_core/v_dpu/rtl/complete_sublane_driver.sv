@@ -180,6 +180,8 @@ typedef struct packed
     // 32-bit multiply
     logic alu_en_32bit_mul;
     logic [1 : 0] sew;
+    logic [2 : 0] lmul;
+    logic [31 : 0] vl;
     
 } dataPacket0;
 
@@ -282,8 +284,8 @@ assign dp0_next.vrf_ren = vrf_ren_i;
 assign dp0_next.vrf_oreg_ren = vrf_oreg_ren_i;
 assign store_data_mux_sel_o = dp0_reg.store_data_mux_sel;
 assign store_load_index_mux_sel_o = dp0_reg.store_load_index_mux_sel; 
-assign read_limit_carry = (vl_i[$clog2(VLANE_NUM) - 1 : 0] == 0);
-assign read_limit_add = dp0_reg.inst_type == 6 ? ((vl_i << vsew_i) >> $clog2(VLANE_NUM)) + !read_limit_carry : (vl_i >> $clog2(VLANE_NUM)) + !read_limit_carry;
+assign read_limit_carry = (dp0_reg.vl[$clog2(VLANE_NUM) - 1 : 0] == 0);
+assign read_limit_add = dp0_reg.inst_type == 6 ? ((dp0_reg.vl << dp0_reg.sew) >> $clog2(VLANE_NUM)) + !read_limit_carry : (dp0_reg.vl >> $clog2(VLANE_NUM)) + !read_limit_carry;
 assign read_limit_comp = (main_cnt == dp0_reg.read_limit - 1);
 
 assign store_load_index_valid_o = dp0_reg.store_load_index_valid;
@@ -353,7 +355,7 @@ assign vsew_o = dp0_reg.sew;
 /////////////////////////////////////////////////////////////////////////////////
 // Per lane lenght in words //
 always_comb begin
-    case(vlmul_i)
+    case(dp0_reg.lmul)
         3'b101: per_lane_words = (VREG_LOC_PER_LANE >> 3);
         3'b110: per_lane_words = (VREG_LOC_PER_LANE >> 2);
         3'b111: per_lane_words = (VREG_LOC_PER_LANE >> 1);
@@ -633,7 +635,7 @@ data_validation_inst
     .clk_i(clk_i),
     .rst_i(rst_i),
     
-    .vl_i(vl_i),
+    .vl_i(dp0_reg.vl),
     .shift_en_i(shift_data_validation),
     .shift_partial_i(shift_partial),
     .load_i(load_data_validation),
@@ -757,14 +759,16 @@ always_comb begin
     dp0_next.delay_addr = dp0_reg.delay_addr;
     dp0_next.reverse_bwen = dp0_reg.reverse_bwen;
     dp0_next.start_decrementor = dp0_reg.start_decrementor;
-    dp0_next.sew = dp0_reg.sew;
+    dp0_next.sew  = dp0_reg.sew;
+    dp0_next.lmul = dp0_reg.lmul;
+    dp0_next.vl = dp0_reg.vl;
     // Loads
     ready_for_load_o = 0;
     // Buffering for slides
     dp0_next.slide_enable_buffering = dp0_reg.slide_enable_buffering;
     // 32-bit multiply
     dp0_next.alu_en_32bit_mul = dp0_reg.alu_en_32bit_mul;
-    element_width_read = vsew_i;
+    element_width_read = dp0_reg.sew;
     element_width_write = dp0_reg.wdata_width - 1;
     dp0_next.slide_waddr_offset = dp0_reg.slide_waddr_offset;
     
@@ -809,6 +813,8 @@ always_comb begin
               dp0_next.vmrf_wen = 0;
               dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
               dp0_next.sew = vsew_i[1 : 0];
+              dp0_next.lmul = vlmul_i[2 : 0];
+              dp0_next.vl = vl_i;
               // slides
               dp0_next.up_down_slide = up_down_slide_i;
               dp0_next.slide_amount = slide_amount_i;

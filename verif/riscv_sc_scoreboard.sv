@@ -90,13 +90,14 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       rd = tr_clone.instruction[11:7];
       immediate = tr_clone.instruction[31:20];
       op1 = sc_reg_bank[rs1];
-      op2 = sc_reg_bank[rs2];
+
       $cast(tr_clone, tr.clone());
       
       num_of_sc_instr++;
       if (opcode == sc_arith_imm)
       begin
-	 sc_reg_bank[rd]=sc_calculate_arith (op1, immediate, funct3, funct7, 1);
+	 op2 = {{20{immediate[11]}}, immediate};
+	 sc_reg_bank[rd]=sc_calculate_arith (op1, op2, funct3, funct7, 1);
 	 assert(sc_reg_bank[rd] == tr_clone.scalar_reg_bank_new[rd])
 	   begin
 	      `uvm_info(get_type_name(), $sformatf("SC_MATCH: instruction:%x \t expected result: %x, dut_result: %x", tr_clone.instruction, 
@@ -112,6 +113,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       end
       else if (opcode == sc_arith)
       begin
+	 op2 = sc_reg_bank[rs2];
 	 sc_reg_bank[rd]=sc_calculate_arith (op1, op2, funct3, funct7, 0);
 	 assert(sc_reg_bank[rd] == tr_clone.scalar_reg_bank_new[rd])
 	   begin
@@ -152,16 +154,16 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
       bit funct7_5;
       logic [31:0] res;
       funct7_5 = funct7[5];//check if add or sub
-      $display("op1=%d op2=%d", op1, op2);
+      //$display("op1=%d op2=%d", op1, op2);
       case (funct3)
 	 000: begin
 	    if (op2_imm)
-	      res = op1 + op2;
+	      res = signed'(op1) + signed'(op2);
 	    else
 	      if (funct7_5 == 0)
-		res = op1 + op2;
+		res = signed'(op1) + signed'(op2);
 	      else
-		res = op1 - op2;	    
+		res = unsigned'(op1) - unsigned'(op2);
 	 end
 	 001: res = op1 << op2[4:0];
 	 010: res = (op1) < (op2);

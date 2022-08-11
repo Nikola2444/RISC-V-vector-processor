@@ -12,7 +12,7 @@ cd [getScriptDirectory]
 # KORAK#1: Definisanje direktorijuma u kojima ce biti smesteni projekat i konfiguracioni fajl
 set resultDir result
 file mkdir $resultDir
-create_project riscv_v_pjt result -part xc7z010clg400-1 -force
+create_project riscv_v_pjt result -part xc7z020clg484 -force
 
 set_property -name {xsim.elaborate.xelab.more_options} -value {-L uvm} -objects [get_filesets sim_1]
 set_property -name {xsim.compile.xvlog.more_options} -value {-L uvm} -objects [get_filesets sim_1]

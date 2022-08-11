@@ -285,6 +285,7 @@ module Vector_Lane
       // Store data mux
       for(int i = 0; i < W_PORTS_NUM; i++) 
       begin
+	 store_data_o = 0;
 	 if (store_data_valid_i[i])
 	 begin
 	    store_data_o = vrf_read_data_prep_reg[store_data_mux_sel[i]][95:64]; //take all 32 bits, sew doesnt matter.
@@ -294,6 +295,7 @@ module Vector_Lane
       // Store and load index mux
       for(int i = 0; i < W_PORTS_NUM; i++) 
       begin
+	 store_data_o = 0;
 	 if (store_load_index_valid_i[i])
 	 begin
 	    store_load_index_o = vrf_read_data_prep_reg[store_load_index_mux_sel[i]][95:64]; //take all 32 bits, sew doesnt matter.

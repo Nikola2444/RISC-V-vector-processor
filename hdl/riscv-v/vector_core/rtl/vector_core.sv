@@ -307,26 +307,6 @@ module vector_core #
       .read_port_allocation_i		(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this
       .use_3_read_ports_i		(8'h00));//TODO: what is this
 
-
-/* -----\/----- EXCLUDED -----\/-----
-   always @(posedge clk)
-   begin
-      if (!rstn)
-      begin
-	 vlane_store_driver_reg <= 'h0;
-	 vlane_idx_driver_reg <= 'h0;
-      end
-      else
-      begin
-      
-	 if (!vlane_mcu_store_dvalid)
-	   vlane_store_driver_reg <= vlane_store_driver;
-	 
-	 if(!vlane_mcu_idx_ivalid)
-	   vlane_idx_driver_reg <= vlane_store_driver;
-      end
-   end
- -----/\----- EXCLUDED -----/\----- */
    
    always_comb
    begin
@@ -338,32 +318,6 @@ module vector_core #
 	 vlane_load_bwen[i] = mcu_load_bwe[i];
       end       
    end
-   
-/* -----\/----- EXCLUDED -----\/-----
-   always_comb
-   begin
-      for (int i=0;i<VLANE_NUM;i++)
-      begin
-	 if (vlane_store_dvalid[i][vlane_store_driver_reg] == 1'b0)
-	   vlane_mcu_store_dvalid = 1'b0;
-	 else
-	   vlane_mcu_store_dvalid = 1'b1;
-      end
-   end
- -----/\----- EXCLUDED -----/\----- */
-   
-   // For indices of indexed loads and stores
-/* -----\/----- EXCLUDED -----\/-----
-   always_comb
-   begin
-      for(int i=0;i<VLANE_NUM;i++) begin
-         if (vlane_store_load_ivalid[i][vlane_idx_driver_reg] == 1'b0)
-           vlane_mcu_idx_ivalid = 1'b0;
-         else
-           vlane_mcu_idx_ivalid = 1'b1;
-      end
-   end
- -----/\----- EXCLUDED -----/\----- */
 
    // Instantiate MEM_SUBSYS
    mem_subsys #(

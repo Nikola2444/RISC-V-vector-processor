@@ -105,7 +105,6 @@ module vector_core #
    logic [31:0] 			  slide_amount;		// From v_cu_inst of v_cu.v
    logic 				  slide_type;		// From v_cu_inst of v_cu.v
 
-   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel_i;// From v_cu_inst of v_cu.v
    logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_index_mux_sel_i;// From v_cu_inst of v_cu.v
    logic 				  up_down_slide;	// From v_cu_inst of v_cu.v
    logic 				  vector_mask;	// From v_cu_inst of v_cu.v
@@ -117,8 +116,8 @@ module vector_core #
    logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
    logic [1:0] 				  wdata_width;		// From v_cu_inst of v_cu.v
    logic [W_PORTS_NUM-1:0] 		  port_group_ready;
-   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_data_mux_sel;
-   logic [$clog2(R_PORTS_NUM)-1:0] 	  store_load_idx_mux_sel;
+   logic [2:0] 				  store_data_mux_sel;
+   logic [2:0] 				  store_load_idx_mux_sel;
 
    // SHEDULER-MEM_SUBSYS interconnections
    logic [31:0] 			  mcu_store_data[0:VLANE_NUM-1];

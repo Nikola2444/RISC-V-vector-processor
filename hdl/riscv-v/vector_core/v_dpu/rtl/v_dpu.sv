@@ -45,8 +45,8 @@ module v_dpu#
     output logic 						   ready_for_load_o, // UPDATED
     input logic [VLANE_NUM - 1 : 0][31 : 0] 			   load_data_i,
     input logic [VLANE_NUM - 1 : 0][3 : 0] 			   load_bwen_i,
-    input logic [$clog2(R_PORTS_NUM) - 1 : 0] 			   store_data_mux_sel_i,
-    input logic [$clog2(R_PORTS_NUM) - 1 : 0] 			   store_load_index_mux_sel_i,
+    input logic [2:0] 						   store_data_mux_sel_i,
+    input logic [2:0] 						   store_load_index_mux_sel_i,
    
     // ALU
     input logic [1 : 0] 					   op2_sel_i,
@@ -72,8 +72,8 @@ module v_dpu#
     // Vlane outputs
     output logic [VLANE_NUM - 1 : 0][31 : 0] 			   store_data_o,
     output logic [VLANE_NUM - 1 : 0][31 : 0] 			   store_load_index_o,
-    output logic [VLANE_NUM - 1 : 0] 				   store_data_valid_o,
-    output logic [VLANE_NUM - 1 : 0] 				   store_load_index_valid_o
+    output logic 						   store_data_valid_o,
+    output logic 						   store_load_index_valid_o
    
     );
 
@@ -98,7 +98,8 @@ module v_dpu#
 
    ////////////////////////////////////////////////////////////////////////////////////
    // Connecting signals
-
+   logic [2:0]	store_data_mux_sel_reg;
+   logic [2:0] 	store_load_index_mux_sel_reg;
    // Special load signals
    logic [W_PORTS_NUM - 1 : 0] ready_for_load;
 
@@ -325,9 +326,25 @@ module v_dpu#
       end
    endgenerate;
 
-   // Generating Vector lanes and changing the dimensions of signals coming from Lane drivers
+   // Store_data mux is the same for all the drivers since only one store can
+   // be executed at a time.
+
+   always @(posedge clk_i)
+   begin
+      if (!rst_i)
+      begin
+	 store_data_mux_sel_reg <= 0;
+	 store_load_index_mux_sel_reg <= 0;
+      end
+      else if (inst_type_i == 2)
+      begin
+	 store_data_mux_sel_reg <= store_data_mux_sel_i;
+	 store_load_index_mux_sel_reg <= store_load_index_mux_sel_i;
+      end
+   end
+   // Generating Vector lanes and changing the dimensions of signals coming from Lane drivers   
    generate
-      // Dimension of signals that are not the same for every lane need to be reordered.
+      // Dimension of signals that are not the same for every lane need to be reordered.      
       for(genvar i=0; i < VLANE_NUM; i++) begin
 	 for(genvar j=0; j < W_PORTS_NUM; j++) begin
 	    assign vrf_bwen_il[i][j] = vrf_bwen_di[j][i];
@@ -397,8 +414,8 @@ module v_dpu#
 		      .store_load_index_valid_i(store_load_index_valid_di[i]),
 		      .store_data_o(store_data_o[i]),
 		      .store_load_index_o(store_load_index_o[i]),
-		      .store_data_mux_sel_i(store_data_mux_sel_di),
-		      .store_load_index_mux_sel_i(store_load_index_mux_sel_di),
+		      .store_data_mux_sel_i(store_data_mux_sel_reg),
+		      .store_load_index_mux_sel_i(store_load_index_mux_sel_reg),
 		      .op3_sel_i(op3_sel_di),
 		      .ALU_ctrl_i(ALU_ctrl_di),
 		      .reduction_op_i(reduction_op_di),
@@ -422,20 +439,20 @@ module v_dpu#
    //Each lane generates valid for their store data.
    always_comb
    begin
+      store_data_valid_o = 1'b0;
+      store_load_index_valid_o = 1'b0;
       for (int i=0; i<VLANE_NUM; i++)
-      begin
-	 store_data_valid_o[i] = 1'b0;
-	 store_load_index_valid_o[i] = 1'b0;
+      begin	 
 	 for (int j=0; j<W_PORTS_NUM; j++)
 	 begin
 	    if (store_data_valid_l[i][j])
 	    begin
-	       store_data_valid_o[i] = 1'b1;
+	       store_data_valid_o = 1'b1;
 	       break;
 	    end
 	    if (store_load_index_valid_l[i][j])
 	    begin
-	       store_load_index_valid_o[i] = 1'b1;
+	       store_load_index_valid_o = 1'b1;
 	       break;
 	    end
 	 end

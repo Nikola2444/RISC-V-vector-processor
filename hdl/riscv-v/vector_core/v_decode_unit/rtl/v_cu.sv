@@ -74,8 +74,8 @@ module v_cu #
    
    // Load and Store signals
 
-   output logic [$clog2(R_PORTS_NUM) - 1 : 0] 				  store_data_mux_sel_o; // TODO drive this
-   output logic [$clog2(R_PORTS_NUM) - 1 : 0] 				  store_load_index_mux_sel_o;//TODO drive this
+   output logic [2:0] 							  store_data_mux_sel_o; // TODO drive this
+   output logic [2:0] 							  store_load_index_mux_sel_o;//TODO drive this
    
    // ALU
    output logic [1 : 0] 						  op2_sel_o;
@@ -555,7 +555,7 @@ module v_cu #
 	     reduction_wait_cnt[i] <= 2;
 	   else if (reduction_wait_cnt_en[i])
 	     reduction_wait_cnt[i] <= reduction_wait_cnt[i]-1;
-      end	
+      end
    end
 
    always@(posedge clk)

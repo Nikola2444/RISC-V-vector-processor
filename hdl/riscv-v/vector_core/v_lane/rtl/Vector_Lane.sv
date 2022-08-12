@@ -49,8 +49,8 @@ module Vector_Lane
     input logic [W_PORTS_NUM - 1 : 0] 				       store_load_index_valid_i,
     output logic [31 : 0] 					       store_data_o,
     output logic [31 : 0] 					       store_load_index_o,
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0]     store_data_mux_sel_i,
-    input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0]     store_load_index_mux_sel_i,
+    input logic [2:0] 						       store_data_mux_sel_i,
+    input logic [2:0] 						       store_load_index_mux_sel_i,
    
     // ALU signals
     input logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0]     op3_sel_i, 
@@ -184,9 +184,9 @@ module Vector_Lane
    // Load and store
    ////////////////////////////////////////////////
    logic [31 : 0] 									    store_data_mux;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 				    store_data_mux_sel;
-   logic [W_PORTS_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][31 : 0] 				    store_load_index_mux;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 				    store_load_index_mux_sel;
+   logic [2:0] 										    store_data_mux_sel;
+   logic [31 : 0] 									    store_load_index_mux;
+   logic [2:0] 										    store_load_index_mux_sel;
    ////////////////////////////////////////////////
 
    // slide data
@@ -280,39 +280,18 @@ module Vector_Lane
        // Choosing slide data
    assign slide_data_o = vrf_rdata[SLIDE_PORT_ID];
 
-   always_comb
-   begin
-      // Store data mux
-      for(int i = 0; i < W_PORTS_NUM; i++) 
-      begin
-	 store_data_o = 0;
-	 if (store_data_valid_i[i])
-	 begin
-	    //store_data_o = vrf_read_data_prep_reg[store_data_mux_sel[i]][95:64]; //take all 32 bits, vrf_read_width doesnt matter.
-	    store_data_o = read_data_mux_reg[store_data_mux_sel[i]];
-	    break;
-	 end
-      end
-      // Store and load index mux
-      for(int i = 0; i < W_PORTS_NUM; i++) 
-      begin
-	 store_load_index_o = 0;
-	 if (store_load_index_valid_i[i])
-	 begin
-	    //store_load_index_o = vrf_read_data_prep_reg[store_load_index_mux_sel[i]][95:64]; //take all 32 bits, vrf_read_width doesnt matter.
-	    store_load_index_o = read_data_mux_reg[store_load_index_mux_sel[i]];
-	    break;
-	 end
-      end      
-   end
+   //Chosing read port for store data
+   assign store_data_o = read_data_mux_reg[ALU_signals_reg[VRF_DELAY - 1].store_data_mux_sel];
+   //Chosing read port for store/load index data
+   assign store_load_index_o = read_data_mux_reg[ALU_signals_reg[VRF_DELAY - 1].store_load_index_mux_sel];
+
 
    always_ff@(posedge clk_i)
    begin
       if (!rst_i)
 	slide_data_reg <= 0;
       else
-	slide_data_reg <= {slide_data_reg[VMRF_DELAY-2:0], slide_data_i};
-      
+	slide_data_reg <= {slide_data_reg[VMRF_DELAY-2:0], slide_data_i};      
    end
 
    ////////////////////////////////////////////////
@@ -356,18 +335,7 @@ module Vector_Lane
 
    generate
 
-      for(i_gen = 0; i_gen < R_PORTS_NUM; i_gen++) begin
-         
-         always_comb begin
-            // Mux for choosing the right byte
-	    //read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen]*8 +: 8];
-            // Mux for choosing the right halfword
-	    //read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen]*16 +: 16];
-            // Mux for choosing the right data
-	    //read_data_mux_reg[i_gen] = (read_data_mux_sel[i_gen] != 3) ? vrf_read_data_prep_reg[i_gen][read_data_mux_sel[i_gen]*32 +: 32] : 0;
-            
-         end
-         
+      for(i_gen = 0; i_gen < R_PORTS_NUM; i_gen++) begin                  
          // Registers
          always_ff@(posedge clk_i) begin
             if(!rst_i) begin
@@ -394,10 +362,7 @@ module Vector_Lane
             el_extractor_next[i_gen][0] = el_extractor_i[i_gen];
          end
          
-         // Generate VRF read assignments
-
-	 
-
+         // Generate VRF read assignments	 
          assign read_data_byte_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2];
          assign read_data_hw_mux_sel[i_gen] = el_extractor_reg[i_gen][VRF_DELAY - 2][0];
 
@@ -405,44 +370,28 @@ module Vector_Lane
 	 assign read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen]*8 +: 8];
          // Mux for choosing the right halfword
 	 assign read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen]*16 +: 16];
-	 // Registering data read from VRF.
-	 
-
+	 // Registering data read from VRF.	 
          assign read_data_prep_next[i_gen] = {vrf_rdata[i_gen], {{16{1'b0}}, read_data_hw_mux[i_gen]}, {{24{1'b0}}, read_data_byte_mux[i_gen]}};
 	 
-/* -----\/----- EXCLUDED -----\/-----
-	 if (i_gen == SLIDE_PORT_ID)
-           assign read_data_mux_sel[SLIDE_PORT_ID] = slide_op_i ? 2'b10 : ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[0];
-	 else
-           assign read_data_mux_sel[i_gen] = ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[i_gen/2];
- -----/\----- EXCLUDED -----/\----- */
-
 	 assign read_data_mux_next[i_gen] = ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[i_gen/2] == 2'b00 ? read_data_byte_mux[i_gen] : // we chose byte
 					    ALU_signals_reg[VRF_DELAY - 2].vrf_read_width[i_gen/2] == 2'b01 ? read_data_hw_mux[i_gen] : // we chose half word
-					    vrf_rdata[i_gen]; // we chose the whole word
-
-	 //assign read_data_mux_reg[i_gen] = (read_data_mux_sel[i_gen] != 3) ? vrf_read_data_prep_reg[i_gen][read_data_mux_sel[i_gen]*32 +: 32] : 0;
+					    vrf_rdata[i_gen]; // we chose the whole word	 
       end // for (i_gen = 0; i_gen < R_PORTS_NUM; i_gen++)
 
       
       for(j_gen = 0; j_gen < W_PORTS_NUM; j_gen++) begin
          
-         always_comb begin
-            
-            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] : (vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] & {4{vmrf_rdata[j_gen]}}); 
-	    
-            
-            case(write_data_mux_sel[j_gen])
-               0: vrf_wdata_mux[j_gen] = ALU_out_data[j_gen];
-               1: vrf_wdata_mux[j_gen] = load_data_i;
-               //2: vrf_wdata_mux[j_gen] = slide_data_reg[VMRF_DELAY-1];
-               2: vrf_wdata_mux[j_gen] = slide_data_i;
-               3: vrf_wdata_mux[j_gen] = 0; // Should insert an assert
+         always_comb begin           
+            bwen_mux[j_gen] = (bwen_mux_sel[j_gen] == 0) ? vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] : (vrf_write_reg[VMRF_DELAY-1][j_gen][3 : 0] & {4{vmrf_rdata[j_gen]}});
+
+	    //case bellow chosses what we write into VRF
+	    case(write_data_mux_sel[j_gen])
+               0: vrf_wdata_mux[j_gen] = ALU_out_data[j_gen];  // ALU output
+               1: vrf_wdata_mux[j_gen] = load_data_i; // load data
+               2: vrf_wdata_mux[j_gen] = slide_data_i; // slide_data
+               3: vrf_wdata_mux[j_gen] = 0;
                default: vrf_wdata_mux[j_gen] = 0;
             endcase
-            
-            // Extender for immediate
-            // ALU_imm[j_gen] = {{27{1'b0}}, ALU_signals_reg[VRF_DELAY - 1].ALU_imm[j_gen]};
             
             // Muxes for ALU operands
             vs1_data[j_gen] = read_data_mux_reg[j_gen*2];
@@ -469,7 +418,6 @@ module Vector_Lane
             else begin
                for(int i = 0; i < VMRF_DELAY; i++) begin
                   vrf_write_reg[i][j_gen] 	 <= vrf_write_next[i][j_gen];
-
                   vmrf_write_reg[i][j_gen] 	 <= vmrf_write_next[i][j_gen];
                   vm_reg[i][j_gen] 		 <= vm_next[i][j_gen];
                   alu_output_valid_reg[i][j_gen] <= alu_output_valid_next[i][j_gen];

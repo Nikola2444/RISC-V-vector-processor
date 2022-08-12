@@ -75,11 +75,11 @@ module buff_array #(
   output logic                                   libuff_write_done_o     ,
   output logic                                   libuff_read_done_o      ,
   // V_LANE <=> BUFF_ARRAY IF
-  input  logic [31:0]                            vlane_store_data_i [0:VLANE_NUM-1],
-  input  logic [31:0]                            vlane_store_idx_i  [0:VLANE_NUM-1],
-  output logic [31:0]                            vlane_load_data_o  [0:VLANE_NUM-1],
-  output logic [3:0]                             vlane_load_bwe_o   [0:VLANE_NUM-1],
-  input  logic [31:0]                            vlane_load_idx_i   [0:VLANE_NUM-1],
+  input  logic [VLANE_NUM-1:0][31:0]             vlane_store_data_i ,
+  input  logic [VLANE_NUM-1:0][31:0]             vlane_store_idx_i  ,
+  output logic [VLANE_NUM-1:0][31:0]             vlane_load_data_o  ,
+  output logic [VLANE_NUM-1:0][ 3:0]             vlane_load_bwe_o   ,
+  input  logic [VLANE_NUM-1:0][31:0]             vlane_load_idx_i   ,
   // AXIM_CTRL <=> BUFF_ARRAY IF [write channel]
   output logic [C_M_AXI_ADDR_WIDTH-1:0]          ctrl_raddr_offset_o     ,
   output logic [C_XFER_SIZE_WIDTH-1:0]           ctrl_rxfer_size_o       ,

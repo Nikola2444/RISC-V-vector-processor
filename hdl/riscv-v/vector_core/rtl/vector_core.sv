@@ -119,28 +119,20 @@ module vector_core #
    logic [2:0] 				  store_data_mux_sel;
    logic [2:0] 				  store_load_idx_mux_sel;
 
-   // SHEDULER-MEM_SUBSYS interconnections
-   logic [31:0] 			  mcu_store_data[0:VLANE_NUM-1];
-   logic [31:0] 			  mcu_store_load_idx  [0:VLANE_NUM-1];
-   logic [31:0] 			  mcu_load_data[0:VLANE_NUM-1];
-   logic [3:0] 				  mcu_load_bwe[0:VLANE_NUM-1];
    // V_LANE-MEM_SUBSYS interconnections
 
    logic [VLANE_NUM-1:0][31:0] vlane_store_data;
-   logic [VLANE_NUM-1:0][31:0]	vlane_store_load_idx;
-   logic 					vlane_store_rdy; 
-   logic [VLANE_NUM-1:0][31:0] 			vlane_load_data;
-   
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] vlane_store_load_ivalid;
-   logic [0:VLANE_NUM-1][3:0] 			vlane_load_bwen;
-   logic 					vlane_load_rdy       ;
-   logic 					vlane_load_last      ;
-   logic 					vlane_load_dvalid    ;
-   logic [1:0] 					vlane_store_driver;
-   logic [1:0] 					vlane_store_driver_reg;
-   logic [1:0] 					vlane_idx_driver_reg;
-   logic 	              			vlane_mcu_store_dvalid;
-   logic 	              			vlane_mcu_idx_ivalid;
+   logic 					             vlane_store_dvalid; 
+   logic 					             vlane_store_rdy; 
+   logic [VLANE_NUM-1:0][31:0] vlane_st_ld_idx;
+   logic                       vlane_st_ld_ivalid;
+   logic [VLANE_NUM-1:0][31:0] vlane_load_data;
+   logic [0:VLANE_NUM-1][3:0]  vlane_load_bwen;
+   logic 					             vlane_load_rdy;
+   logic 					             vlane_load_last;
+   logic 					             vlane_load_dvalid;
+
+   logic [1:0] 					       vlane_store_driver;
    
    // End of automatics
    /*INSTANTIATE SCHEDULER*/
@@ -263,11 +255,10 @@ module vector_core #
      (/*AUTO_INST*/
       // Outputs
       .ready_for_load_o			    (vlane_load_rdy),
-      .store_data_o			    (vlane_store_data),
-      .store_load_index_o		    (vlane_mcu_idx_ivalid),
-      .store_data_valid_o		    (vlane_mcu_store_dvalid),
-      // TODO: rename store_load_index_valid to load index valid - as store_data_valid should be for both index and data
-      .store_load_index_valid_o	(vlane_store_load_ivalid),
+      .store_data_o			        (vlane_store_data),
+      .store_load_index_o		    (vlane_st_ld_idx),
+      .store_data_valid_o		    (vlane_store_dvalid),
+      .store_load_index_valid_o	(vlane_st_ld_ivalid),
       .load_valid_i			        (vlane_load_dvalid),
       .load_last_i			        (vlane_load_last),
       .load_data_i			        (vlane_load_data),
@@ -310,10 +301,6 @@ module vector_core #
    begin
       for (int i=0; i<VLANE_NUM; i++)
       begin
-	 mcu_store_data[i] = vlane_store_data[i];
-	 mcu_store_load_idx[i] = vlane_store_load_idx[i];
-	 vlane_load_data[i] = mcu_load_data[i];
-	 vlane_load_bwen[i] = mcu_load_bwe[i];
       end       
    end
 
@@ -359,17 +346,17 @@ module vector_core #
       .wr_tdata_o           (wr_tdata_o          ),
       .wr_tvalid_o          (wr_tvalid_o         ),
       .wr_tready_i          (wr_tready_i         ),
-      .wr_tstrb_msk_o       (wr_tstrb_msk_o),
-      .vlane_store_data_i   (mcu_store_data      ),
-      .vlane_store_idx_i    (mcu_store_load_idx  ),
-      .vlane_store_dvalid_i (vlane_mcu_store_dvalid),
-      .vlane_store_ivalid_i (vlane_mcu_idx_ivalid),
+      .wr_tstrb_msk_o       (wr_tstrb_msk_o      ),
+      .vlane_store_data_i   (vlane_store_data    ),
+      .vlane_store_idx_i    (vlane_st_ld_idx     ),
+      .vlane_store_dvalid_i (vlane_store_dvalid  ),
+      .vlane_store_ivalid_i (vlane_st_ld_ivalid  ),
       .vlane_store_rdy_o    (vlane_store_rdy     ),
-      .vlane_load_data_o    (mcu_load_data     ),
-      .vlane_load_bwe_o     (mcu_load_bwe      ),
-      .vlane_load_idx_i     (mcu_store_load_idx),
+      .vlane_load_data_o    (vlane_load_data     ),
+      .vlane_load_bwe_o     (vlane_load_bwen     ),
+      .vlane_load_idx_i     (vlane_st_ld_idx     ),
       .vlane_load_rdy_i     (vlane_load_rdy      ),
-      .vlane_load_ivalid_i  (vlane_mcu_idx_ivalid),
+      .vlane_load_ivalid_i  (vlane_st_ld_ivalid  ),
       .vlane_load_dvalid_o  (vlane_load_dvalid   ),
       .vlane_load_last_o    (vlane_load_last     )
       );

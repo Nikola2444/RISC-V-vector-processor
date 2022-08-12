@@ -17,7 +17,7 @@ module complete_sublane_driver
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
     input logic [1 : 0] vsew_i,
     output logic [1 : 0] vsew_o,
-    output logic [1 : 0] wdata_width_o,
+    output logic [1 : 0] vrf_write_sew_o,
     input logic [2 : 0] vlmul_i,                                                // NEW SIGNAL
     
     // Control Flow signals
@@ -38,7 +38,7 @@ module complete_sublane_driver
     input logic vrf_oreg_ren_i,                                                // unknown behaviour
     input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr_i,
     input logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr_i,   // UPDATED
-    input logic [1 : 0] wdata_width_i,                                         // 1 - byte, 2 - halfword, 3 - word
+    input logic [1 : 0] vrf_write_sew_i,                                         // 1 - byte, 2 - halfword, 3 - word
     output logic vrf_ren_o,
     output logic vrf_oreg_ren_o,
     output logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_o,
@@ -88,13 +88,13 @@ module complete_sublane_driver
     input logic [31 : 0] slide_amount_i,
     output logic[$clog2(VLANE_NUM)-1:0] 	    slide_data_mux_sel_o,
     output logic up_down_slide_o,
-    output logic [1:0] vrf_read_width_o,
+    output logic [1:0] vrf_read_sew_o,
     output logic request_write_control_o,                                       // 0 - ALU generates valid signal, 1 - only bwen is important 
     // Misc signals
     input vector_mask_i,
     output logic [1:0][1:0] vrf_read_byte_sel_o,
     output logic vector_mask_o,
-    output logic [1 : 0] write_data_sel_o
+    output logic [1 : 0] vrf_write_mux_sel_o
     
 );
 
@@ -135,7 +135,7 @@ typedef struct packed
     logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_delay;
     logic vrf_ren;
     logic vrf_oreg_ren;
-    logic [1 : 0] wdata_width;
+    logic [1 : 0] vrf_write_sew;
     logic [$clog2(INST_TYPE_NUM) - 1 : 0] inst_type;   
     logic vmrf_wen;
     logic en_write;
@@ -153,7 +153,7 @@ typedef struct packed
     logic [31 : 0] ALU_x_data;
     logic [4 : 0] ALU_imm;
     logic vector_mask;
-    logic [1 : 0] 	write_data_sel;
+    logic [1 : 0] 	vrf_write_mux_sel;
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
     logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
     logic [ALU_OPMODE - 1 : 0] ALU_opmode;
@@ -264,7 +264,7 @@ logic [6 : 0] inst_type_comp;
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
 assign vrf_waddr_o = (current_state == SLIDE) ? slide_waddr : normal_waddr;
-assign wdata_width_o = element_width_write;
+assign vrf_write_sew_o = element_width_write;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
 assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
@@ -297,7 +297,7 @@ assign ALU_imm_o = dp0_reg.ALU_imm;
 assign vrf_read_byte_sel_o[0] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
 assign vrf_read_byte_sel_o[1] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
 assign vector_mask_o = dp0_reg.vector_mask;
-assign write_data_sel_o = dp0_reg.write_data_sel;
+assign vrf_write_mux_sel_o = dp0_reg.vrf_write_mux_sel;
 assign read_data_valid_o = (dp0_reg.delay_addr == 1) ? read_data_valid_slide : read_data_valid;
 assign read_data_valid[VLANE_NUM - 1 : 1] = read_data_valid_dv[VLANE_NUM - 1 : 1];
 assign ALU_ctrl_o = dp0_reg.ALU_opmode;
@@ -307,7 +307,7 @@ assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 //assign SA_complete_lane = slide_amount_i[$clog2(VLANE_NUM) - 1 : 0];
 assign SA_complete_lane = dp0_reg.slide_amount[$clog2(VLANE_NUM) - 1 : 0];
 assign slide_complete_lane_adder = ~SA_complete_lane + 1;
-assign vrf_read_width_o = element_width_read;
+assign vrf_read_sew_o = element_width_read;
 
 assign dp1_next[VRF_DELAY - 1].waddr = waddr;
 assign dp0_next.bwen_ff = bwen_mux;
@@ -554,7 +554,7 @@ always_comb begin
 
     shift4_next = 4'b0001;
     shift2_next = 2'b01; 
-    case(dp0_reg.wdata_width & {2{dp0_reg.en_write}})
+    case(dp0_reg.vrf_write_sew & {2{dp0_reg.en_write}})
     //case(element_width_write & {2{dp0_reg.en_write}})
         2'b01: bwen_selcetion = shift4_reg;
         2'b10: bwen_selcetion = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
@@ -725,7 +725,7 @@ always_comb begin
     request_write_control_o = 1'b0;
     // registers
     dp0_next.inst_delay = dp0_reg.inst_delay;
-    dp0_next.wdata_width = dp0_reg.wdata_width;
+    dp0_next.vrf_write_sew = dp0_reg.vrf_write_sew;
     dp0_next.inst_type = dp0_reg.inst_type;
     dp0_next.vmrf_wen = dp0_reg.vmrf_wen;
     dp0_next.en_write = dp0_reg.en_write;
@@ -743,7 +743,7 @@ always_comb begin
     dp0_next.ALU_x_data = dp0_reg.ALU_x_data;
     dp0_next.ALU_imm = dp0_reg.ALU_imm;
     dp0_next.vector_mask = dp0_reg.vector_mask;
-    dp0_next.write_data_sel = dp0_reg.write_data_sel;
+    dp0_next.vrf_write_mux_sel = dp0_reg.vrf_write_mux_sel;
     dp0_next.vrf_starting_raddr = dp0_reg.vrf_starting_raddr;
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
     dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
@@ -769,7 +769,7 @@ always_comb begin
     // 32-bit multiply
     dp0_next.alu_en_32bit_mul = dp0_reg.alu_en_32bit_mul;
     element_width_read = dp0_reg.sew;
-    element_width_write = dp0_reg.wdata_width - 1;
+    element_width_write = dp0_reg.vrf_write_sew - 1;
     dp0_next.slide_waddr_offset = dp0_reg.slide_waddr_offset;
     
     case(current_state)
@@ -790,7 +790,7 @@ always_comb begin
 	   begin
               dp0_next.inst_delay = inst_delay_i;
 	      dp0_next.slide_waddr_offset = slide_waddr_offset;
-              dp0_next.wdata_width = wdata_width_i;
+              dp0_next.vrf_write_sew = vrf_write_sew_i;
               dp0_next.inst_type = inst_type_i;
               dp0_next.en_write = 0;
               dp0_next.waddr_cnt_en = 0;
@@ -804,7 +804,7 @@ always_comb begin
               dp0_next.store_load_index_mux_sel = store_load_index_mux_sel_i;
               dp0_next.store_data_mux_sel = store_data_mux_sel_i;
 
-              dp0_next.write_data_sel = 0;
+              dp0_next.vrf_write_mux_sel = 0;
               dp0_next.vector_mask = vector_mask_i;
               dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
               dp0_next.vrf_starting_waddr = vrf_starting_waddr_i;
@@ -863,7 +863,7 @@ always_comb begin
 		       element_width_read=2'b00;
                         dp0_next.en_write = 1;
 		        next_state = SLIDE;                            
-                        dp0_next.write_data_sel = 2'b10;                        
+                        dp0_next.vrf_write_mux_sel = 2'b10;                        
                     end
                     
                     default : begin                                             // An assert should be put here
@@ -939,7 +939,7 @@ always_comb begin
         LOAD_MODE : begin
            next_state = LOAD_MODE;
 	   dp0_next.waddr_cnt_en = 1;
-           dp0_next.write_data_sel = 1;
+           dp0_next.vrf_write_mux_sel = 1;
 	   element_width_write = 2'b10;
 	   request_write_control_o = 1'b1;
             //if(load_valid_i) begin            
@@ -949,7 +949,7 @@ always_comb begin
             if(load_last_i) begin
                 next_state = IDLE;
 	       dp0_next.waddr_cnt_en = 0;
-               dp0_next.write_data_sel = 0;
+               dp0_next.vrf_write_mux_sel = 0;
                 //ready_for_load_o = 0;
             end 
         end

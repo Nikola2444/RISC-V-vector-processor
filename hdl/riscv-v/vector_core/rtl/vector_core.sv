@@ -114,7 +114,7 @@ module vector_core #
    logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
    logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
    logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
-   logic [1:0] 				  wdata_width;		// From v_cu_inst of v_cu.v
+   logic [1:0] 				  vrf_write_sew;		// From v_cu_inst of v_cu.v
    logic [W_PORTS_NUM-1:0] 		  port_group_ready;
    logic [2:0] 				  store_data_mux_sel;
    logic [2:0] 				  store_load_idx_mux_sel;
@@ -216,7 +216,7 @@ module vector_core #
 	     .vrf_starting_waddr_o	(vrf_starting_waddr[8*$clog2( MEM_DEPTH)-1:0]),
 	     .vrf_starting_raddr_vs1_o	(vrf_starting_raddr_vs1[8*$clog2( MEM_DEPTH)-1:0]),
 	     .vrf_starting_raddr_vs2_o	(vrf_starting_raddr_vs2[8*$clog2( MEM_DEPTH)-1:0]),
-	     .wdata_width_o		(wdata_width[1:0]),
+	     .vrf_write_sew_o		(vrf_write_sew[1:0]),
 	     .store_data_mux_sel_o	(store_data_mux_sel[$clog2(R_PORTS_NUM)-1:0]),
 	     .store_load_index_mux_sel_o(store_load_idx_mux_sel[$clog2(R_PORTS_NUM)-1:0]),
 	     .op2_sel_o			(op2_sel/*[W_PORTS_NUM-1:0][1:0]*/),
@@ -286,7 +286,7 @@ module vector_core #
       .vrf_oreg_ren_i			(vrf_oreg_ren),
       .vrf_starting_waddr_i		(vrf_starting_waddr),
       .vrf_starting_raddr_i		({vrf_starting_waddr, vrf_starting_raddr_vs2, vrf_starting_raddr_vs1}), //TODO: how to orded them ?
-      .wdata_width_i			(wdata_width[1:0]),
+      .vrf_write_sew_i			(vrf_write_sew[1:0]),
       .ready_o				(port_group_ready[W_PORTS_NUM-1:0]),
       .load_bwen_i                      (vlane_load_bwen),
       .store_data_mux_sel_i		(store_data_mux_sel),

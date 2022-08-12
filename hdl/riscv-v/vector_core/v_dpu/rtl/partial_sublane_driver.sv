@@ -17,7 +17,7 @@ module partial_sublane_driver
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
     input logic [1 : 0] vsew_i,
     output logic [1 : 0] vsew_o,
-    output logic [1 : 0] wdata_width_o,
+    output logic [1 : 0] vrf_write_sew_o,
     // Control Flow signals
     input logic [$clog2(INST_TYPE_NUM) - 1 : 0] inst_type_i,                    // 0 - normal, 1 - reduction, 2 - load, ...
     
@@ -36,7 +36,7 @@ module partial_sublane_driver
     input logic vrf_oreg_ren_i,                                                 // unknown behaviour
     input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr_i,
     input logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr_i,    // UPDATED
-    input logic [1 : 0] wdata_width_i,                                          // 1 - byte, 2 - halfword, 3 - word
+    input logic [1 : 0] vrf_write_sew_i,                                          // 1 - byte, 2 - halfword, 3 - word
     output logic vrf_ren_o,
     output logic vrf_oreg_ren_o,
     output logic [$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_o,
@@ -78,12 +78,12 @@ module partial_sublane_driver
     output logic [31 : 0] ALU_reduction_data_o,
     output logic [ALU_OPMODE - 1 : 0] ALU_ctrl_o,                                   // Not yet finished
     output logic                      reduction_op_o,                              // Not yet finished
-    output logic [1:0]                vrf_read_width_o,                              // Not yet finished
+    output logic [1:0]                vrf_read_sew_o,                              // Not yet finished
     // Misc signals
     input vector_mask_i,
     output logic[1:0][1 : 0] vrf_read_byte_sel_o,
     output logic vector_mask_o,
-    output logic [1 : 0] write_data_sel_o
+    output logic [1 : 0] vrf_write_mux_sel_o
 );
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -111,7 +111,7 @@ typedef struct packed
     logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] inst_delay;
     logic vrf_ren;
     logic vrf_oreg_ren;
-    logic [1 : 0] wdata_width;
+    logic [1 : 0] vrf_write_sew;
     logic [$clog2(INST_TYPE_NUM) - 1 : 0] inst_type;   
     logic vmrf_wen;
     logic en_write;
@@ -130,7 +130,7 @@ typedef struct packed
     logic [4 : 0] ALU_imm;
     logic vector_mask;
    logic  [1:0] sew;
-    logic [1 : 0] write_data_sel;
+    logic [1 : 0] vrf_write_mux_sel;
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
     logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
     logic [ALU_OPMODE - 1 : 0] ALU_opmode;
@@ -189,8 +189,8 @@ logic [5 : 0] inst_type_comp;
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
 assign vsew_o = dp0_reg.sew;
-assign wdata_width_o = element_width_write;
-assign vrf_read_width_o = element_width_read;
+assign vrf_write_sew_o = element_width_write;
+assign vrf_read_sew_o = element_width_read;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
@@ -214,14 +214,14 @@ assign ALU_imm_o = dp0_reg.ALU_imm;
 assign vrf_read_byte_sel_o[0] = main_cnt[1 : 0];
 assign vrf_read_byte_sel_o[1] = main_cnt[1 : 0];
 assign vector_mask_o = dp0_reg.vector_mask;
-assign write_data_sel_o = dp0_reg.write_data_sel;
+assign vrf_write_mux_sel_o = dp0_reg.vrf_write_mux_sel;
 assign read_data_valid_o[VLANE_NUM - 1 : 1] = read_data_valid[VLANE_NUM - 1 : 1];
 assign ALU_ctrl_o = dp0_reg.ALU_opmode;
 assign reduction_op_o = dp0_reg.reduction_op;
 assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 // Write address generation //
-assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.wdata_width - 1);
+assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.vrf_write_sew - 1);
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -330,7 +330,7 @@ always_comb begin
     shift4_next = 4'b0001;
     shift2_next = 2'b01; 
 
-    case(dp0_reg.wdata_width & {2{dp0_reg.en_write}})
+    case(dp0_reg.vrf_write_sew & {2{dp0_reg.en_write}})
         2'b01: bwen_mux = shift4_reg;
         2'b10: bwen_mux = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
         2'b11: bwen_mux = {{4{1'b1}}};
@@ -463,7 +463,7 @@ always_comb begin
     read_data_valid_o[0] = read_data_valid[0];
     // registers
     dp0_next.inst_delay = dp0_reg.inst_delay;
-    dp0_next.wdata_width = dp0_reg.wdata_width;
+    dp0_next.vrf_write_sew = dp0_reg.vrf_write_sew;
     dp0_next.inst_type = dp0_reg.inst_type;
     dp0_next.vmrf_wen = dp0_reg.vmrf_wen;
     dp0_next.en_write = dp0_reg.en_write;
@@ -481,7 +481,7 @@ always_comb begin
     dp0_next.ALU_x_data = dp0_reg.ALU_x_data;
     dp0_next.ALU_imm = dp0_reg.ALU_imm;
     dp0_next.vector_mask = dp0_reg.vector_mask;
-    dp0_next.write_data_sel = dp0_reg.write_data_sel;
+    dp0_next.vrf_write_mux_sel = dp0_reg.vrf_write_mux_sel;
     dp0_next.vrf_starting_raddr = dp0_reg.vrf_starting_raddr;
     dp0_next.vrf_starting_waddr = dp0_reg.vrf_starting_waddr;
     dp0_next.ALU_opmode = dp0_reg.ALU_opmode;
@@ -507,7 +507,7 @@ always_comb begin
            if (start_i)
 	   begin
               dp0_next.inst_delay = inst_delay_i;;
-              dp0_next.wdata_width = wdata_width_i;
+              dp0_next.vrf_write_sew = vrf_write_sew_i;
               dp0_next.inst_type = inst_type_i;
               dp0_next.en_write = 0;
               dp0_next.waddr_cnt_en = 0;
@@ -521,7 +521,7 @@ always_comb begin
               dp0_next.store_load_index_mux_sel = store_load_index_mux_sel_i;
               dp0_next.store_data_mux_sel = store_data_mux_sel_i;
               dp0_next.read_limit = read_limit_add;
-              dp0_next.write_data_sel = 0;
+              dp0_next.vrf_write_mux_sel = 0;
 	      dp0_next.sew = vsew_i[1 : 0];
               dp0_next.vector_mask = vector_mask_i;
               dp0_next.vrf_starting_raddr = vrf_starting_raddr_i;
@@ -631,7 +631,7 @@ always_comb begin
         LOAD_MODE : begin
             next_state = LOAD_MODE;
             dp0_next.waddr_cnt_en = 1;
-            dp0_next.write_data_sel = 1;
+            dp0_next.vrf_write_mux_sel = 1;
             //if(load_valid_i) begin
               //  dp0_next.waddr_cnt_en = 1;
             //end
@@ -641,7 +641,7 @@ always_comb begin
             if(load_last_i) begin
                 next_state = IDLE;
 	       dp0_next.waddr_cnt_en = 0;
-               dp0_next.write_data_sel = 0;
+               dp0_next.vrf_write_mux_sel = 0;
                 //ready_for_load_o = 0;
             end 
         end

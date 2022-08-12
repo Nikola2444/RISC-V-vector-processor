@@ -23,15 +23,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="26656400000fs"></ZoomStartTime>
-      <ZoomEndTime time="26755100001fs"></ZoomEndTime>
-      <Cursor1Time time="26721400000fs"></Cursor1Time>
+      <ZoomStartTime time="26594800000fs"></ZoomStartTime>
+      <ZoomEndTime time="26793000001fs"></ZoomEndTime>
+      <Cursor1Time time="26750000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="237"></NameColumnWidth>
-      <ValueColumnWidth column_width="105"></ValueColumnWidth>
+      <ValueColumnWidth column_width="101"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="35" />
+   <WVObjectSize size="38" />
    <wave_markers>
       <marker label="" time="14700000" />
       <marker label="" time="26721400000" />
@@ -139,6 +139,7 @@
    <wvobject type="group" fp_name="group543">
       <obj_property name="label">V_data_axi_if</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="logic" fp_name="/riscv_v_verif_top/v_axi4_vif/clk">
          <obj_property name="ElementShortName">clk</obj_property>
          <obj_property name="ObjectShortName">clk</obj_property>
@@ -311,267 +312,9 @@
    <wvobject type="group" fp_name="group511">
       <obj_property name="label">SCALAR_CORE</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s">
          <obj_property name="ElementShortName">reg_bank_s[0:31][31:0]</obj_property>
          <obj_property name="ObjectShortName">reg_bank_s[0:31][31:0]</obj_property>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[0]">
-            <obj_property name="ElementShortName">[0][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[0][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[1]">
-            <obj_property name="ElementShortName">[1][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[1][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[2]">
-            <obj_property name="ElementShortName">[2][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[2][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[3]">
-            <obj_property name="ElementShortName">[3][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[3][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[4]">
-            <obj_property name="ElementShortName">[4][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[4][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[5]">
-            <obj_property name="ElementShortName">[5][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[5][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[6]">
-            <obj_property name="ElementShortName">[6][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[6][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[7]">
-            <obj_property name="ElementShortName">[7][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[7][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[8]">
-            <obj_property name="ElementShortName">[8][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[8][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[9]">
-            <obj_property name="ElementShortName">[9][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[9][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[10]">
-            <obj_property name="ElementShortName">[10][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[10][31:0]</obj_property>
-            <obj_property name="Radix">SIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[11]">
-            <obj_property name="ElementShortName">[11][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[11][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[12]">
-            <obj_property name="ElementShortName">[12][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[12][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[13]">
-            <obj_property name="ElementShortName">[13][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[13][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[14]">
-            <obj_property name="ElementShortName">[14][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[14][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[15]">
-            <obj_property name="ElementShortName">[15][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[15][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[16]">
-            <obj_property name="ElementShortName">[16][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[16][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[17]">
-            <obj_property name="ElementShortName">[17][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[17][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[18]">
-            <obj_property name="ElementShortName">[18][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[18][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[19]">
-            <obj_property name="ElementShortName">[19][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[19][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[20]">
-            <obj_property name="ElementShortName">[20][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[20][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[21]">
-            <obj_property name="ElementShortName">[21][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[21][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[22]">
-            <obj_property name="ElementShortName">[22][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[22][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[23]">
-            <obj_property name="ElementShortName">[23][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[23][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[24]">
-            <obj_property name="ElementShortName">[24][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[24][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[25]">
-            <obj_property name="ElementShortName">[25][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[25][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[26]">
-            <obj_property name="ElementShortName">[26][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[26][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[27]">
-            <obj_property name="ElementShortName">[27][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[27][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[28]">
-            <obj_property name="ElementShortName">[28][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[28][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[29]">
-            <obj_property name="ElementShortName">[29][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[29][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[30]">
-            <obj_property name="ElementShortName">[30][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[30][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[31]">
-            <obj_property name="ElementShortName">[31][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[31][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[0]">
-            <obj_property name="ElementShortName">[0][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[0][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[1]">
-            <obj_property name="ElementShortName">[1][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[1][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[2]">
-            <obj_property name="ElementShortName">[2][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[2][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[3]">
-            <obj_property name="ElementShortName">[3][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[3][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[4]">
-            <obj_property name="ElementShortName">[4][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[4][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[5]">
-            <obj_property name="ElementShortName">[5][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[5][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[6]">
-            <obj_property name="ElementShortName">[6][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[6][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[7]">
-            <obj_property name="ElementShortName">[7][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[7][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[8]">
-            <obj_property name="ElementShortName">[8][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[8][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[9]">
-            <obj_property name="ElementShortName">[9][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[9][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[10]">
-            <obj_property name="ElementShortName">[10][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[10][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[11]">
-            <obj_property name="ElementShortName">[11][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[11][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[12]">
-            <obj_property name="ElementShortName">[12][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[12][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[13]">
-            <obj_property name="ElementShortName">[13][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[13][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[14]">
-            <obj_property name="ElementShortName">[14][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[14][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[15]">
-            <obj_property name="ElementShortName">[15][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[15][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[16]">
-            <obj_property name="ElementShortName">[16][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[16][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[17]">
-            <obj_property name="ElementShortName">[17][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[17][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[18]">
-            <obj_property name="ElementShortName">[18][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[18][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[19]">
-            <obj_property name="ElementShortName">[19][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[19][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[20]">
-            <obj_property name="ElementShortName">[20][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[20][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[21]">
-            <obj_property name="ElementShortName">[21][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[21][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[22]">
-            <obj_property name="ElementShortName">[22][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[22][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[23]">
-            <obj_property name="ElementShortName">[23][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[23][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[24]">
-            <obj_property name="ElementShortName">[24][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[24][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[25]">
-            <obj_property name="ElementShortName">[25][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[25][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[26]">
-            <obj_property name="ElementShortName">[26][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[26][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[27]">
-            <obj_property name="ElementShortName">[27][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[27][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[28]">
-            <obj_property name="ElementShortName">[28][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[28][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[29]">
-            <obj_property name="ElementShortName">[29][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[29][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[30]">
-            <obj_property name="ElementShortName">[30][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[30][31:0]</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/register_bank_1/reg_bank_s[31]">
-            <obj_property name="ElementShortName">[31][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[31][31:0]</obj_property>
-         </wvobject>
       </wvobject>
       <wvobject type="logic" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/scalar_core_inst/data_path_1/vector_stall_i">
          <obj_property name="ElementShortName">vector_stall_i</obj_property>
@@ -716,7 +459,6 @@
    <wvobject type="group" fp_name="group467">
       <obj_property name="label">v_cu</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_cu_inst/dependancy_issue">
          <obj_property name="ElementShortName">dependancy_issue[3:0]</obj_property>
          <obj_property name="ObjectShortName">dependancy_issue[3:0]</obj_property>
@@ -793,6 +535,7 @@
    <wvobject type="group" fp_name="group314">
       <obj_property name="label">Partial_driver1</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[1].genblk1.partial_sublane_driver_inst /current_state">
          <obj_property name="ElementShortName">current_state[2:0]</obj_property>
          <obj_property name="ObjectShortName">current_state[2:0]</obj_property>
@@ -835,6 +578,19 @@
    <wvobject type="group" fp_name="group1001">
       <obj_property name="label">ALU3</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\VL_instances[0].Vector_Lane_inst /store_data_o">
+      <obj_property name="ElementShortName">store_data_o[31:0]</obj_property>
+      <obj_property name="ObjectShortName">store_data_o[31:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\VL_instances[0].Vector_Lane_inst /store_data_mux_sel">
+      <obj_property name="ElementShortName">store_data_mux_sel[2:0]</obj_property>
+      <obj_property name="ObjectShortName">store_data_mux_sel[2:0]</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\VL_instances[0].Vector_Lane_inst /read_data_mux_reg">
+      <obj_property name="ElementShortName">read_data_mux_reg[7:0][31:0]</obj_property>
+      <obj_property name="ObjectShortName">read_data_mux_reg[7:0][31:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="group" fp_name="group1334">
       <obj_property name="label">VRF0</obj_property>

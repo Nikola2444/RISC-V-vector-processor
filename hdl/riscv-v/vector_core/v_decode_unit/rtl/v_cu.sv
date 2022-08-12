@@ -10,7 +10,7 @@ module v_cu #
    instr_rdy_o, sew_o, lmul_o, store_driver_o, slide_type_o, vl_o,
    inst_type_o, start_o, inst_delay_o, vrf_ren_o, vrf_oreg_ren_o,
    vrf_starting_waddr_o, vrf_starting_raddr_vs1_o,
-   vrf_starting_raddr_vs2_o, wdata_width_o, reduction_op_o,
+   vrf_starting_raddr_vs2_o, vrf_write_sew_o, reduction_op_o,
    store_data_mux_sel_o, store_load_index_mux_sel_o, op2_sel_o,
    op3_sel_o, alu_x_data_o, alu_imm_o, alu_opmode_o, up_down_slide_o,
    slide_amount_o, vector_mask_o,
@@ -69,7 +69,7 @@ module v_cu #
    output logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 			  vrf_starting_waddr_o;
    output logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 			  vrf_starting_raddr_vs1_o;
    output logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 			  vrf_starting_raddr_vs2_o;
-   output logic [1 : 0] 						  wdata_width_o;
+   output logic [1 : 0] 						  vrf_write_sew_o;
    output logic 							  reduction_op_o;
    
    // Load and Store signals
@@ -304,7 +304,7 @@ module v_cu #
    assign vrf_ren      = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    assign vrf_oreg_ren = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
-   assign wdata_width_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b01 :
+   assign vrf_write_sew_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b01 :
 			   widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
                                                                        // TODO: take into account narrowing instructions
 

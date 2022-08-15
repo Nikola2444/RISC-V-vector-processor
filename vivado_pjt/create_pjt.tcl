@@ -38,7 +38,7 @@ add_files -norecurse ..\/hdl\/common\/sdp_distram.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/vrf.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/alu.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/alu_submodule.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/Vector_Lane.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/vector_lane.sv
 #scheduler
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/scheduler\/rtl\/scheduler.sv
 #v_cu

@@ -1,4 +1,4 @@
-module Vector_Lane
+module vector_lane
   #(
     parameter R_PORTS_NUM = 8,
     parameter W_PORTS_NUM = 4,

@@ -372,7 +372,7 @@ module v_dpu#
 
 
       for(genvar i = 0; i < VLANE_NUM; i++) begin: VL_instances
-	 Vector_Lane
+	 vector_lane
 		     #(
 		       .R_PORTS_NUM(R_PORTS_NUM),
 		       .W_PORTS_NUM(W_PORTS_NUM),
@@ -385,7 +385,7 @@ module v_dpu#
 		       .MEM_WIDTH(MEM_WIDTH),
 		       .V_LANE_NUM(i)
 		       )
-	 Vector_Lane_inst
+	 vector_lane_inst
 		     (
 		      .clk_i(clk_i),
 		      .clk2_i(clk2_i),

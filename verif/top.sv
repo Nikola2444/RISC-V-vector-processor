@@ -163,8 +163,8 @@ module riscv_v_verif_top;
    logic[31:0] LVT0_xor_LVT1;
    logic [31:0] LVT1_in;
    logic [31:0] LVT0_out;
-   //assign LVT0_out = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.doutb;
-   //assign LVT1_in = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].Vector_Lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.dina;
+   //assign LVT0_out = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.doutb;
+   //assign LVT1_in = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.dina;
    //assign LVT0_xor_LVT1 = LVT0_out ^ LVT1_in;
    //Initialize VRF
    initial

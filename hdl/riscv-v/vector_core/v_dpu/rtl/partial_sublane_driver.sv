@@ -285,11 +285,11 @@ end
 /////////////////////////////////////////////////////////////////////////////////
 // Signal selection for reductions - implementation ///
 always_comb begin
-    if(main_cnt < VLANE_NUM - 1) begin
-        ALU_reduction_data_o = lane_result_i[main_cnt[$clog2(VLANE_NUM - 1) - 1 : 0]];
-    end
-    else
-        ALU_reduction_data_o = 0;
+    //if(main_cnt < VLANE_NUM - 1) begin
+   ALU_reduction_data_o = lane_result_i[main_cnt[$clog2(VLANE_NUM - 1) - 1 : 0]];
+    //end
+    //else
+        //ALU_reduction_data_o = 0;
 end
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -489,7 +489,7 @@ always_comb begin
     dp0_next.sew = dp0_reg.sew;
     // Loads //
     ready_for_load_o = 0;
-    element_width_read = vsew_i;
+    element_width_read = dp0_reg.sew;
     case(current_state)
         IDLE : begin
             next_state = IDLE;

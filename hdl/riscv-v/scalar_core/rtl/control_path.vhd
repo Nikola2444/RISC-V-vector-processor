@@ -83,6 +83,11 @@ architecture behavioral of control_path is
   signal rs1_address_id_s : std_logic_vector (4 downto 0);
   signal rs2_address_id_s : std_logic_vector (4 downto 0);
   signal rd_address_id_s  : std_logic_vector (4 downto 0);
+  signal alu_forward_a_id : fwd_a_t;
+  signal alu_forward_b_id : fwd_b_t;
+  signal alu_forward_a_ex : fwd_a_t;
+  signal alu_forward_b_ex : fwd_b_t;
+  
 
   signal fencei_id_s : std_logic;
   --*********       EXECUTE       **************
@@ -224,7 +229,7 @@ begin
       elsif(data_ready_i = '1' and instr_ready_i = '1' and ce = '1' and
             (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0')))then
         vector_instr_ex_s <= vector_instr_id_s;
-      elsif (vector_instr_ex_s = '1' and vector_stall_i='0' and instr_ready_i = '0') then
+      elsif (vector_instr_ex_s = '1' and vector_stall_i = '0' and instr_ready_i = '0') then
         vector_instr_ex_s <= '0';
       elsif (vector_instr_ex_s = '1' and vector_stall_i = '0') then
         vector_instr_ex_s <= vector_instr_id_s;
@@ -245,6 +250,8 @@ begin
         rd_address_mem_s     <= (others => '0');
         scalar_load_req_mem  <= '0';
         scalar_store_req_mem <= '0';
+        alu_forward_a_ex     <= dont_fwd_a;
+        alu_forward_b_ex     <= dont_fwd_b;
       elsif (data_ready_i = '1' and instr_ready_i = '1' and ce = '1')then
         funct3_mem_s         <= funct3_ex_s;
         data_mem_we_mem_s    <= data_mem_we_ex_s;
@@ -253,10 +260,13 @@ begin
         rd_address_mem_s     <= rd_address_ex_s;
         scalar_load_req_mem  <= scalar_load_req_ex;
         scalar_store_req_mem <= scalar_store_req_ex;
+        alu_forward_a_ex     <= alu_forward_a_id;
+        alu_forward_b_ex     <= alu_forward_b_id;
       end if;
     end if;
   end process;
-
+  alu_forward_a_o <= alu_forward_a_ex;
+  alu_forward_b_o <= alu_forward_b_ex;
   --MEM/WB register
   mem_wb : process (clk) is
   begin
@@ -312,14 +322,14 @@ begin
   -- Forwarding_unit
   forwarding_u : entity work.forwarding_unit(behavioral)
     port map (
+      rd_we_ex_i       => rd_we_ex_s,
+      rd_address_ex_i  => rd_address_ex_s,
       rd_we_mem_i      => rd_we_mem_s,
       rd_address_mem_i => rd_address_mem_s,
-      rd_we_wb_i       => rd_we_wb_s,
-      rd_address_wb_i  => rd_address_wb_s,
-      rs1_address_ex_i => rs1_address_ex_s,
-      rs2_address_ex_i => rs2_address_ex_s,
-      alu_forward_a_o  => alu_forward_a_o,
-      alu_forward_b_o  => alu_forward_b_o);
+      rs1_address_id_i => rs1_address_id_s,
+      rs2_address_id_i => rs2_address_id_s,
+      alu_forward_a_o  => alu_forward_a_id,
+      alu_forward_b_o  => alu_forward_b_id);
 
   -- Hazard unit
   hazard_u : entity work.hazard_unit(behavioral)

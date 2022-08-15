@@ -489,11 +489,11 @@ end
 /////////////////////////////////////////////////////////////////////////////////
 // Signal selection for reductions - implementation ///
 always_comb begin
-    if(main_cnt < VLANE_NUM - 1) begin
-        ALU_reduction_data_o = lane_result_i[main_cnt[$clog2(VLANE_NUM - 1) - 1 : 0]];
-    end
-    else
-        ALU_reduction_data_o = 0;
+   //if(main_cnt < VLANE_NUM - 1) begin
+   ALU_reduction_data_o = lane_result_i[main_cnt[$clog2(VLANE_NUM - 1) - 1 : 0]];
+//end
+  //  else
+    //    ALU_reduction_data_o = 0;
 end
 /////////////////////////////////////////////////////////////////////////////////
 

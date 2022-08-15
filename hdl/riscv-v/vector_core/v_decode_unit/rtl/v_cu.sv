@@ -304,8 +304,8 @@ module v_cu #
    assign vrf_ren      = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    assign vrf_oreg_ren = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
-   assign vrf_write_sew_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b01 :
-			   widening_instr_check ? sew_o + 2 : sew_o+1; // NOTE: check this. We should check if widening instructions is in play
+   assign vrf_write_sew_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b00 :
+			   widening_instr_check ? sew_o + 1 : sew_o; // NOTE: check this. We should check if widening instructions is in play
                                                                        // TODO: take into account narrowing instructions
 
    //assign store_data_mux_sel_i =  ;TODO : after implementing resource available logic

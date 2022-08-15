@@ -171,12 +171,12 @@ typedef struct packed
     logic slide_enable_buffering;                                       // 1 - buffering enabled, 0 - for disabled
     logic start_decrementor;
     logic reduction_op;
-   logic [31-$clog2(VLANE_NUM):0] slide_waddr_offset;  
+    logic [31-$clog2(VLANE_NUM):0] slide_waddr_offset;  
     
     // 1-cycle delayed data for slides
     logic [$clog2(MEM_DEPTH) - 1 : 0] waddr_ff;
     logic [3 : 0] bwen_ff;
-    
+   logic [1:0] 	  vrf_read_sew;
     // 32-bit multiply
     logic alu_en_32bit_mul;
     logic [1 : 0] sew;
@@ -196,8 +196,8 @@ logic main_cnt_en;
 logic rst_main_cnt;
 logic [$clog2(MAX_VL_PER_LANE) : 0] limit_adder;
 // Write address generation //
-logic [1 : 0] element_width_write;
-logic [1 : 0] element_width_read;
+
+
 // VMRF //
 logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_cnt;
 logic rst_vmrf_cnt;
@@ -264,7 +264,7 @@ logic [6 : 0] inst_type_comp;
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
 assign vrf_waddr_o = (current_state == SLIDE) ? slide_waddr : normal_waddr;
-assign vrf_write_sew_o = element_width_write;
+assign vrf_write_sew_o = dp0_reg.vrf_write_sew;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
 assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
@@ -307,7 +307,7 @@ assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 //assign SA_complete_lane = slide_amount_i[$clog2(VLANE_NUM) - 1 : 0];
 assign SA_complete_lane = dp0_reg.slide_amount[$clog2(VLANE_NUM) - 1 : 0];
 assign slide_complete_lane_adder = ~SA_complete_lane + 1;
-assign vrf_read_sew_o = element_width_read;
+assign vrf_read_sew_o = dp0_reg.vrf_read_sew;
 
 assign dp1_next[VRF_DELAY - 1].waddr = waddr;
 assign dp0_next.bwen_ff = bwen_mux;
@@ -503,9 +503,11 @@ end
 always_ff@(posedge clk_i) begin
     if(!rst_i) begin
         dp0_reg <= 0;
+        dp0_reg.vrf_write_sew <= 2'b11;
     end
     else begin
         dp0_reg <= dp0_next;
+        
     end
     
     for(int i = 0; i < VRF_DELAY; i++) begin
@@ -547,24 +549,23 @@ always_ff@(posedge clk_i) begin
     end
 end
 
-logic [3 : 0] bwen_selcetion;
-always_comb begin
-    
-    
+logic [3 : 0] bwen_selection;
+always_comb begin       
+   shift4_next = 4'b0001;
+   shift2_next = 2'b01;
+   if(dp0_reg.en_write)
+     case(dp0_reg.vrf_write_sew)
+        2'b00: bwen_selection = shift4_reg;
+        2'b01: bwen_selection = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
+        2'b10: bwen_selection = {{4{1'b1}}};
+        default: bwen_selection = {{4{1'b0}}};
+     endcase // case (dp0_reg.vrf_write_sew+1)
+   else
+     bwen_selection = {{4{1'b0}}};
 
-    shift4_next = 4'b0001;
-    shift2_next = 2'b01; 
-    case(dp0_reg.vrf_write_sew & {2{dp0_reg.en_write}})
-    //case(element_width_write & {2{dp0_reg.en_write}})
-        2'b01: bwen_selcetion = shift4_reg;
-        2'b10: bwen_selcetion = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
-        2'b11: bwen_selcetion = {{4{1'b1}}};
-        default: bwen_selcetion = {{4{1'b0}}};
-    endcase
-    
-    bwen_mux = (main_cnt > dp0_reg.read_limit+1) && current_state == SLIDE ? 'h0 : 
-//	       (dp0_reg.reverse_bwen == 1) ? {bwen_selcetion[0], bwen_selcetion[1], bwen_selcetion[2], bwen_selcetion[3]} : 
-                                              bwen_selcetion;
+   bwen_mux = (main_cnt > dp0_reg.read_limit+1) && current_state == SLIDE ? 'h0 : 
+//	       (dp0_reg.reverse_bwen == 1) ? {bwen_selection[0], bwen_selection[1], bwen_selection[2], bwen_selection[3]} : 
+                                              bwen_selection;
 end
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -590,7 +591,7 @@ waddr_cnt
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
     .up_down_i(dp0_reg.up_down_slide),
-    .element_width_i(element_width_write),
+    .element_width_i(dp0_reg.vrf_write_sew),
     .rst_cnt_i(waddr_cnt_rst),
     .en_i(waddr_cnt_en),
     .secondary_en_i(wsecondary_en),
@@ -614,7 +615,7 @@ generate
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(dp0_reg.up_down_slide),
-            .element_width_i(2'(element_width_read)),
+            .element_width_i(2'(dp0_reg.vrf_read_sew)),
             .rst_cnt_i(raddr_cnt_rst),
             .en_i(raddr_cnt_en),
             .secondary_en_i(1'b1),
@@ -644,32 +645,6 @@ data_validation_inst
     .partial_results_valid_o(partial_results_valid)
 );
 /////////////////////////////////////////////////////////////////////////////////
-
-
-/////////////////////////////////////////////////////////////////////////////////
-/* -----\/----- EXCLUDED -----\/-----
-column_offset_register
-#(
-    .VREG_LOC_PER_LANE(VREG_LOC_PER_LANE),
-    .VLANE_NUM(VLANE_NUM)
-)
-column_offset_register_inst
-(
-    .clk_i(clk_i),
-    .rst_i(rst_i),
-    
-    .input_sel_i(dp0_reg.input_sel),                                                                // 00 - NOP, 01 - right shift, 10 - left shift, 11 - parallel input
-    .adder_input_sel_i(dp0_reg.adder_input_sel),                                                    // 00 - SA + i, 01 - SA + VLANE_NUM - i, 10 - shift_reg - 1, 11 - NOT DEFINED
-    .en_comp_i(dp0_reg.en_comp),
-    .start_decrementor_i(dp0_reg.start_decrementor),
-    .shift_amount_i(dp0_reg.slide_amount[$clog2(VREG_LOC_PER_LANE * 4 * 8 * VLANE_NUM) - 1 : 0]),
-    .valid_data_o(valid_data),
-    .slide_write_data_pattern_o(slide_write_data_pattern),
-    .enable_write_slide_o(enable_write_slide)
-);
- -----/\----- EXCLUDED -----/\----- */
-/////////////////////////////////////////////////////////////////////////////////
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // Comparators - implementations //
@@ -760,6 +735,7 @@ always_comb begin
     dp0_next.reverse_bwen = dp0_reg.reverse_bwen;
     dp0_next.start_decrementor = dp0_reg.start_decrementor;
     dp0_next.sew  = dp0_reg.sew;
+    dp0_next.vrf_read_sew  = dp0_reg.vrf_read_sew;
     dp0_next.lmul = dp0_reg.lmul;
     dp0_next.vl = dp0_reg.vl;
     // Loads
@@ -768,8 +744,8 @@ always_comb begin
     dp0_next.slide_enable_buffering = dp0_reg.slide_enable_buffering;
     // 32-bit multiply
     dp0_next.alu_en_32bit_mul = dp0_reg.alu_en_32bit_mul;
-    element_width_read = dp0_reg.sew;
-    element_width_write = dp0_reg.vrf_write_sew - 1;
+    //dp0_next.vrf_read_sew = dp0_reg.sew;
+
     dp0_next.slide_waddr_offset = dp0_reg.slide_waddr_offset;
     
     case(current_state)
@@ -813,6 +789,7 @@ always_comb begin
               dp0_next.vmrf_wen = 0;
               dp0_next.alu_en_32bit_mul = alu_en_32bit_mul_i;
               dp0_next.sew = vsew_i[1 : 0];
+	      dp0_next.vrf_read_sew  = vsew_i[1:0];
               dp0_next.lmul = vlmul_i[2 : 0];
               dp0_next.vl = vl_i;
               // slides
@@ -841,26 +818,30 @@ always_comb begin
                     end
                     7'b0000100 : begin                                            // STORE
                         next_state = READ_MODE;
+       		        dp0_next.vrf_read_sew=2'b10;
                         dp0_next.store_data_valid = 1;
                     end
                     7'b0001000 : begin                                            // INDEXED_STORE
                         dp0_next.store_data_valid = 1;
                         dp0_next.store_load_index_valid = 1;
+		        dp0_next.vrf_read_sew=2'b10;
                         next_state = READ_MODE;
                     end
                     7'b0010000 : begin                                            // LOAD
+		        dp0_next.vrf_write_sew=2'b10;
                         next_state = LOAD_MODE;
 		        ready_for_load_o = 1'b1;
                         
                     end
                     7'b0100000 : begin                                            // INDEXED_LOAD
                         dp0_next.store_load_index_valid = 1;
+		        dp0_next.vrf_read_sew=2'b10; //
                         next_state = READ_MODE;
                     end
-                    7'b1000000 : begin                                            // SLIDE                        
-                        //dp0_next.delay_addr = 1;                                  // Starting from the next cycle bwen is 1111                        
-                        //dp0_next.reverse_bwen = up_down_slide_i;
-		       element_width_read=2'b00;
+                    7'b1000000 : begin                                            // SLIDE
+		       
+		        dp0_next.vrf_write_sew=2'b00;
+		        dp0_next.vrf_read_sew=2'b00;
                         dp0_next.en_write = 1;
 		        next_state = SLIDE;                            
                         dp0_next.vrf_write_mux_sel = 2'b10;                        
@@ -911,7 +892,7 @@ always_comb begin
                     end                                   
                 end
                 4'b0010 : begin                                            // STORE
-		   element_width_read=2'b10; // 
+ 
                     if(read_limit_comp) begin                       
                         next_state = IDLE;
                         dp0_next.store_data_valid = 0;
@@ -940,7 +921,7 @@ always_comb begin
            next_state = LOAD_MODE;
 	   dp0_next.waddr_cnt_en = 1;
            dp0_next.vrf_write_mux_sel = 1;
-	   element_width_write = 2'b10;
+
 	   request_write_control_o = 1'b1;
             //if(load_valid_i) begin            
        	    ready_for_load_o = 1'b1;
@@ -991,8 +972,8 @@ always_comb begin
             main_cnt_en = 1;            
             // read address generator
             raddr_cnt_en = 1;	    
-            element_width_read=2'b00;
-            element_width_write=2'b00;
+            //dp0_next.vrf_read_sew=2'b00;
+
 	   if(main_cnt == dp0_reg.inst_delay-1) begin
 	      dp0_next.waddr_cnt_en = 1;// Starting from the next cycle write addres counter is enabled
 	      dp0_next.bwen_en = 1;

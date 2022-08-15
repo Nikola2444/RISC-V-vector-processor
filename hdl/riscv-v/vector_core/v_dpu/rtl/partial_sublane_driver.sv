@@ -129,12 +129,13 @@ typedef struct packed
     logic [31 : 0] ALU_x_data;
     logic [4 : 0] ALU_imm;
     logic vector_mask;
-   logic  [1:0] sew;
+    logic  [1:0] sew;
+    logic [1:0]  vrf_read_sew;
     logic [1 : 0] vrf_write_mux_sel;
     logic [8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_waddr;
     logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] vrf_starting_raddr;
     logic [ALU_OPMODE - 1 : 0] ALU_opmode;
-   logic 		       reduction_op;
+    logic 		       reduction_op;
     
 } dataPacket0;
 
@@ -147,9 +148,8 @@ logic [1 : 0] shift2_reg, shift2_next;
 logic [$clog2(MAX_VL_PER_LANE) : 0] main_cnt;
 logic main_cnt_en;
 logic rst_main_cnt;
-// Write address generation //
-logic [1 : 0] element_width_write;
-logic [1 : 0] element_width_read;
+
+
 // VMRF //
 logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_cnt;
 logic rst_vmrf_cnt;
@@ -189,8 +189,8 @@ logic [5 : 0] inst_type_comp;
 /////////////////////////////////////////////////////////////////////////////////
 // Assigments //
 assign vsew_o = dp0_reg.sew;
-assign vrf_write_sew_o = element_width_write;
-assign vrf_read_sew_o = element_width_read;
+assign vrf_write_sew_o = dp0_reg.vrf_write_sew;
+assign vrf_read_sew_o = dp0_reg.vrf_read_sew;
 assign vrf_waddr_o = waddr;
 assign vrf_raddr_o = raddr;
 assign vmrf_addr_o = vmrf_cnt;
@@ -221,7 +221,7 @@ assign reduction_op_o = dp0_reg.reduction_op;
 assign waddr_cnt_en = dp0_reg.waddr_cnt_en;
 assign request_write_control_o = (current_state == LOAD_MODE) | (current_state == REDUCTION_WRITE_MODE);
 // Write address generation //
-assign element_width_write = (current_state == LOAD_MODE) ? 2'b10 : 2'(dp0_reg.vrf_write_sew - 1);
+
 
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -299,6 +299,7 @@ end
 always_ff@(posedge clk_i) begin
     if(!rst_i) begin
         dp0_reg <= 0;
+        dp0_reg.vrf_write_sew <= 2'b11;
     end
     else begin
         dp0_reg <= dp0_next;
@@ -330,12 +331,15 @@ always_comb begin
     shift4_next = 4'b0001;
     shift2_next = 2'b01; 
 
-    case(dp0_reg.vrf_write_sew & {2{dp0_reg.en_write}})
-        2'b01: bwen_mux = shift4_reg;
-        2'b10: bwen_mux = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
-        2'b11: bwen_mux = {{4{1'b1}}};
-        default: bwen_mux = {{4{1'b0}}};
-    endcase
+    if (dp0_reg.en_write)
+      case(dp0_reg.vrf_write_sew)
+         2'b00: bwen_mux = shift4_reg;
+         2'b01: bwen_mux = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
+         2'b10: bwen_mux = {{4{1'b1}}};
+         default: bwen_mux = {{4{1'b0}}};	 
+      endcase // case (dp0_reg.vrf_write_sew+1 & {2{}})
+    else
+      bwen_mux = {{4{1'b0}}};	 
 end
 /////////////////////////////////////////////////////////////////////////////////
 
@@ -356,7 +360,7 @@ waddr_cnt
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
     .up_down_i(1'b1),
-    .element_width_i(element_width_write),
+    .element_width_i(dp0_reg.vrf_write_sew),
     .rst_cnt_i(waddr_cnt_rst),
     .en_i(waddr_cnt_en),
     .secondary_en_i(1'b1),
@@ -380,7 +384,7 @@ generate
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
             .up_down_i(1'b1),
-            .element_width_i(2'(element_width_read)),
+            .element_width_i(2'(dp0_reg.vrf_read_sew)),
             .rst_cnt_i(raddr_cnt_rst),
             .en_i(raddr_cnt_en),
             .secondary_en_i(1'b1),
@@ -479,6 +483,7 @@ always_comb begin
     dp0_next.op2_sel = dp0_reg.op2_sel;
     dp0_next.op3_sel = dp0_reg.op3_sel;
     dp0_next.ALU_x_data = dp0_reg.ALU_x_data;
+    dp0_next.vrf_read_sew = dp0_reg.vrf_read_sew;
     dp0_next.ALU_imm = dp0_reg.ALU_imm;
     dp0_next.vector_mask = dp0_reg.vector_mask;
     dp0_next.vrf_write_mux_sel = dp0_reg.vrf_write_mux_sel;
@@ -489,7 +494,7 @@ always_comb begin
     dp0_next.sew = dp0_reg.sew;
     // Loads //
     ready_for_load_o = 0;
-    element_width_read = dp0_reg.sew;
+
     case(current_state)
         IDLE : begin
             next_state = IDLE;
@@ -506,7 +511,7 @@ always_comb begin
            load_data_validation = 1;
            if (start_i)
 	   begin
-              dp0_next.inst_delay = inst_delay_i;;
+              dp0_next.inst_delay = inst_delay_i;
               dp0_next.vrf_write_sew = vrf_write_sew_i;
               dp0_next.inst_type = inst_type_i;
               dp0_next.en_write = 0;
@@ -529,9 +534,10 @@ always_comb begin
               dp0_next.ALU_opmode = ALU_opmode_i;
               dp0_next.reduction_op = reduction_op_i;
               dp0_next.vmrf_wen = 0;
+	      dp0_next.vrf_read_sew = vsew_i[1:0];
            end
             if(dp0_reg.start) begin
-                dp0_next.start = 0;
+                dp0_next.start = 0;	        
                 case(inst_type_comp[5 : 0])
                     6'b000001 : begin                                            // NORMAL
                         next_state = NORMAL_MODE;
@@ -540,20 +546,23 @@ always_comb begin
                         next_state = READ_MODE;                                  
                     end
                     6'b000100 : begin                                            // STORE
+ 		        dp0_next.vrf_read_sew = 2'b10;
                         next_state = READ_MODE;
                         dp0_next.store_data_valid = 1;
                     end
                     6'b001000 : begin                                            // INDEXED_STORE
+		        dp0_next.vrf_read_sew = 2'b10;
                         dp0_next.store_data_valid = 1;
                         dp0_next.store_load_index_valid = 1;
                         next_state = READ_MODE;
                     end
                     6'b010000 : begin                                            // LOAD
+		        dp0_next.vrf_write_sew = 2'b10;
                         next_state = LOAD_MODE;
          		ready_for_load_o = 1'b1;
     		        
                     end
-                    6'b100000 : begin                                            // INDEXED_LOAD
+                    6'b100000 : begin                                            // INDEXED_LOAD		       
                         dp0_next.store_load_index_valid = 1;
                         next_state = READ_MODE;
                     end
@@ -593,7 +602,7 @@ always_comb begin
             shift_data_validation = 1;
             
             raddr_cnt_en = 1;
-           element_width_read = vsew_i[1:0];
+
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                 4'b0001 : begin                                            // REDUCTION
                    if(main_cnt == (dp0_reg.read_limit - 1 + dp0_reg.inst_delay)) begin                               // Not yet specified                  
@@ -602,7 +611,7 @@ always_comb begin
                     end                                   
                 end
                 4'b0010 : begin                                           // STORE
-		    element_width_read = 2'b10; // we read all bytes no matter the sew
+		    
                     if(read_limit_comp) begin                               
                         next_state = IDLE;
 		        

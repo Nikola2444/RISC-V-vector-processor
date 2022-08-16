@@ -23,15 +23,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="26594800000fs"></ZoomStartTime>
-      <ZoomEndTime time="26793000001fs"></ZoomEndTime>
-      <Cursor1Time time="26750000000fs"></Cursor1Time>
+      <ZoomStartTime time="99736106fs"></ZoomStartTime>
+      <ZoomEndTime time="100052779fs"></ZoomEndTime>
+      <Cursor1Time time="100000000fs"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="237"></NameColumnWidth>
-      <ValueColumnWidth column_width="101"></ValueColumnWidth>
+      <ValueColumnWidth column_width="97"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="38" />
+   <WVObjectSize size="35" />
    <wave_markers>
       <marker label="" time="14700000" />
       <marker label="" time="26721400000" />
@@ -139,7 +139,6 @@
    <wvobject type="group" fp_name="group543">
       <obj_property name="label">V_data_axi_if</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="logic" fp_name="/riscv_v_verif_top/v_axi4_vif/clk">
          <obj_property name="ElementShortName">clk</obj_property>
          <obj_property name="ObjectShortName">clk</obj_property>
@@ -272,13 +271,13 @@
          <obj_property name="ObjectShortName">rd_tlast_i</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/mem_subsys_inst/vlane_load_data_o">
-         <obj_property name="ElementShortName">vlane_load_data_o[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_data_o[0:3][31:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_load_data_o[3:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_data_o[3:0][31:0]</obj_property>
          <obj_property name="isExpanded"></obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/mem_subsys_inst/vlane_load_bwe_o">
-         <obj_property name="ElementShortName">vlane_load_bwe_o[0:3][3:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_bwe_o[0:3][3:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_load_bwe_o[3:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_bwe_o[3:0][3:0]</obj_property>
       </wvobject>
       <wvobject type="logic" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/mem_subsys_inst/vlane_load_rdy_i">
          <obj_property name="ElementShortName">vlane_load_rdy_i</obj_property>
@@ -293,8 +292,8 @@
          <obj_property name="ObjectShortName">vlane_load_last_o</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/mem_subsys_inst/vlane_store_data_i">
-         <obj_property name="ElementShortName">vlane_store_data_i[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_store_data_i[0:3][31:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_store_data_i[3:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_store_data_i[3:0][31:0]</obj_property>
       </wvobject>
       <wvobject type="logic" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/mem_subsys_inst/vlane_store_dvalid_i">
          <obj_property name="ElementShortName">vlane_store_dvalid_i</obj_property>
@@ -531,12 +530,21 @@
    <wvobject type="group" fp_name="group2393">
       <obj_property name="label">Complete driver</obj_property>
       <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[0].genblk1.complete_sublane_driver_inst /current_state">
+         <obj_property name="ElementShortName">current_state[2:0]</obj_property>
+         <obj_property name="ObjectShortName">current_state[2:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[3].genblk1.complete_sublane_driver_inst /vrf_waddr_o">
+         <obj_property name="ElementShortName">vrf_waddr_o[3:0][9:0]</obj_property>
+         <obj_property name="ObjectShortName">vrf_waddr_o[3:0][9:0]</obj_property>
+      </wvobject>
    </wvobject>
    <wvobject type="group" fp_name="group314">
       <obj_property name="label">Partial_driver1</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[1].genblk1.partial_sublane_driver_inst /current_state">
+      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[1].genblk1.complete_sublane_driver_inst /current_state">
          <obj_property name="ElementShortName">current_state[2:0]</obj_property>
          <obj_property name="ObjectShortName">current_state[2:0]</obj_property>
       </wvobject>
@@ -545,7 +553,7 @@
       <obj_property name="label">Partial_driver2</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[2].genblk1.partial_sublane_driver_inst /current_state">
+      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[2].genblk1.complete_sublane_driver_inst /current_state">
          <obj_property name="ElementShortName">current_state[2:0]</obj_property>
          <obj_property name="ObjectShortName">current_state[2:0]</obj_property>
       </wvobject>
@@ -554,7 +562,7 @@
       <obj_property name="label">Partial driver3</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[3].genblk1.partial_sublane_driver_inst /current_state">
+      <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\genblk1[3].genblk1.complete_sublane_driver_inst /current_state">
          <obj_property name="ElementShortName">current_state[2:0]</obj_property>
          <obj_property name="ObjectShortName">current_state[2:0]</obj_property>
       </wvobject>
@@ -578,19 +586,6 @@
    <wvobject type="group" fp_name="group1001">
       <obj_property name="label">ALU3</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\VL_instances[0].Vector_Lane_inst /store_data_o">
-      <obj_property name="ElementShortName">store_data_o[31:0]</obj_property>
-      <obj_property name="ObjectShortName">store_data_o[31:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\VL_instances[0].Vector_Lane_inst /store_data_mux_sel">
-      <obj_property name="ElementShortName">store_data_mux_sel[2:0]</obj_property>
-      <obj_property name="ObjectShortName">store_data_mux_sel[2:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/riscv_v_verif_top/DUT/riscv_v_inst/vector_core_inst/v_dpu_inst/\VL_instances[0].Vector_Lane_inst /read_data_mux_reg">
-      <obj_property name="ElementShortName">read_data_mux_reg[7:0][31:0]</obj_property>
-      <obj_property name="ObjectShortName">read_data_mux_reg[7:0][31:0]</obj_property>
-      <obj_property name="isExpanded"></obj_property>
    </wvobject>
    <wvobject type="group" fp_name="group1334">
       <obj_property name="label">VRF0</obj_property>

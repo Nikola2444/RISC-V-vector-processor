@@ -546,13 +546,15 @@ module complete_sublane_driver
    always_comb begin       
       shift4_next = 4'b0001;
       shift2_next = 2'b01;
-      case(dp0_reg.vrf_write_sew)
-	 2'b00: bwen_selection = shift4_reg;
-	 2'b01: bwen_selection = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
-	 2'b10: bwen_selection = {{4{1'b1}}};
-	 default: bwen_selection = {{4{1'b0}}};
-      endcase // case (dp0_reg.vrf_write_sew+1)
-      // 
+      if (dp0_reg.en_write)
+	case(dp0_reg.vrf_write_sew)
+	   2'b00: bwen_selection = shift4_reg;
+	   2'b01: bwen_selection = {{2{shift2_reg[1]}}, {2{shift2_reg[0]}}};
+	   2'b10: bwen_selection = {{4{1'b1}}};
+	   default: bwen_selection = {{4{1'b0}}};
+	endcase // case (dp0_reg.vrf_write_sew+1)
+      else
+	bwen_selection = {{4{1'b0}}};
       
       bwen_mux = (main_cnt > dp0_reg.read_limit+1) && current_state == SLIDE ? 'h0 : 
                  bwen_selection;

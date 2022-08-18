@@ -109,7 +109,6 @@ module vector_lane
    logic [R_PORTS_NUM - 1 : 0] 					       read_data_hw_mux_sel;                                                   // # Control signal # DONE
    logic [R_PORTS_NUM - 1 : 0][31 : 0] 				       read_data_mux_reg, read_data_mux_next;
    logic [R_PORTS_NUM - 1 : 0][1 : 0] 				       read_data_mux_sel;                                               // # Control signal # DONE
-   logic [R_PORTS_NUM - 1 : 0][3 * 32 - 1 : 0] 			       vrf_read_data_prep_reg, read_data_prep_next;
    ////////////////////////////////////////////////
 
    // Write address logic
@@ -335,14 +334,12 @@ module vector_lane
          // Registers
          always_ff@(posedge clk_i) begin
             if(!rst_i) begin
-               vrf_read_data_prep_reg[i_gen] <= 0; 
                for(int i = 0; i < VRF_DELAY - 1; i++) begin
                   vrf_read_byte_sel_reg[i_gen][i] <= 0;               
                end
 	       read_data_mux_reg[i_gen] <= 0;
             end
-            else begin
-               vrf_read_data_prep_reg[i_gen] <= read_data_prep_next[i_gen];
+            else begin               
                
                for(int i = 0; i < VRF_DELAY - 1; i++) begin
                   vrf_read_byte_sel_reg[i_gen][i] <= vrf_read_byte_sel_next[i_gen][i];                  
@@ -366,9 +363,7 @@ module vector_lane
 	 assign read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen]*8 +: 8];
          // Mux for choosing the right halfword
 	 assign read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen]*16 +: 16];
-	 // Registering data read from VRF.	 
-         assign read_data_prep_next[i_gen] = {vrf_rdata[i_gen], {{16{1'b0}}, read_data_hw_mux[i_gen]}, {{24{1'b0}}, read_data_byte_mux[i_gen]}};
-	 
+	 // Registering data read from VRF.	 	 
 	 assign read_data_mux_next[i_gen] = ALU_signals_reg[VRF_DELAY - 2].vrf_read_sew[i_gen/2] == 2'b00 ? read_data_byte_mux[i_gen] : // we chose byte
 					    ALU_signals_reg[VRF_DELAY - 2].vrf_read_sew[i_gen/2] == 2'b01 ? read_data_hw_mux[i_gen] : // we chose half word
 					    vrf_rdata[i_gen]; // we chose the whole word	 

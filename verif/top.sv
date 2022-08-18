@@ -202,8 +202,8 @@ module riscv_v_verif_top;
    end
 
    // clock generation
-   always #200 clk = ~clk;
-   always #100 clk2 = ~clk2;
+   always #10 clk = ~clk;
+   always #5 clk2 = ~clk2;
 
 endmodule : riscv_v_verif_top	// 
 // Local Variables:

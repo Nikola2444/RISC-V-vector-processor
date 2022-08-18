@@ -136,6 +136,7 @@ module buff_array #(
   logic [1:0]                               sbuff_strobe_rol_amt;
   // Registers for counting data during transactions
   logic [31:0]                              store_baseaddr_reg;
+  logic [31:0]                              store_targetaddr_reg;
   logic [$clog2(VLMAX):0]                   sdbuff_read_cntr,sdbuff_read_cntr_next, sdbuff_read_cntr_nnext;
   logic [$clog2(VLMAX):0]                   sdbuff_read_cntr_incr,sdbuff_read_cntr_iincr;
   logic [$clog2(VLMAX):0]                   sibuff_read_cntr,sibuff_read_cntr_next, sibuff_read_cntr_nnext;
@@ -160,6 +161,7 @@ module buff_array #(
   logic [31:0]                              lbuff_rptr_ext;
   // Registers for counting data during transactions
   logic [31:0]                              load_baseaddr_reg;
+  logic [31:0]                              load_targetaddr_reg;
   logic [$clog2(VLMAX):0]                   lbuff_word_cnt; 
   logic [$clog2(VLMAX):0]                   ldbuff_byte_cnt; 
   logic [$clog2(VLANE_NUM)+1:0]             libuff_read_cntr_low;
@@ -173,63 +175,63 @@ module buff_array #(
 
   // STORE BUFFER INTERFACE ************
   // Store Data Buffer Signals
-  logic [31:0]                              sdbuff_wdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_waddr;
-  logic [3:0]                               sdbuff_wen;
-  logic [31:0]                              sdbuff_rdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr_curr;
-  logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr_nnext;
-  logic [$clog2(BUFF_DEPTH)-1:0]            sdbuff_raddr [0:VLANE_NUM-1];
-  logic [31:0]                              sdbuff_rptr  [0:VLANE_NUM-1];
-  logic                                     sdbuff_ren;
-  logic                                     sdbuff_roen;
-  logic                                     sdbuff_rocl;
+  logic [VLANE_NUM-1:0] [31:0]                    sdbuff_wdata ;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  sdbuff_waddr;
+  logic                 [3:0]                     sdbuff_wen;
+  logic [VLANE_NUM-1:0] [31:0]                    sdbuff_rdata;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  sdbuff_raddr_curr;
+  logic [VLANE_NUM-1:0] [$clog2(BUFF_DEPTH)-1:0]  sdbuff_raddr_nnext;
+  logic [VLANE_NUM-1:0] [$clog2(BUFF_DEPTH)-1:0]  sdbuff_raddr;
+  logic [VLANE_NUM-1:0] [31:0]                    sdbuff_rptr;
+  logic                                           sdbuff_ren;
+  logic                                           sdbuff_roen;
+  logic                                           sdbuff_rocl;
   // Store Index Buffer Signals
-  logic [31:0]                              sibuff_wdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_waddr;
-  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr_curr;
-  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr_nnext;
-  logic [3:0]                               sibuff_wen;
-  logic [31:0]                              sibuff_rdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            sibuff_raddr [0:VLANE_NUM-1];
-  logic [31:0]                              sibuff_rptr  [0:VLANE_NUM-1];
-  logic                                     sibuff_ren;
-  logic                                     sibuff_roen;
-  logic                                     sibuff_rocl;
+  logic [VLANE_NUM-1:0] [31:0]                    sibuff_wdata;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  sibuff_waddr;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  sibuff_raddr_curr;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  sibuff_raddr_nnext;
+  logic                 [3:0]                     sibuff_wen;
+  logic [VLANE_NUM-1:0] [31:0]                    sibuff_rdata;
+  logic [VLANE_NUM-1:0] [$clog2(BUFF_DEPTH)-1:0]  sibuff_raddr;
+  logic [VLANE_NUM-1:0] [31:0]                    sibuff_rptr;
+  logic                                           sibuff_ren;
+  logic                                           sibuff_roen;
+  logic                                           sibuff_rocl;
   // LOAD BUFFER INTERFACE ************
   // Load Data Buffer Signals
-  logic [35:0]                              ldbuff_wdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_waddr;
-  logic [VLANE_NUM-1:0][3:0]                ldbuff_wen_reg;
-  logic [VLANE_NUM-1:0][3:0]                ldbuff_nwen;
-  logic [VLANE_NUM-1:0][3:0]                ldbuff_pr_wen;
-  logic [31:0]                              ldbuff_wptr  [0:VLANE_NUM-1];
-  logic [35:0]                              ldbuff_rdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            ldbuff_raddr;
-  logic [31:0]                              ldbuff_rptr  [0:VLANE_NUM-1];
-  logic                                     ldbuff_roen;
-  logic                                     ldbuff_ren;
-  logic                                     ldbuff_rocl;
+  logic [VLANE_NUM-1:0] [35:0]                    ldbuff_wdata;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  ldbuff_waddr;
+  logic [VLANE_NUM-1:0] [3:0]                     ldbuff_wen_reg;
+  logic [VLANE_NUM-1:0] [3:0]                     ldbuff_nwen;
+  logic [VLANE_NUM-1:0] [3:0]                     ldbuff_pr_wen;
+  logic [VLANE_NUM-1:0] [31:0]                    ldbuff_wptr;
+  logic [VLANE_NUM-1:0] [35:0]                    ldbuff_rdata;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  ldbuff_raddr;
+  logic [VLANE_NUM-1:0] [31:0]                    ldbuff_rptr;
+  logic                                           ldbuff_roen;
+  logic                                           ldbuff_ren;
+  logic                                           ldbuff_rocl;
   // Load Index Buffer Signals
-  logic [31:0]                              libuff_wdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_waddr;
-  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr_curr;
-  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr_nnext;
-  logic [VLANE_NUM-1:0][3:0]                libuff_wen;
-  logic [31:0]                              libuff_wptr  [0:VLANE_NUM-1];
-  logic [31:0]                              libuff_rdata [0:VLANE_NUM-1];
-  logic [$clog2(BUFF_DEPTH)-1:0]            libuff_raddr [0:VLANE_NUM-1];
-  logic [31:0]                              libuff_rptr  [0:VLANE_NUM-1];
-  logic                                     libuff_roen;
-  logic                                     libuff_ren;
-  logic                                     libuff_rocl;
+  logic [VLANE_NUM-1:0] [31:0]                    libuff_wdata;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  libuff_waddr;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  libuff_raddr_curr;
+  logic                 [$clog2(BUFF_DEPTH)-1:0]  libuff_raddr_nnext;
+  logic [VLANE_NUM-1:0] [3:0]                     libuff_wen;
+  logic [VLANE_NUM-1:0] [31:0]                    libuff_wptr;
+  logic [VLANE_NUM-1:0] [31:0]                    libuff_rdata;
+  logic [VLANE_NUM-1:0] [$clog2(BUFF_DEPTH)-1:0]  libuff_raddr;
+  logic [VLANE_NUM-1:0] [31:0]                    libuff_rptr;
+  logic                                           libuff_roen;
+  logic                                           libuff_ren;
+  logic                                           libuff_rocl;
   // Misc
-  logic [ 3:0]                              ldbuff_wen_last_mask;
-  logic                                     single_word_load;
-  logic                                     single_word_store;
-  logic [ 3:0]                              ldbuff_wen_narrow_mask;
-  logic [ 3:0]                              ldbuff_wen_mux [0:VLANE_NUM-1];
-  logic [ 3:0]                              ldbuff_wen_masked [0:VLANE_NUM-1];
+  logic                 [ 3:0]                    ldbuff_wen_last_mask;
+  logic                                           single_word_load;
+  logic                                           single_word_store;
+  logic                 [ 3:0]                    ldbuff_wen_narrow_mask;
+  logic [VLANE_NUM-1:0] [ 3:0]                    ldbuff_wen_mux;
+  logic [VLANE_NUM-1:0] [ 3:0]                    ldbuff_wen_masked;
   
 
   ///////////////////////////////////////////////////////////////////////////////
@@ -242,26 +244,28 @@ module buff_array #(
     if (!rstn) begin
       store_baseaddr_reg <= 0;
       store_stride_reg   <= 0;
+      store_targetaddr_reg <= 0;
     end
     else if(store_baseaddr_set_i) begin
       store_baseaddr_reg <= store_baseaddr_i;
       store_stride_reg   <= store_stride_i;
+      store_targetaddr_reg <= store_baseaddr_i;
     end
     else if(store_baseaddr_update_i) begin
       case(store_type_i[1:0])
       1:      // indexed
-        store_baseaddr_reg <= store_baseaddr_reg + sbuff_rptr_ext;// - (1<<cfg_store_data_sew_i[0]); // TODO double-check this, NOT NEEDED?
+        store_targetaddr_reg <= store_baseaddr_reg + sbuff_rptr_ext;
       2:      // strided
-        store_baseaddr_reg <= store_baseaddr_reg + store_stride_reg;// - (1<<cfg_store_data_sew_i[0]); // TODO double-check this, NOTE NEEDED?
+        store_targetaddr_reg <= store_targetaddr_reg + store_stride_reg;
       default:// unit_stride
-        store_baseaddr_reg <= store_baseaddr_i;
+        store_targetaddr_reg <= store_baseaddr_reg;
       endcase
     end
   end
   assign single_word_store   = !store_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
   assign ctrl_wstrb_msk_en_o = single_word_store;
 
-  assign ctrl_waddr_offset_o = {store_baseaddr_reg[31:2], 2'b00}; // align per 32-bit TODO: double-check this
+  assign ctrl_waddr_offset_o = {store_targetaddr_reg[31:2], 2'b00}; // align per 32-bit TODO: double-check this
   assign ctrl_wxfer_size_o   = store_type_i[2] ? (sdbuff_byte_cnt) : 4;
 
   // Number of expected stores
@@ -331,7 +335,7 @@ module buff_array #(
 
   // Output barrel shifter after selecting data
   // Narrower data needs to be barrel shifted to fit the position
-  assign sbuff_rdata_rol_amt = store_baseaddr_reg[1:0];
+  assign sbuff_rdata_rol_amt = store_targetaddr_reg[1:0];
   assign sbuff_rdata_ror_amt = sdbuff_read_cntr_low_d[1][1:0];
   assign sbuff_rdata_total_rol_amt = sbuff_rdata_rol_amt + sbuff_rdata_ror_amt;// TODO: doublecheck if not needed
   always_comb begin
@@ -528,7 +532,7 @@ module buff_array #(
   end
   assign wr_tstrb_msk_o = sbuff_strobe_curr;
 
-  assign sbuff_strobe_rol_amt = store_baseaddr_reg[1:0];// - sdbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
+  assign sbuff_strobe_rol_amt = store_targetaddr_reg[1:0];// - sdbuff_read_cntr_low_d[1][1:0];TODO doublecheck if needed
   // ***************************************************************************************************************************************
   // ***********************************************       LOAD BUFFER LOGIC        ********************************************************
   // ***************************************************************************************************************************************
@@ -538,26 +542,28 @@ module buff_array #(
     if (!rstn) begin
       load_baseaddr_reg <= 0;
       load_stride_reg   <= 0;
+      load_targetaddr_reg <= 0;
     end
     else if(load_baseaddr_set_i) begin
       load_baseaddr_reg <= load_baseaddr_i;
       load_stride_reg   <= load_stride_i;
+      load_targetaddr_reg <= load_baseaddr_i;
     end
     else if(load_baseaddr_update_i)begin
       case(load_type_i[1:0])
       1:      // indexed
-        load_baseaddr_reg <= load_baseaddr_reg + lbuff_rptr_ext;// - (1<<cfg_store_data_sew_i[0]); // TODO double-check this (-1)
+        load_targetaddr_reg <= load_baseaddr_reg + lbuff_rptr_ext;
       2:      // strided
-        load_baseaddr_reg <= load_baseaddr_reg + load_stride_reg;// - (1<<cfg_store_data_sew_i[0]); // TODO double-check this (-2)
+        load_targetaddr_reg <= load_targetaddr_reg + load_stride_reg;
       default:// unit_stride
-        load_baseaddr_reg <= load_baseaddr_i;
+        load_targetaddr_reg <= load_baseaddr_reg;
       endcase
     end
   end
   assign single_word_load = !load_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
 
   // AXI INTERFACE
-  assign ctrl_raddr_offset_o = {load_baseaddr_reg[31:2],2'b00}; // align per 32-bit address space
+  assign ctrl_raddr_offset_o = {load_targetaddr_reg[31:2],2'b00}; // align per 32-bit address space
   assign ctrl_rxfer_size_o   = (load_type_i[1:0]==0) ? (ldbuff_byte_cnt) : 4; 
 
   // Number of expected loads
@@ -646,7 +652,7 @@ module buff_array #(
   // Input barrel shifter
   // Narrower data needs to be barrel shifted to fit the position
   assign lbuff_wdata_rol_amt = ldbuff_write_cntr[1:0];
-  assign lbuff_wdata_ror_amt = load_baseaddr_reg[1:0];
+  assign lbuff_wdata_ror_amt = load_targetaddr_reg[1:0];
   assign lbuff_wdata_total_rol_amt = lbuff_wdata_rol_amt - lbuff_wdata_ror_amt;
   always_comb begin
     case (lbuff_wdata_total_rol_amt)
@@ -808,21 +814,11 @@ module buff_array #(
                                   ldbuff_wen_mux[vlane][1], lbuff_wdata_mux[vlane][15: 8],
                                   ldbuff_wen_mux[vlane][0], lbuff_wdata_mux[vlane][ 7: 0]};
 
-      // Multiplex narrower data in so writes are in the correct position for byte-write enable
-      always_comb begin
-        case(cfg_store_data_sew_i[1:0])
-          2: begin       // FOR SEW = 32
-            libuff_wdata[vlane] = vlane_load_idx_i [vlane];
-          end
-          1: begin       // FOR SEW = 16
-            libuff_wdata[vlane] = {vlane_load_idx_i [(vlane*2)%VLANE_NUM+1][15:0], vlane_load_idx_i [(vlane*2)%VLANE_NUM][15:0]};
-          end
-          default: begin // FOR SEW = 8
-            libuff_wdata[vlane] = {vlane_load_idx_i [(vlane*4)%VLANE_NUM+3][7:0], vlane_load_idx_i [(vlane*4)%VLANE_NUM+2][7:0],
-                                   vlane_load_idx_i [(vlane*4)%VLANE_NUM+1][7:0], vlane_load_idx_i [(vlane*4)%VLANE_NUM  ][7:0]};
-          end
-        endcase
-      end
+    // Multiplex narrower data in so writes are in the correct position for byte-write enable
+    assign libuff_wdata[vlane] = {vlane_load_idx_i [(vlane*4)%VLANE_NUM+3][((vlane*4)/VLANE_NUM)*8+:8],
+                                  vlane_load_idx_i [(vlane*4)%VLANE_NUM+2][((vlane*4)/VLANE_NUM)*8+:8],
+                                  vlane_load_idx_i [(vlane*4)%VLANE_NUM+1][((vlane*4)/VLANE_NUM)*8+:8],
+                                  vlane_load_idx_i [(vlane*4)%VLANE_NUM  ][((vlane*4)/VLANE_NUM)*8+:8]};
 
 
       assign vlane_load_data_o[vlane] = {ldbuff_rdata[vlane][34:27],ldbuff_rdata[vlane][25:18],ldbuff_rdata[vlane][16:9],ldbuff_rdata[vlane][7:0]};

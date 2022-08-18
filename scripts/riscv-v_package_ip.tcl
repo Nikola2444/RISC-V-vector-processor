@@ -17,7 +17,8 @@ file mkdir $resultDir
 file mkdir $releaseDir
 
 create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
-set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
+#set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
+set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
 
 
 
@@ -39,16 +40,19 @@ add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/Vector_Lane.sv
 #scheduler
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/scheduler\/rtl\/scheduler.sv
 #v_cu
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/v_cu.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Address_counter.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Column_offset_register.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Complete_sublane_driver_new.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Data_validation.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Driver_vlane_interconnect.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Partial_sublane_driver.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/port_allocate_unit.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/renaming_unit.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_cu\/rtl\/Vlane_with_low_lvl_ctrl.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_decode_unit\/rtl\/v_cu.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_decode_unit\/rtl\/port_allocate_unit.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_decode_unit\/rtl\/resource_allocate_unit.sv
+
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/address_counter.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/column_offset_register.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/complete_sublane_driver.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/data_validation.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/partial_sublane_driver.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/v_dpu.sv
+
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/renaming_unit\/rtl\/renaming_unit.sv
+
 #vector core
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/rtl\/vector_core.sv
 #scalar core

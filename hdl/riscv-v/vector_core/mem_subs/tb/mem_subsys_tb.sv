@@ -43,11 +43,11 @@ module m_cu_tb();
 
   // V_LANE INTERFACE
   logic                                   vlane_store_rdy      ; 
-  logic [31:0]                            vlane_store_data[0:VLANE_NUM-1];
-  logic [31:0]                            vlane_store_idx [0:VLANE_NUM-1];
-  logic [31:0]                            vlane_load_data [0:VLANE_NUM-1];
-  logic [3:0]                             vlane_load_bwe[0:VLANE_NUM-1];
-  logic [31:0]                            vlane_load_idx  [0:VLANE_NUM-1];
+  logic [VLANE_NUM-1:0][31:0]             vlane_store_data     ;
+  logic [VLANE_NUM-1:0][31:0]             vlane_store_idx      ;
+  logic [VLANE_NUM-1:0][31:0]             vlane_load_data      ;
+  logic [VLANE_NUM-1:0][3:0]              vlane_load_bwe       ;
+  logic [VLANE_NUM-1:0][31:0]             vlane_load_idx       ;
   logic                                   vlane_store_dvalid   ; 
   logic                                   vlane_store_ivalid   ; 
   logic                                   vlane_load_rdy       ;
@@ -147,9 +147,9 @@ mem_subsys #(
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   assign mcu_vl = 256;
-  int sew_in_bytes = 2;
+  int sew_in_bytes = 4;
   int store1_load2 = 2;
-  int unit1_stride2_index3 = 2;
+  int unit1_stride2_index3 = 3;
   // SCHEDULER DRIVER
   initial
   begin
@@ -248,7 +248,6 @@ mem_subsys #(
       vlane_store_idx[i][16+:8] <= (0);
       vlane_store_idx[i][24+:8] <= (0);
       end
-      vlane_load_idx [i]<=iter+i;
     end
     @(negedge clk);
     vlane_store_dvalid <= $urandom_range(0,1);
@@ -326,8 +325,31 @@ always begin
   // LOAD SIGNAL INTERFACE ************************************
   // LANE INTERFACE
   
+  integer iiter=0;
   always begin
-    vlane_load_rdy <= 1'b0;
+    vlane_load_ivalid <= 1'b1;
+    for(int i=0; i<VLANE_NUM; i++)begin
+      if(i==0)begin
+      vlane_load_idx[i][0+:8]  <= (iiter*4+4);
+      vlane_load_idx[i][8+:8]  <= (iiter*4+8);
+      vlane_load_idx[i][16+:8] <= (iiter*4+12);
+      vlane_load_idx[i][24+:8] <= (iiter*4+16);
+      end
+      else
+      begin
+      vlane_load_idx[i][0+:8]  <= (0);
+      vlane_load_idx[i][8+:8]  <= (0);
+      vlane_load_idx[i][16+:8] <= (0);
+      vlane_load_idx[i][24+:8] <= (0);
+      end
+    end
+    @(negedge clk);
+    @(posedge clk);
+    iiter+=4*VLANE_NUM;
+  end
+
+  always begin
+    vlane_load_rdy    <= 1'b0;
     @(negedge clk);
     @(posedge mcu_ld_buffered);
     vlane_load_rdy <= 1'b1;

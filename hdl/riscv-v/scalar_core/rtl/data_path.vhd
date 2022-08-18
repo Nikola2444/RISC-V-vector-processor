@@ -101,6 +101,9 @@ architecture Behavioral of data_path is
   signal extended_data_wb_s : std_logic_vector (31 downto 0);
   signal rd_data_wb_s       : std_logic_vector (31 downto 0);
   signal rd_address_wb_s    : std_logic_vector (4 downto 0);
+  signal branch_condition_eq: std_logic;
+  signal branch_condition_lt: std_logic;
+  signal branch_condition_gt: std_logic;
 
 begin
 
@@ -228,12 +231,16 @@ begin
 
 
 
-  --branch condition 
   branch_condition_o <= '1' when ((signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) and branch_op_i = "00") else
                         '1' when ((signed(alu_forward_a_ex_s) < signed(alu_forward_b_ex_s)) and branch_op_i = "10") else
                         '1' when ((signed(alu_forward_a_ex_s) > signed(alu_forward_b_ex_s)) and branch_op_i = "11") else
                         '0';
-  --pc_next mux
+  -- branch_condition_eq <= '1' when ((signed(alu_forward_a_ex_s) = signed(alu_forward_b_ex_s)) and branch_op_i = "00") else '0';
+  -- branch_condition_lt <= '1' when ((signed(alu_forward_a_ex_s) < signed(alu_forward_b_ex_s)) and branch_op_i = "10") else '0';
+  -- branch_condition_gt <= '1' when ((signed(alu_forward_a_ex_s) > signed(alu_forward_b_ex_s)) and branch_op_i = "11") else '0';
+  
+  -- branch_condition_o <= branch_condition_eq or branch_condition_lt or branch_condition_gt;
+  -- --pc_next mux
   with pc_next_sel_i select
     pc_next_if_s <= pc_adder_if_s when '0',
     alu_result_ex_s               when others;

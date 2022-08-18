@@ -116,7 +116,7 @@ module v_dpu#
    logic [W_PORTS_NUM - 1 : 0] 				  vrf_ren_di;
    logic [W_PORTS_NUM - 1 : 0] 				  vrf_oreg_ren_di;
    logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_di;
-   logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]   vrf_waddr_complete_di;
+   logic [W_PORTS_NUM-1:0][VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]   vrf_waddr_complete_di;
    logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_di;
    logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0][3 : 0] 	 vrf_bwen_di;
    logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][3 : 0] 	 vrf_bwen_il;
@@ -209,13 +209,13 @@ module v_dpu#
                .vrf_write_sew_i(vrf_write_sew_i),
                .vrf_ren_o(vrf_ren_di[0]),
                .vrf_oreg_ren_o(vrf_oreg_ren_di[0]),
-               .vrf_waddr_o(vrf_waddr_complete_di),
+               .vrf_waddr_o(vrf_waddr_complete_di[0]),
                .vrf_raddr_o(vrf_raddr_di[0]),
                .vrf_bwen_o(vrf_bwen_di[0]),
                .vmrf_addr_o(vmrf_addr_di[0]),   
                .vmrf_wen_o(vmrf_wen_di[0]),
                .load_bwen_i(load_bwen_i),
-               // .load_valid_i(load_valid_i),
+               .load_valid_i(load_valid_i),
                .load_last_i(load_last_i),
                .ready_for_load_o(ready_for_load[0]),
                .store_data_mux_sel_i(store_data_mux_sel_i),
@@ -254,7 +254,7 @@ module v_dpu#
                );
          end
          else begin
-            partial_sublane_driver
+	    complete_sublane_driver
               #(
                 .MEM_DEPTH(MEM_DEPTH),
                 .MAX_VL_PER_LANE(MAX_VL_PER_LANE),
@@ -263,18 +263,17 @@ module v_dpu#
                 .INST_TYPE_NUM(INST_TYPE_NUM),
                 .VLANE_NUM(VLANE_NUM),
                 .ALU_OPMODE(ALU_OPMODE)
-                //.STRIDE_ENABLE("NO")
 		)
-            partial_sublane_driver_inst
+            complete_sublane_driver_inst
               (
                .clk_i(clk_i),
                .rst_i(rst_i),
                .vl_i(vl_i),
+               .vsew_i(vsew_i[1 : 0]),
                .vsew_o(vsew_di[i]),
                .vrf_write_sew_o(vrf_write_sew_di[i]),
                .vrf_read_sew_o(vrf_read_sew_di[i]),
-               .vsew_i(vsew_i[1 : 0]),
-               //.vlmul_i(vlmul_i),
+               .vlmul_i(vlmul_i),
                .inst_type_i(inst_type_i),
                .start_i(start_i[i]),
                .ready_o(ready_o[i]),
@@ -287,16 +286,15 @@ module v_dpu#
                .vrf_write_sew_i(vrf_write_sew_i),
                .vrf_ren_o(vrf_ren_di[i]),
                .vrf_oreg_ren_o(vrf_oreg_ren_di[i]),
-               .vrf_waddr_o(vrf_waddr_di[i]),
+               .vrf_waddr_o(vrf_waddr_complete_di[i]),
                .vrf_raddr_o(vrf_raddr_di[i]),
                .vrf_bwen_o(vrf_bwen_di[i]),
                .vmrf_addr_o(vmrf_addr_di[i]),   
                .vmrf_wen_o(vmrf_wen_di[i]),
                .load_bwen_i(load_bwen_i),
-               // .load_valid_i(load_valid_i),
+               .load_valid_i(load_valid_i),
                .load_last_i(load_last_i),
                .ready_for_load_o(ready_for_load[i]),
-               .request_write_control_o(request_write_control_di[i]),
                .store_data_mux_sel_i(store_data_mux_sel_i),
                .store_load_index_mux_sel_i(store_load_index_mux_sel_i),
                .store_data_valid_o(store_data_valid_di[i]),
@@ -317,11 +315,20 @@ module v_dpu#
                .ALU_reduction_data_o(ALU_reduction_data_di[i]),
                .ALU_ctrl_o(ALU_ctrl_di[i]),
                .reduction_op_o (reduction_op_di[i]),
+               .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
+               .alu_en_32bit_mul_o(alu_en_32bit_mul_di),                               
+               .up_down_slide_i(1'b1),
+	       //.slide_op_o (slide_op),
+	       .slide_data_mux_sel_o(),
+	       // .slide_type_i   (slide_type),
+               .slide_amount_i('h0),
+               .up_down_slide_o(),                                         // 1 for left and 0 for right
+               .request_write_control_o(request_write_control_di[i]),
                .vector_mask_i(vector_mask_i),
-               .vrf_read_byte_sel_o(vrf_read_byte_sel_di[i*2 +: 2]),
+               .vrf_read_byte_sel_o(vrf_read_byte_sel_di[i*2+:2]),
                .vector_mask_o(vector_mask_di[i]),
                .vrf_write_mux_sel_o(vrf_write_mux_sel_di[i])
-               );        
+               );
          end
       end
    endgenerate;
@@ -356,10 +363,13 @@ module v_dpu#
       begin
 	 for(genvar i=0; i < VLANE_NUM; i++)
 	 begin
+	    assign vrf_waddr_il[i][j] = vrf_waddr_complete_di[j][i];
+/* -----\/----- EXCLUDED -----\/-----
 	    if (j == 0)
 	      assign vrf_waddr_il[i][j] = vrf_waddr_complete_di[i];
 	    else
 	      assign vrf_waddr_il[i][j] = vrf_waddr_di[j];
+ -----/\----- EXCLUDED -----/\----- */
 	 end
       end
 
@@ -372,7 +382,7 @@ module v_dpu#
 
 
       for(genvar i = 0; i < VLANE_NUM; i++) begin: VL_instances
-	 Vector_Lane
+	 vector_lane
 		     #(
 		       .R_PORTS_NUM(R_PORTS_NUM),
 		       .W_PORTS_NUM(W_PORTS_NUM),
@@ -385,7 +395,7 @@ module v_dpu#
 		       .MEM_WIDTH(MEM_WIDTH),
 		       .V_LANE_NUM(i)
 		       )
-	 Vector_Lane_inst
+	 vector_lane_inst
 		     (
 		      .clk_i(clk_i),
 		      .clk2_i(clk2_i),

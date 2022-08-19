@@ -17,8 +17,10 @@ file mkdir $resultDir
 file mkdir $releaseDir
 
 create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
-#set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
-set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
+
+# TODO CHANGE BASED ON VIVADO VERSION
+set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
+#set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
 
 
 
@@ -36,7 +38,7 @@ add_files -norecurse ..\/hdl\/common\/sdp_distram.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/vrf.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/alu.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/alu_submodule.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/Vector_Lane.sv
+add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_lane\/rtl\/vector_lane.sv
 #scheduler
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/scheduler\/rtl\/scheduler.sv
 #v_cu
@@ -48,7 +50,7 @@ add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/address_counter.
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/column_offset_register.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/complete_sublane_driver.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/data_validation.sv
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/partial_sublane_driver.sv
+#add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/partial_sublane_driver.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/v_dpu\/rtl\/v_dpu.sv
 
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/renaming_unit\/rtl\/renaming_unit.sv

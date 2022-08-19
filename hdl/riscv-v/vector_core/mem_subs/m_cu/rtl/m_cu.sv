@@ -648,6 +648,7 @@ module m_cu #(
       end
 
       load_read_wait: begin
+        libuff_wen_o            = vlane_load_ivalid_i;
         if(mcu_ld_buffered_o)
           load_read_state_next = load_read;
       end
@@ -685,7 +686,7 @@ module m_cu #(
     libuff_read_stall_o     = 1'b0;
     libuff_read_flush_o     = 1'b0;
     libuff_ren_o            = 1'b0;
-    libuff_rvalid           = 1'b1;
+    libuff_rvalid           = 1'b0;
     ldbuff_wen_o            = 1'b0;
     ctrl_rstart             = 1'b0;
     rd_tready_o             = 1'b0;

@@ -20,7 +20,8 @@ file mkdir $releaseDir
 
 # Create project
 create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
-set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
+#set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
+set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
 
 create_bd_design "riscv_v_axi_bd"
 update_compile_order -fileset sources_1
@@ -81,9 +82,12 @@ assign_bd_address -target_address_space /RISCV_V_0/v_m_axi [get_bd_addr_segs pro
 # regenerate layout
 regenerate_bd_layout
 # CREATE WRAPPER
-make_wrapper -files [get_files /home/fouste/RISC-V-vector-processor/scripts/result/RISCV_AXI_system/RISCV_V_AXI_project.srcs/sources_1/bd/riscv_v_axi_bd/riscv_v_axi_bd.bd] -top
+#make_wrapper -files [get_files $resultDir/RISCV_V_AXI_project.srcs/sources_1/bd/riscv_v_axi_bd/riscv_v_axi_bd.bd] -top
+#add_files -norecurse $resultDir/RISCV_V_AXI_project.gen/sources_1/bd/riscv_v_axi_bd/hdl/riscv_v_axi_bd_wrapper.v
 
-add_files -norecurse /home/fouste/RISC-V-vector-processor/scripts/result/RISCV_AXI_system/RISCV_V_AXI_project.gen/sources_1/bd/riscv_v_axi_bd/hdl/riscv_v_axi_bd_wrapper.v
+
+make_wrapper -files [get_files $resultDir/RISCV_V_AXI_project.srcs/sources_1/bd/riscv_v_axi_bd/riscv_v_axi_bd.bd] -top
+add_files -norecurse $resultDir/RISCV_V_AXI_project.srcs/sources_1/bd/riscv_v_axi_bd/hdl/riscv_v_axi_bd_wrapper.v
 
 
 #launch_runs synth_1 -jobs 4

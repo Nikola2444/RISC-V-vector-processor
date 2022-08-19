@@ -31,7 +31,7 @@ module complete_sublane_driver
     input logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] 		inst_delay_i,
    
     // Signals for read data valid logic
-    output logic [VLANE_NUM - 1 : 0] 				read_data_valid_o,//not reg
+    output logic [VLANE_NUM - 1 : 0] 				read_data_valid_o,//reg
    
     // VRF
     input logic 						vrf_ren_i, // unknown behaviour 
@@ -42,7 +42,7 @@ module complete_sublane_driver
     output logic 						vrf_ren_o,//reg
     output logic 						vrf_oreg_ren_o,//reg
     output logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_o,//reg
-    output logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] 		vrf_raddr_o, //not_reg UPDATED, 0 - vs1, 1 - vs2, 2 - vs3(only for three operands)  
+    output logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] 		vrf_raddr_o, //reg UPDATED, 0 - vs1, 1 - vs2, 2 - vs3(only for three operands)  
     output logic [VLANE_NUM - 1 : 0][3 : 0] 			vrf_bwen_o,//not reg but ok
    
     // VMRF
@@ -72,7 +72,7 @@ module complete_sublane_driver
     input logic [4 : 0] 					ALU_imm_i,
     input logic [ALU_OPMODE - 1 : 0] 				ALU_opmode_i,
     input logic 						reduction_op_i,
-    output logic [1 : 0] 					op2_sel_o,// not reg
+    output logic [1 : 0] 					op2_sel_o,// not reg but seems ok
     output logic [$clog2(R_PORTS_NUM) - 1 : 0] 			op3_sel_o,//reg
     output logic [31 : 0] 					ALU_x_data_o,//reg
     output logic [4 : 0] 					ALU_imm_o,//reg
@@ -89,7 +89,7 @@ module complete_sublane_driver
     output logic [$clog2(VLANE_NUM)-1:0] 			slide_data_mux_sel_o,//reg
     output logic 						up_down_slide_o,//reg
     output logic [1:0] 						vrf_read_sew_o,//reg
-    output logic 						request_write_control_o, //not_reg- 0 - ALU generates valid signal, 1 - only bwen_reg is important 
+    output logic 						request_write_control_o, //not_reg but ok- 0 - ALU generates valid signal, 1 - only bwen_reg is important 
     // Misc signals
     input 							vector_mask_i,
     output logic [1:0][1:0] 					vrf_read_byte_sel_o,//not reg
@@ -194,7 +194,7 @@ module complete_sublane_driver
    logic [$clog2(MAX_VL_PER_LANE) : 0] 		       main_cnt;
    logic 					       main_cnt_en;
    logic 					       rst_main_cnt;
-   logic [$clog2(MAX_VL_PER_LANE) : 0] 		       limit_adder;
+   logic [$clog2(MAX_VL_PER_LANE) : 0] 		       main_cnt_limit;
    // Write address generation //
 
 
@@ -219,11 +219,6 @@ module complete_sublane_driver
    logic [VLANE_NUM - 1 : 0] 			       valid_data;
    logic [VLANE_NUM - 1 : 0] 			       slide_write_data_pattern;
    logic 					       enable_write_slide;
-
-
-
-
-
 
    typedef struct 				       packed
 						       {
@@ -271,7 +266,7 @@ module complete_sublane_driver
    assign read_data_valid[VLANE_NUM - 1 : 1] = read_data_valid_dv[VLANE_NUM - 1 : 1];//valid for all lanes except lane 0
    assign read_data_valid_slide = valid_data;
 
-   assign limit_adder = dp0_reg.inst_delay + dp0_reg.read_limit;
+   assign main_cnt_limit = dp0_reg.inst_delay + dp0_reg.read_limit;
 
    ////////////////////////////SLIDE LOGIC///////////////////////////////////
    // For some instruction, like slide, depending on the slide amount lanes should skip some of the elements
@@ -351,7 +346,7 @@ module complete_sublane_driver
 	    slide_bwen_skip2_reg <= 4'b0100;
 	    slide_bwen_skip3_reg <= 4'b1000;
 	 end	
-	 if (main_cnt == dp0_reg.read_limit-1)
+	 if (main_cnt >= dp0_reg.read_limit)
 	 begin
 	    slide_bwen_skip1_reg[0] <= 1'b0;
 	    slide_bwen_skip2_reg[1:0] <= 2'b00;
@@ -714,16 +709,16 @@ module complete_sublane_driver
             main_cnt_en 	  = 1;            
             shift_data_validation = 1;
             raddr_cnt_en 	  = 1;
-            if(main_cnt >= dp0_reg.inst_delay-1) begin
+            if(main_cnt >= dp0_reg.inst_delay) begin
                dp0_next.en_write    = 1;
-	       waddr_out_reg_en 	    = 1;
+	       waddr_out_reg_en     = 1;
 	       waddr_cnt_en 	    = 1;
                dp0_next.vmrf_wen    = 1;
                dp0_next.vmrf_cnt_en = 1;
                dp0_next.bwen_en     = 1;
             end
             
-            if(main_cnt == limit_adder) begin
+            if(main_cnt == main_cnt_limit+1) begin
                next_state 	 = IDLE;
                dp0_next.en_write = 0;
                dp0_next.vmrf_wen = 0;
@@ -736,10 +731,11 @@ module complete_sublane_driver
             
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                4'b0001 : begin                                            // REDUCTION
-                  if(main_cnt == (dp0_reg.read_limit - 1 + dp0_reg.inst_delay)) begin                               // Not yet specified                  
-                     next_state  = REDUCTION_MODE;
-		     shift_partial = 1;
+                  if(main_cnt == (dp0_reg.read_limit + dp0_reg.inst_delay - 1)) begin                               // Not yet specified                  
+                     next_state       = REDUCTION_MODE;
+		     shift_partial    = 1;
 		     waddr_out_reg_en = 1;
+		     read_data_valid[0] = partial_results_valid;
                   end                                   
                end
                4'b0010 : begin                                            // STORE		  
@@ -786,6 +782,7 @@ module complete_sublane_driver
             
             if(main_cnt == REDUCTION_MODE_LIMIT) begin
                next_state   = REDUCTION_WRITE_MODE;
+	       read_data_valid[0] = 0;
 	       //shift_partial = 0;
             end
          end
@@ -793,7 +790,7 @@ module complete_sublane_driver
             request_write_control_o = 1'b1; 
             main_cnt_en 	    = 1;
             
-            if(main_cnt == dp0_reg.inst_delay) begin
+            if(main_cnt == dp0_reg.inst_delay+1) begin
                dp0_next.en_write = 1;
                dp0_next.vmrf_wen = 1;
             end
@@ -810,18 +807,18 @@ module complete_sublane_driver
             dp0_next.read_limit = read_limit_add - dp0_reg.slide_amount[$clog2(VLANE_NUM) +: 32-($clog2(VLANE_NUM))];
             main_cnt_en 	= 1;            
             raddr_cnt_en 	= 1;
-	    if(main_cnt >= dp0_reg.inst_delay-1) begin
+	    if(main_cnt >= dp0_reg.inst_delay) begin
 	       waddr_cnt_en 	 = 1;
 	       waddr_out_reg_en  = 1;
 	       dp0_next.bwen_en  = 1;
 	       dp0_next.en_write = 1;
 
 	    end
-	    if(main_cnt >= dp0_reg.inst_delay)
+	    if(main_cnt >= dp0_reg.inst_delay+1)
 	       request_write_control_o = 1'b1;
-	    if(main_cnt > limit_adder-1)
+	    if(main_cnt > main_cnt_limit)
 	      request_write_control_o = 0;
-            if(main_cnt > limit_adder) begin
+            if(main_cnt > main_cnt_limit) begin
                next_state 	       = IDLE;	       
                dp0_next.vmrf_wen       = 0;
                dp0_next.en_comp        = 0;
@@ -864,7 +861,7 @@ module complete_sublane_driver
 
    
    //VRF read logic
-/* -----\/----- EXCLUDED -----\/-----
+
    always@(posedge clk_i)
    begin
       if (!rst_i)
@@ -872,7 +869,7 @@ module complete_sublane_driver
 	 vrf_raddr_o <= 0;
 	 vrf_read_byte_sel_o[0] <= 0;
 	 vrf_read_byte_sel_o[1] <= 0;
-	 read_data_valid_o <= read_data_valid;
+	 read_data_valid_o <= 0;
       end
       else
       begin
@@ -883,14 +880,14 @@ module complete_sublane_driver
       end
    end
 
- -----/\----- EXCLUDED -----/\----- */
-   assign vrf_raddr_o = raddr;
+
+   //assign vrf_raddr_o = raddr;
    assign vmrf_addr_o = vmrf_cnt;      
    assign vrf_ren_o = dp0_reg.vrf_ren;
    assign vrf_oreg_ren_o = dp0_reg.vrf_oreg_ren;
-   assign vrf_read_byte_sel_o[0] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
-   assign vrf_read_byte_sel_o[1] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
-   assign read_data_valid_o = read_data_valid;
+   //assign vrf_read_byte_sel_o[0] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
+   //assign vrf_read_byte_sel_o[1] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
+   //assign read_data_valid_o = read_data_valid;
    assign vrf_read_sew_o = dp0_reg.vrf_read_sew;
    //VRF store port sel logic
    assign store_data_mux_sel_o = dp0_reg.store_data_mux_sel;

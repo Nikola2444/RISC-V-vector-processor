@@ -846,7 +846,7 @@ module complete_sublane_driver
    end
    //VRF write logic
    assign vrf_write_sew_o = dp0_reg.vrf_write_sew;
-   assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
+   //assign vmrf_wen_o = dp0_reg.vmrf_wen & dp0_reg.vector_mask;
    assign vrf_bwen_o = (current_state == LOAD_MODE) ? load_bwen_i : bwen_reg;
    assign vrf_write_mux_sel_o = dp0_reg.vrf_write_mux_sel;
    always@(posedge clk_i)
@@ -866,23 +866,27 @@ module complete_sublane_driver
    begin
       if (!rst_i)
       begin
-	 vrf_raddr_o <= 0;
+	 vrf_raddr_o 		<= 0;
 	 vrf_read_byte_sel_o[0] <= 0;
 	 vrf_read_byte_sel_o[1] <= 0;
-	 read_data_valid_o <= 0;
+	 read_data_valid_o 	<= 0;
+	 vmrf_addr_o 		<= 0;
+	 vmrf_wen_o 		<= 0;
       end
       else
       begin
-	 vrf_raddr_o <= raddr;
+	 vmrf_addr_o 		<= vmrf_cnt;
+	 vmrf_wen_o 		<= dp0_reg.vmrf_wen & dp0_reg.vector_mask;
+	 vrf_raddr_o 		<= raddr;
 	 vrf_read_byte_sel_o[0] <= dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
 	 vrf_read_byte_sel_o[1] <= dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];
-	 read_data_valid_o <= read_data_valid;
+	 read_data_valid_o 	<= read_data_valid;
       end
    end
 
 
    //assign vrf_raddr_o = raddr;
-   assign vmrf_addr_o = vmrf_cnt;      
+   //assign vmrf_addr_o = vmrf_cnt;      
    assign vrf_ren_o = dp0_reg.vrf_ren;
    assign vrf_oreg_ren_o = dp0_reg.vrf_oreg_ren;
    //assign vrf_read_byte_sel_o[0] = dp0_reg.up_down_slide ? main_cnt[1 : 0] : ~main_cnt[1 : 0];

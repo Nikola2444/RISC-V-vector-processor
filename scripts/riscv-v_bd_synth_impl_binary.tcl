@@ -23,6 +23,7 @@ create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
 # TODO CHANGE BASED ON VIVADO VERSION
 set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
 #set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
+#set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
 
 create_bd_design "riscv_v_axi_bd"
 update_compile_order -fileset sources_1
@@ -41,6 +42,11 @@ set_property -dict [list CONFIG.PCW_USE_S_AXI_HP0 {1} CONFIG.PCW_USE_S_AXI_HP1 {
 endgroup
 
 # RISCV-V
+# Fix clocking
+startgroup
+set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {100.000000}] [get_bd_cells processing_system7_0]
+endgroup
+
 startgroup
 create_bd_cell -type ip -vlnv FTN:ftn_cores:RISCV_V:1.0 RISCV_V_0
 endgroup
@@ -64,12 +70,9 @@ endgroup
 connect_bd_net [get_bd_pins smartconnect_1/aresetn] [get_bd_pins rst_ps7_0_100M/peripheral_aresetn]
 connect_bd_net [get_bd_pins smartconnect_0/aresetn] [get_bd_pins rst_ps7_0_100M/peripheral_aresetn]
 
-# Fix clocking
-startgroup
-set_property -dict [list CONFIG.PCW_FPGA0_PERIPHERAL_FREQMHZ {50.000000}] [get_bd_cells processing_system7_0]
+
 startgroup
 create_bd_cell -type ip -vlnv xilinx.com:ip:clk_wiz:6.0 clk_wiz_0
-endgroup
 set_property location {2 341 377} [get_bd_cells clk_wiz_0]
 set_property -dict [list CONFIG.USE_LOCKED {false} CONFIG.USE_RESET {false}] [get_bd_cells clk_wiz_0]
 endgroup

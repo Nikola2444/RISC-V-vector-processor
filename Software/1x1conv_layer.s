@@ -13,16 +13,16 @@ li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
 li x23, 1064960  # Pointer to start of results
 
-addi x6,x21,x0  # Pointer to start of image
-addi x2,x22,x0  # Pointer to start of weights
-addi x3,x23,x0  # Pointer to start of results
-addi x5,x10,x0  # Set to track number of pixels
+add x6,x21,x0  # Pointer to start of image
+add x2,x22,x0  # Pointer to start of weights
+add x3,x23,x0  # Pointer to start of results
+add x5,x10,x0  # Set to track number of pixels
 
 vsetvli x31, x12, e8, m1	# 8-bit data
 
 l_ch_batch_first_px: nop
 
-addi x6, x21, x0              # Pointer to start of image
+add x6, x21, x0              # Pointer to start of image
 
 vle8.v        v0, (x6)        # load pixel in v0  ~ fixed for all output pixels
 vmul.vx       v31,  v31, x0   #reset results to zero
@@ -246,7 +246,7 @@ vredsum.vs    v31, v30, v31	  # sum to zeroth
 
 vsetvli x31, x13, e8, m1	# 8-bit data / vlen 16
 vse8.v v31, (x3)          # load image in v0
-addi x3, x3, x11          # set x3 to next ofm pixel position
+add x3, x3, x11          # set x3 to next ofm pixel position
 vsetvli x31, x12, e8, m1	# 8-bit data / vlen 64
 
 addi x5,  x5,  -1           # one pixel done (first batch of output channels)

@@ -263,12 +263,10 @@ add  x3, x23, x0 # reset result pointer
 beq x14, x0, l_finished
 jal l_ch_batch_first_px
 l_finished: nop
-
 nop
 nop
 nop
 nop
-jal l_finished
 
 
 

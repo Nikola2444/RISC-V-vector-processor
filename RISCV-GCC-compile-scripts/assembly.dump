@@ -216,4 +216,3 @@ Disassembly of section .text:
  320:	00000013          	nop
  324:	00000013          	nop
  328:	00000013          	nop
- 32c:	fedff0ef          	jal	ra,318 <l_finished>

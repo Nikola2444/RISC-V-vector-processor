@@ -1,43 +1,219 @@
 
-assembly.o:     file format elf64-littleriscv
+assembly.o:     file format elf32-littleriscv
 
 
 Disassembly of section .text:
 
-0000000000000000 <l_image_loop-0x48>:
-   0:	10050513          	addi	a0,a0,256
-   4:	40058593          	addi	a1,a1,1024
-   8:	40060613          	addi	a2,a2,1024
-   c:	40060613          	addi	a2,a2,1024
-  10:	40068693          	addi	a3,a3,1024
-  14:	40068693          	addi	a3,a3,1024
-  18:	40068693          	addi	a3,a3,1024
-  1c:	40068693          	addi	a3,a3,1024
-  20:	40070713          	addi	a4,a4,1024
-  24:	40070713          	addi	a4,a4,1024
-  28:	40070713          	addi	a4,a4,1024
-  2c:	00180813          	addi	a6,a6,1
-  30:	00000793          	li	a5,0
-  34:	00057fd7          	vsetvli	t6,a0,e8,m1,tu,mu,d1
-  38:	00a008b3          	add	a7,zero,a0
-  3c:	02058007          	vle8.v	v0,(a1)
-  40:	97c06e57          	vmul.vx	v28,v28,zero
-  44:	96806457          	vmul.vx	v8,v8,zero
+00000000 <l_ch_batch_first_px-0x3c>:
+   0:	00100f13          	li	t5,1
+   4:	00001537          	lui	a0,0x1
+   8:	c4050513          	addi	a0,a0,-960 # c40 <l_finished+0x928>
+   c:	04000593          	li	a1,64
+  10:	10000613          	li	a2,256
+  14:	01000693          	li	a3,16
+  18:	00400713          	li	a4,4
+  1c:	40000a93          	li	s5,1024
+  20:	00100b37          	lui	s6,0x100
+  24:	00104bb7          	lui	s7,0x104
+  28:	000a8333          	add	t1,s5,zero
+  2c:	000b0133          	add	sp,s6,zero
+  30:	000b81b3          	add	gp,s7,zero
+  34:	000502b3          	add	t0,a0,zero
+  38:	00067fd7          	vsetvli	t6,a2,e8,m1,tu,mu
 
-0000000000000048 <l_image_loop>:
-  48:	02068807          	vle8.v	v16,(a3)
-  4c:	96082857          	vmul.vv	v16,v0,v16
-  50:	030e2e57          	vredsum.vs	v28,v16,v28
-  54:	fff88893          	addi	a7,a7,-1
-  58:	00088a63          	beqz	a7,6c <l_image_loop_exit>
-  5c:	3bc84457          	vslideup.vx	v8,v28,a6
-  60:	02804e57          	vadd.vx	v28,v8,zero
-  64:	00a686b3          	add	a3,a3,a0
-  68:	fe1ff0ef          	jal	ra,48 <l_image_loop>
+0000003c <l_ch_batch_first_px>:
+  3c:	00000013          	nop
+  40:	000a8333          	add	t1,s5,zero
+  44:	02030007          	vle8.v	v0,(t1)
+  48:	97f06fd7          	vmul.vx	v31,v31,zero
+  4c:	02010087          	vle8.v	v1,(sp)
+  50:	00c10133          	add	sp,sp,a2
+  54:	9600af57          	vmul.vv	v30,v0,v1
+  58:	03efafd7          	vredsum.vs	v31,v30,v31
+  5c:	3bff4f57          	vslideup.vx	v30,v31,t5
+  60:	03e04fd7          	vadd.vx	v31,v30,zero
+  64:	02010107          	vle8.v	v2,(sp)
+  68:	00c10133          	add	sp,sp,a2
+  6c:	96012f57          	vmul.vv	v30,v0,v2
+  70:	03efafd7          	vredsum.vs	v31,v30,v31
+  74:	3bff4f57          	vslideup.vx	v30,v31,t5
+  78:	03e04fd7          	vadd.vx	v31,v30,zero
+  7c:	02010187          	vle8.v	v3,(sp)
+  80:	00c10133          	add	sp,sp,a2
+  84:	9601af57          	vmul.vv	v30,v0,v3
+  88:	03efafd7          	vredsum.vs	v31,v30,v31
+  8c:	3bff4f57          	vslideup.vx	v30,v31,t5
+  90:	03e04fd7          	vadd.vx	v31,v30,zero
+  94:	02010207          	vle8.v	v4,(sp)
+  98:	00c10133          	add	sp,sp,a2
+  9c:	96022f57          	vmul.vv	v30,v0,v4
+  a0:	03efafd7          	vredsum.vs	v31,v30,v31
+  a4:	3bff4f57          	vslideup.vx	v30,v31,t5
+  a8:	03e04fd7          	vadd.vx	v31,v30,zero
+  ac:	02010287          	vle8.v	v5,(sp)
+  b0:	00c10133          	add	sp,sp,a2
+  b4:	9602af57          	vmul.vv	v30,v0,v5
+  b8:	03efafd7          	vredsum.vs	v31,v30,v31
+  bc:	3bff4f57          	vslideup.vx	v30,v31,t5
+  c0:	03e04fd7          	vadd.vx	v31,v30,zero
+  c4:	02010307          	vle8.v	v6,(sp)
+  c8:	00c10133          	add	sp,sp,a2
+  cc:	96032f57          	vmul.vv	v30,v0,v6
+  d0:	03efafd7          	vredsum.vs	v31,v30,v31
+  d4:	3bff4f57          	vslideup.vx	v30,v31,t5
+  d8:	03e04fd7          	vadd.vx	v31,v30,zero
+  dc:	02010387          	vle8.v	v7,(sp)
+  e0:	00c10133          	add	sp,sp,a2
+  e4:	9603af57          	vmul.vv	v30,v0,v7
+  e8:	03efafd7          	vredsum.vs	v31,v30,v31
+  ec:	3bff4f57          	vslideup.vx	v30,v31,t5
+  f0:	03e04fd7          	vadd.vx	v31,v30,zero
+  f4:	02010407          	vle8.v	v8,(sp)
+  f8:	00c10133          	add	sp,sp,a2
+  fc:	96042f57          	vmul.vv	v30,v0,v8
+ 100:	03efafd7          	vredsum.vs	v31,v30,v31
+ 104:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 108:	03e04fd7          	vadd.vx	v31,v30,zero
+ 10c:	02010487          	vle8.v	v9,(sp)
+ 110:	00c10133          	add	sp,sp,a2
+ 114:	9604af57          	vmul.vv	v30,v0,v9
+ 118:	03efafd7          	vredsum.vs	v31,v30,v31
+ 11c:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 120:	03e04fd7          	vadd.vx	v31,v30,zero
+ 124:	02010507          	vle8.v	v10,(sp)
+ 128:	00c10133          	add	sp,sp,a2
+ 12c:	96052f57          	vmul.vv	v30,v0,v10
+ 130:	03efafd7          	vredsum.vs	v31,v30,v31
+ 134:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 138:	03e04fd7          	vadd.vx	v31,v30,zero
+ 13c:	02010587          	vle8.v	v11,(sp)
+ 140:	00c10133          	add	sp,sp,a2
+ 144:	9605af57          	vmul.vv	v30,v0,v11
+ 148:	03efafd7          	vredsum.vs	v31,v30,v31
+ 14c:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 150:	03e04fd7          	vadd.vx	v31,v30,zero
+ 154:	02010607          	vle8.v	v12,(sp)
+ 158:	00c10133          	add	sp,sp,a2
+ 15c:	96062f57          	vmul.vv	v30,v0,v12
+ 160:	03efafd7          	vredsum.vs	v31,v30,v31
+ 164:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 168:	03e04fd7          	vadd.vx	v31,v30,zero
+ 16c:	02010687          	vle8.v	v13,(sp)
+ 170:	00c10133          	add	sp,sp,a2
+ 174:	9606af57          	vmul.vv	v30,v0,v13
+ 178:	03efafd7          	vredsum.vs	v31,v30,v31
+ 17c:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 180:	03e04fd7          	vadd.vx	v31,v30,zero
+ 184:	02010707          	vle8.v	v14,(sp)
+ 188:	00c10133          	add	sp,sp,a2
+ 18c:	96072f57          	vmul.vv	v30,v0,v14
+ 190:	03efafd7          	vredsum.vs	v31,v30,v31
+ 194:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 198:	03e04fd7          	vadd.vx	v31,v30,zero
+ 19c:	02010787          	vle8.v	v15,(sp)
+ 1a0:	00c10133          	add	sp,sp,a2
+ 1a4:	9607af57          	vmul.vv	v30,v0,v15
+ 1a8:	03efafd7          	vredsum.vs	v31,v30,v31
+ 1ac:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 1b0:	03e04fd7          	vadd.vx	v31,v30,zero
+ 1b4:	02010807          	vle8.v	v16,(sp)
+ 1b8:	00c10133          	add	sp,sp,a2
+ 1bc:	96082f57          	vmul.vv	v30,v0,v16
+ 1c0:	03efafd7          	vredsum.vs	v31,v30,v31
+ 1c4:	0006ffd7          	vsetvli	t6,a3,e8,m1,tu,mu
+ 1c8:	02018fa7          	vse8.v	v31,(gp)
+ 1cc:	00b181b3          	add	gp,gp,a1
+ 1d0:	00067fd7          	vsetvli	t6,a2,e8,m1,tu,mu
+ 1d4:	fff28293          	addi	t0,t0,-1
 
-000000000000006c <l_image_loop_exit>:
-  6c:	00000013          	nop
-  70:	02060407          	vle8.v	v8,(a2)
-  74:	03c40e57          	vadd.vv	v28,v28,v8
-  78:	02070e27          	vse8.v	v28,(a4)
-  7c:	00000013          	nop
+000001d8 <l_ch_batch_other_px>:
+ 1d8:	00000013          	nop
+ 1dc:	00c30333          	add	t1,t1,a2
+ 1e0:	02030007          	vle8.v	v0,(t1)
+ 1e4:	97f06fd7          	vmul.vx	v31,v31,zero
+ 1e8:	9600af57          	vmul.vv	v30,v0,v1
+ 1ec:	03efafd7          	vredsum.vs	v31,v30,v31
+ 1f0:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 1f4:	03e04fd7          	vadd.vx	v31,v30,zero
+ 1f8:	96012f57          	vmul.vv	v30,v0,v2
+ 1fc:	03efafd7          	vredsum.vs	v31,v30,v31
+ 200:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 204:	03e04fd7          	vadd.vx	v31,v30,zero
+ 208:	9601af57          	vmul.vv	v30,v0,v3
+ 20c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 210:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 214:	03e04fd7          	vadd.vx	v31,v30,zero
+ 218:	96022f57          	vmul.vv	v30,v0,v4
+ 21c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 220:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 224:	03e04fd7          	vadd.vx	v31,v30,zero
+ 228:	9602af57          	vmul.vv	v30,v0,v5
+ 22c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 230:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 234:	03e04fd7          	vadd.vx	v31,v30,zero
+ 238:	96032f57          	vmul.vv	v30,v0,v6
+ 23c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 240:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 244:	03e04fd7          	vadd.vx	v31,v30,zero
+ 248:	9603af57          	vmul.vv	v30,v0,v7
+ 24c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 250:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 254:	03e04fd7          	vadd.vx	v31,v30,zero
+ 258:	96042f57          	vmul.vv	v30,v0,v8
+ 25c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 260:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 264:	03e04fd7          	vadd.vx	v31,v30,zero
+ 268:	9604af57          	vmul.vv	v30,v0,v9
+ 26c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 270:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 274:	03e04fd7          	vadd.vx	v31,v30,zero
+ 278:	96052f57          	vmul.vv	v30,v0,v10
+ 27c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 280:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 284:	03e04fd7          	vadd.vx	v31,v30,zero
+ 288:	9605af57          	vmul.vv	v30,v0,v11
+ 28c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 290:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 294:	03e04fd7          	vadd.vx	v31,v30,zero
+ 298:	96062f57          	vmul.vv	v30,v0,v12
+ 29c:	03efafd7          	vredsum.vs	v31,v30,v31
+ 2a0:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 2a4:	03e04fd7          	vadd.vx	v31,v30,zero
+ 2a8:	9606af57          	vmul.vv	v30,v0,v13
+ 2ac:	03efafd7          	vredsum.vs	v31,v30,v31
+ 2b0:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 2b4:	03e04fd7          	vadd.vx	v31,v30,zero
+ 2b8:	96072f57          	vmul.vv	v30,v0,v14
+ 2bc:	03efafd7          	vredsum.vs	v31,v30,v31
+ 2c0:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 2c4:	03e04fd7          	vadd.vx	v31,v30,zero
+ 2c8:	9607af57          	vmul.vv	v30,v0,v15
+ 2cc:	03efafd7          	vredsum.vs	v31,v30,v31
+ 2d0:	3bff4f57          	vslideup.vx	v30,v31,t5
+ 2d4:	03e04fd7          	vadd.vx	v31,v30,zero
+ 2d8:	96082f57          	vmul.vv	v30,v0,v16
+ 2dc:	03efafd7          	vredsum.vs	v31,v30,v31
+ 2e0:	0006ffd7          	vsetvli	t6,a3,e8,m1,tu,mu
+ 2e4:	02018fa7          	vse8.v	v31,(gp)
+ 2e8:	00b181b3          	add	gp,gp,a1
+ 2ec:	00067fd7          	vsetvli	t6,a2,e8,m1,tu,mu
+ 2f0:	fff28293          	addi	t0,t0,-1
+ 2f4:	00028463          	beqz	t0,2fc <l_ch_batch_exit>
+ 2f8:	ee1ff0ef          	jal	ra,1d8 <l_ch_batch_other_px>
+
+000002fc <l_ch_batch_exit>:
+ 2fc:	00000013          	nop
+ 300:	fff70713          	addi	a4,a4,-1
+ 304:	000502b3          	add	t0,a0,zero
+ 308:	00db8bb3          	add	s7,s7,a3
+ 30c:	000b81b3          	add	gp,s7,zero
+ 310:	00070463          	beqz	a4,318 <l_finished>
+ 314:	d29ff0ef          	jal	ra,3c <l_ch_batch_first_px>
+
+00000318 <l_finished>:
+ 318:	00000013          	nop
+ 31c:	00000013          	nop
+ 320:	00000013          	nop
+ 324:	00000013          	nop
+ 328:	00000013          	nop
+ 32c:	fedff0ef          	jal	ra,318 <l_finished>

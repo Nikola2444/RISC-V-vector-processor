@@ -452,28 +452,29 @@ module m_cu #(
       end
       // UNIT_STORE
       store_read_unit: begin
-        ctrl_wstart               = 1'b1;
-        if(sdbuff_read_rdy_i)begin
-          sdbuff_rvalid               = 1'b1;
-          sdbuff_ren_o            = 1'b1;
-          if(ctrl_wdone_i)begin
+         ctrl_wstart = 1'b1;
+         if(sdbuff_read_rdy_i)begin
+            sdbuff_rvalid = 1'b1;
+            sdbuff_ren_o  = 1'b1;
+            
+            if(sdbuff_read_done_i && wr_tready_i) begin
+               sdbuff_rvalid = 1'b0;
+               sdbuff_ren_o  = 1'b0;
+            end
+            if(!wr_tready_i && wr_tvalid_o) begin
+               sdbuff_read_stall_o = 1'b1;
+               sdbuff_ren_o 	   = 1'b0;
+            end
+         end
+         else begin //data not ready in buffer
+            sdbuff_read_stall_o   = 1'b1;
+            sdbuff_ren_o 	  = 1'b0;
+            sbuff_read_invalidate = 1'b1;
+         end
+	 if(ctrl_wdone_i)begin
             store_read_state_next = store_read_idle;
             store_read_fsm_done   = 1'b1;
-          end
-          if(sdbuff_read_done_i && wr_tready_i) begin
-            sdbuff_rvalid             = 1'b0;
-            sdbuff_ren_o          = 1'b0;
-          end
-          if(!wr_tready_i && wr_tvalid_o) begin
-            sdbuff_read_stall_o   = 1'b1;
-            sdbuff_ren_o          = 1'b0;
-          end
-        end
-        else begin //data not ready in buffer
-          sdbuff_read_stall_o     = 1'b1;
-          sdbuff_ren_o            = 1'b0;
-          sbuff_read_invalidate   = 1'b1;
-        end
+         end
       end
 
       //STRIDED_STORE

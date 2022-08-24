@@ -8,8 +8,8 @@ module v_dpu#
    parameter INST_TYPE_NUM = 7,
    parameter VLANE_NUM = 8,
    parameter ALU_OPMODE = 6,
-   parameter MULTIPUMP_WRITE = 2,
-   parameter MULTIPUMP_READ = 2,
+   parameter MULTIPUMP_WRITE = 4,
+   parameter MULTIPUMP_READ = 4,
    parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
    parameter MEM_WIDTH = 32)
    (
@@ -419,7 +419,7 @@ module v_dpu#
 		      .vrf_write_mux_sel_i(vrf_write_mux_sel_di),
 		      .request_control_i(request_write_control_di),
 		      .store_data_valid_o(store_data_valid_l[i]),
-		      .store_data_valid_i(store_data_valid_di[i]),
+		      .store_data_valid_i(store_data_valid_di),
 		      .store_load_index_valid_o(store_load_index_valid_l[i]),
 		      .store_load_index_valid_i(store_load_index_valid_di[i]),
 		      .store_data_o(store_data_o[i]),

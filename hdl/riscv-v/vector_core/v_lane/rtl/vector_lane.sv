@@ -154,7 +154,8 @@ module vector_lane
    
    // Vector mask register file
    ////////////////////////////////////////////////
-   logic [W_PORTS_NUM - 1 : 0] 								    vmrf_wdata, vmrf_rdata;    
+   logic [W_PORTS_NUM - 1 : 0] 								    vmrf_wdata;
+   logic [W_PORTS_NUM - 1 : 0] 								    vmrf_rdata='{default:'0};    
    logic [W_PORTS_NUM - 1 : 0][3 : 0] 							    bwen_mux;
    logic [W_PORTS_NUM - 1 : 0] 								    bwen_mux_sel;                                                           // # Control signal # DONE
    logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] 			    vmrf_waddr;
@@ -223,6 +224,7 @@ module vector_lane
       .din_i(vrf_wdata)
       );
 
+/* -----\/----- EXCLUDED -----\/-----
    vrf
      #(
        .R_PORTS_NUM(W_PORTS_NUM),
@@ -248,6 +250,7 @@ module vector_lane
       .waddr_i(vmrf_waddr),
       .bwe_i(vmrf_wen)
       );
+ -----/\----- EXCLUDED -----/\----- */
 
    assign alu_opmode_o = ALU_ctrl;
    assign vs1_data_o = vs1_data;
@@ -312,7 +315,7 @@ module vector_lane
       store_load_index_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_load_index_mux_sel;
       ALU_ctrl = ALU_signals_reg[VRF_DELAY - 1].ALU_ctrl;
       ALU_reduction = ALU_signals_reg[VRF_DELAY - 1].ALU_reduction;
-      store_data_valid_o = ALU_signals_reg[VRF_DELAY - 2].store_data_valid;
+      store_data_valid_o = ALU_signals_reg[VRF_DELAY - 1].store_data_valid;
       store_load_index_valid_o = ALU_signals_reg[VRF_DELAY - 1].store_load_index_valid;
       
       ALU_signals_next[0].op3_sel = op3_sel_i;

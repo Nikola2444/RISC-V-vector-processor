@@ -22,10 +22,10 @@ vsetvli x31, x12, e8, m1	# 8-bit data
 
 l_ch_batch_first_px: nop
 
-add x6, x21, x0              # Pointer to start of image
+add x6, x21, x0               # Pointer to start of image
 
 vle8.v        v0, (x6)        # load pixel in v0  ~ fixed for all output pixels
-vmul.vx       v31,  v31, x0   #reset results to zero
+vmul.vx       v31, v31, x0    # reset results to zero
 
 vle8.v        v1, (x2)        # load first filter in v1
 add x2, x2, x12
@@ -263,12 +263,10 @@ add  x3, x23, x0 # reset result pointer
 beq x14, x0, l_finished
 jal l_ch_batch_first_px
 l_finished: nop
-
 nop
 nop
 nop
 nop
-jal l_finished
 
 
 

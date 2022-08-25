@@ -26,126 +26,127 @@ add x6, x21, x0              # Pointer to start of image
 
 vle8.v        v0, (x6)        # load pixel in v0  ~ fixed for all output pixels
 vmul.vx       v31,  v31, x0   #reset results to zero
+vmul.vx       v29,  v29, x0   #reset results to zero
 
 vle8.v        v1, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v1    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v2, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v2    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v3, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v3    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v4, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v4    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v5, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v5    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v6, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v6    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v7, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v7    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v8, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v8    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v9, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v9    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v10, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v10    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v11, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v11    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v12, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v12    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v13, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v13    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v14, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v14    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v15, (x2)        # load first filter in v1
 add x2, x2, x12
 
 vmul.vv       v30, v0,  v15    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vle8.v        v16, (x2)       # load first filter in v1
 add x2, x2, x12
@@ -168,78 +169,78 @@ vmul.vx       v31,  v31, x0   #reset results to zero
 
 vmul.vv       v30, v0,  v1    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v2    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v3    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v4    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v5    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v6    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v7    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v8    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v9    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v10    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v11    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v12    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v13    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v14    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v15    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 
-vslideup.vx   v30, v31, x30		# slide up result by one each time 
-vadd.vx       v31, v30, x0		# mov to result vector
+vslideup.vx   v29, v31, x30		# slide up result by one each time 
+vadd.vx       v31, v29, x0		# mov to result vector
 
 vmul.vv       v30, v0,  v16    # Multiply weights and pixels
 vredsum.vs    v31, v30, v31	  # sum to zeroth 

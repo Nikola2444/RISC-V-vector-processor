@@ -44,6 +44,161 @@ assign 	  backdoor_v_instr_vif.sew= DUT.riscv_v_inst.vector_core_inst.v_cu_inst.
 assign 	  backdoor_v_instr_vif.vl = DUT.riscv_v_inst.vector_core_inst.v_cu_inst.vl_o;
 //assign    backdoor_v_instr_vif.vrf_read_ram = vrf_read_ram;
 
+//bwen for all lanes and all drivers
+generate
+   if (`V_LANES > 1)
+   begin
+      assign backdoor_v_instr_vif.vrf_waddr[0][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.waddr_i[3];
+
+      assign backdoor_v_instr_vif.vrf_waddr[0][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.waddr_i[3];
+
+   end
+   if (`V_LANES > 2)
+   begin
+
+      assign backdoor_v_instr_vif.vrf_waddr[0][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.waddr_i[3];
+
+      assign backdoor_v_instr_vif.vrf_waddr[0][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.waddr_i[3];
+   end
+   if (`V_LANES > 4)
+   begin      
+      assign backdoor_v_instr_vif.vrf_waddr[0][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.waddr_i[3];
+
+      assign backdoor_v_instr_vif.vrf_waddr[0][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.waddr_i[3];
+
+      assign backdoor_v_instr_vif.vrf_waddr[0][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.waddr_i[3];
+
+      assign backdoor_v_instr_vif.vrf_waddr[0][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.waddr_i[0];
+      assign backdoor_v_instr_vif.vrf_waddr[1][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.waddr_i[1];
+      assign backdoor_v_instr_vif.vrf_waddr[2][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.waddr_i[2];
+      assign backdoor_v_instr_vif.vrf_waddr[3][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.waddr_i[3];
+   end
+endgenerate
+generate
+   if (`V_LANES > 1)
+   begin
+      assign backdoor_v_instr_vif.vrf_wdata[0][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.din_i[3];
+
+      assign backdoor_v_instr_vif.vrf_wdata[0][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.din_i[3];
+
+   end
+   if (`V_LANES > 2)
+   begin
+
+      assign backdoor_v_instr_vif.vrf_wdata[0][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.din_i[3];
+
+      assign backdoor_v_instr_vif.vrf_wdata[0][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.din_i[3];
+   end
+   if (`V_LANES > 4)
+   begin      
+      assign backdoor_v_instr_vif.vrf_wdata[0][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.din_i[3];
+
+      assign backdoor_v_instr_vif.vrf_wdata[0][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.din_i[3];
+
+      assign backdoor_v_instr_vif.vrf_wdata[0][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.din_i[3];
+
+      assign backdoor_v_instr_vif.vrf_wdata[0][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.din_i[0];
+      assign backdoor_v_instr_vif.vrf_wdata[1][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.din_i[1];
+      assign backdoor_v_instr_vif.vrf_wdata[2][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.din_i[2];
+      assign backdoor_v_instr_vif.vrf_wdata[3][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.din_i[3];
+   end
+endgenerate
+
+//bwen for all lanes and all drivers
+generate
+   if (`V_LANES > 1)
+   begin
+      assign backdoor_v_instr_vif.vrf_bwen[0][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][0] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.bwe_i[3];
+
+      assign backdoor_v_instr_vif.vrf_bwen[0][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][1] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[1].vector_lane_inst.VRF_inst.bwe_i[3];
+
+   end
+   if (`V_LANES > 2)
+   begin
+
+      assign backdoor_v_instr_vif.vrf_bwen[0][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][2] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[2].vector_lane_inst.VRF_inst.bwe_i[3];
+
+      assign backdoor_v_instr_vif.vrf_bwen[0][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][3] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[3].vector_lane_inst.VRF_inst.bwe_i[3];
+   end
+   if (`V_LANES > 4)
+   begin      
+      assign backdoor_v_instr_vif.vrf_bwen[0][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][4] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[4].vector_lane_inst.VRF_inst.bwe_i[3];
+
+      assign backdoor_v_instr_vif.vrf_bwen[0][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][5] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[5].vector_lane_inst.VRF_inst.bwe_i[3];
+
+      assign backdoor_v_instr_vif.vrf_bwen[0][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][6] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[6].vector_lane_inst.VRF_inst.bwe_i[3];
+
+      assign backdoor_v_instr_vif.vrf_bwen[0][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.bwe_i[0];
+      assign backdoor_v_instr_vif.vrf_bwen[1][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.bwe_i[1];
+      assign backdoor_v_instr_vif.vrf_bwen[2][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.bwe_i[2];
+      assign backdoor_v_instr_vif.vrf_bwen[3][7] = DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.bwe_i[3];
+   end
+endgenerate
+
+
 generate
    if (`V_LANES > 1)
    begin

@@ -21,7 +21,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    virtual interface backdoor_v_instr_if backdoor_v_instr_vif;
    uvm_analysis_imp_v#(bd_v_instr_if_seq_item, riscv_v_scoreboard) item_collected_imp_v;
    
-   logic [31:0] vrf_read_ram [31:0][`VLEN/32-1:0];
+   logic [31:0] vrf_read_ram [31:0][`VLEN/32-1:0] =  '{default:'0};;
 
    typedef enum logic [6:0] {v_arith=7'b1010111, v_store=7'b0100111, v_load=7'b0000111} vector_opcodes;
    
@@ -50,6 +50,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       if (!uvm_config_db#(virtual backdoor_v_instr_if)::get(this, "", "backdoor_v_instr_if", backdoor_v_instr_vif)) // needed for initialization of vrf ref model
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".backdoor_v_instr_vif"})
       //init ref model vrf
+/* -----\/----- EXCLUDED -----\/-----
       for (int i=0; i<32; i++)
 	for (logic[31:0] j=0; j<`VLEN/8; j++)
 	begin
@@ -63,11 +64,19 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 						     backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_read+vreg_addr_offset][byte_sel*8+:8];
 
 	end
+ -----/\----- EXCLUDED -----/\----- */
    endfunction
 
    function write_v (bd_v_instr_if_seq_item tr);
-      bd_v_instr_if_seq_item tr_clone;      
+      bd_v_instr_if_seq_item tr_clone;
+
       $cast(tr_clone, tr.clone());
+
+/* -----\/----- EXCLUDED -----\/-----
+      for (int lane=0; lane<`V_LANES; lane++)
+	for (int i=0; i< `VRF_DEPTH; i++)
+	  $display("tr_clone.vrf_read_ram[%d][%d]=%x", lane, i, tr_clone.vrf_read_ram[lane][i]);
+ -----/\----- EXCLUDED -----/\----- */
 
       `uvm_info(get_type_name(),
                 $sformatf("V_SCBD:vMonitor sent...\n%s", tr_clone.sprint()),
@@ -215,38 +224,6 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	 
       end // for (int i=0; i<tr.vl; i++)
       cmp_exp_with_real(tr);
-/* -----\/----- EXCLUDED -----\/-----
-      vreg_to_update = vd*(`VLEN/32/`V_LANES);
-	for (logic[31:0] j=0; j<`VLEN/8; j++)
-	begin
-	   vrf_vlane=j[$clog2(`V_LANES)-1:0]; // 1:0
-	   byte_sel=j[$clog2(`V_LANES) +:2];
-	   vrf_addr_offset = j[$clog2(`V_LANES) + 2 +: 27];
-	   dut_vrf_data = backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][0][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8] ^
-			  backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8];
-	   //$display("vrf_addr_offset=%0d, vreg_to_update=%0d",vrf_addr_offset, vreg_to_update);
-	   assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)
-	   
-	     begin
-		$display("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
-			 vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
-			 vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data);
-		match_num++;
-		match = 1;	
-	   end
-	   else
-	   begin
-	      match = 0;
-	      `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
-						       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
-						       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data)) // dut result
-	   end	   
-	end
-      if (match == 1)
-      begin
-	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)
-      end
- -----/\----- EXCLUDED -----/\----- */
    endfunction
 
 
@@ -456,28 +433,39 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       logic [4:0] vs2;
       logic [4:0] vd;
       int 	  missmatchess;
+      logic [2:0] funct3;
+      logic [5:0] funct6;
+      int vector_len=tr.vl;
       vs1=tr.v_instruction[19:15];
       vs2=tr.v_instruction[24:20];
       vd=tr.v_instruction[11:7];
-
+      funct3=tr.v_instruction[14:12];
+      funct6=tr.v_instruction[31:26];
+      
       vreg_to_update = vd*(`VLEN/32/`V_LANES);
-      for (logic[31:0] j=0; j<`VLEN/8; j++)
+      if (funct3==OPMVV && funct6[5:3] == 3'b000)//if reduction we look only at one element
+	vector_len=1<<tr.sew;
+      else
+	vector_len=tr.vl<<tr.sew;
+
+      for (logic[31:0] j=0; j<vector_len; j++)
       begin
 	 vrf_vlane=j[$clog2(`V_LANES)-1:0]; // 1:0
 	 byte_sel=j[$clog2(`V_LANES) +:2];
 	 vrf_addr_offset = j[$clog2(`V_LANES) + 2 +: 27];
-	 dut_vrf_data = backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][0][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8] ^
-			backdoor_v_instr_vif.vrf_read_ram[vrf_vlane][1][0][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8];
+	 dut_vrf_data = tr.vrf_read_ram[vrf_vlane][vreg_to_update+vrf_addr_offset][byte_sel*8 +: 8];
 	 //$display("vrf_addr_offset=%0d, vreg_to_update=%0d",vrf_addr_offset, vreg_to_update);
 	 assert (vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8] == dut_vrf_data)	    	 
 	   else
-	 begin	    
-	    `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
-						     vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
-						     vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data)) // dut result
-	    missmatchess++;
-	 end	   
+	   begin	    
+	      `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d][%0d][%0d]: %0x, dut_result[%0d][%0d][%0d]: %0x", tr.v_instruction, 
+						       vd, j[31:2], j[1:0], vrf_read_ram[vd][j[31:2]][j[1:0]*8 +: 8], //exp result
+						       vrf_vlane, vreg_to_update+vrf_addr_offset, byte_sel, dut_vrf_data)) // dut result
+	      missmatchess++;
+	   end	   
       end
+      
+
       if (missmatchess == 0)
       begin
 	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", tr.v_instruction), UVM_MEDIUM)

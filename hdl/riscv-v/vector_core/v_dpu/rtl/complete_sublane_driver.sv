@@ -220,13 +220,6 @@ module complete_sublane_driver
    logic [VLANE_NUM - 1 : 0] 			       slide_write_data_pattern;
    logic 					       enable_write_slide;
 
-   typedef struct 				       packed
-						       {
-   logic [$clog2(MEM_DEPTH) - 1 : 0] 		       waddr;
-   logic [3 : 0] 				       vrf_bwen;
-   } dataPacket1;
-
-
    /////////////////////////////////////////////////////////////////////////////////
 
    /////////////////////////////////////////////////////////////////////////////////
@@ -907,7 +900,7 @@ module complete_sublane_driver
    assign vector_mask_o = dp0_reg.vector_mask;      
    assign ALU_ctrl_o = dp0_reg.ALU_opmode;
    //assign reduction_op_o = dp0_reg.reduction_op;
-   assign reduction_op_o = dp0_next.reduction_op;
+   assign reduction_op_o = dp0_reg.reduction_op;
    assign alu_en_32bit_mul_o = dp0_reg.alu_en_32bit_mul;
    //slide logic
    assign up_down_slide_o = dp0_reg.up_down_slide;

@@ -144,8 +144,7 @@ module alu_submodule #
 	 reduction_op_reg <= 'h0;
       end
       else
-      begin
-	 
+      begin	 
 	 if (V_LANE_NUM!=0)
 	 begin	    
 	    if (reduction_op_i && alu_opmode_i[6:5]==2'b01)

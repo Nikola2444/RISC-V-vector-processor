@@ -14,7 +14,7 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 
 
    typedef enum logic [6:0] {sc_arith_imm=7'b0010011, sc_arith=7'b0110011,  sc_store=7'b0100011, sc_branch=7'b1100011,
-			     sc_jal=7'b1101111, sc_jalr=7'b1100111} scalar_opcodes;
+			     sc_jal=7'b1101111, sc_jalr=7'b1100111, sc_lui=7'b0110111} scalar_opcodes;
 
    
    logic [6:0] 	opcode;
@@ -59,6 +59,10 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	 begin
 	    skip_2_instructions=2;
 	    jal_instr_check(tr_clone);
+	 end
+	 else if (opcode == sc_lui)
+	 begin
+	    lui_instr_check(tr_clone);
 	 end
       end
       else
@@ -258,6 +262,35 @@ class riscv_sc_scoreboard extends uvm_scoreboard;
 	sc_reg_bank[rd]= {jump_addr[31:1], 1'b0};
       else
 	sc_reg_bank[rd]= 0;
+      
+      assert(sc_reg_bank[rd] == tr.scalar_reg_bank_new[rd])
+	begin
+	   `uvm_info(get_type_name(), $sformatf("SC_MATCH: instruction:%x \t expected result: %x, dut_result: %x", tr.instruction, 
+						sc_reg_bank[rd], tr.scalar_reg_bank_new[rd]), UVM_MEDIUM)
+	   match_num++;
+	end
+      else
+      begin
+	 `uvm_error("SC_MISSMATCH", $sformatf("instruction: %x \t expected result[%d]: %x, dut_result[%d]: %x", tr.instruction, 
+					      rd, sc_reg_bank[rd], rd, tr.scalar_reg_bank_new[rd]))
+	 missmatch_num++;
+      end
+      
+
+      
+   endfunction // jalr_instr_check
+
+   function void lui_instr_check(bd_instr_if_seq_item tr);
+      logic [31:0] jump_addr;
+      logic [4:0]  rs1 = tr.instruction[19:15];		       
+      logic [4:0]  rs2 = tr.instruction[24:20];
+      logic [4:0]  rd = tr.instruction[11:7];
+      logic [2:0]  funct3 = tr.instruction[14:12];
+      logic [19:0] lui_immediate = {tr.instruction[20], tr.instruction[10:1], 
+				    tr.instruction[11], tr.instruction[19:12]};
+      num_of_sc_instr++;
+
+      sc_reg_bank[rd]= {lui_immediate, 12'b0};
       
       assert(sc_reg_bank[rd] == tr.scalar_reg_bank_new[rd])
 	begin

@@ -581,7 +581,7 @@ module v_cu #
       else
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++)
-	   if (start_o[i])
+	   if (start_o[i] && store_instr_check)
 	     if (sew_o[1:0] == 2'b00)
 	       store_dependencie_cnt[i] <= 88;
 	     else if (sew_o[1:0] == 2'b01)
@@ -607,7 +607,7 @@ module v_cu #
 	 for (int i=0;i<W_PORTS_NUM;i++)
 	   if (start_o[i] && port_group_ready_i[i])
 	     vd_instr_in_progress[i] <= {1'b0, v_instr_vd};
-	   else if (dependancy_issue_cnt[i]==0 && reduction_wait_cnt[i] == 0 && store_dependencie_cnt[i]==0)
+	   else if (dependancy_issue_cnt[i]==0 && reduction_wait_cnt[i] == 0 && store_dependencie_cnt[i]==0)	   
 	     vd_instr_in_progress[i] <= 6'b100000;//no valid instruction
       end
    end
@@ -621,9 +621,11 @@ module v_cu #
 	 dependancy_issue[i]=1'b0;
 	 if (i == 0)
 	 begin
+/* -----\/----- EXCLUDED -----\/-----
 	    if (slide_in_progress_reg)
 	      dependancy_issue[i]=1'b1;
-	    else if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
+ -----/\----- EXCLUDED -----/\----- */
+	    if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
 		     (dependancy_issue_cnt[i] != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
 		     (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check))
 	      dependancy_issue[i]=1'b1;
@@ -645,18 +647,18 @@ module v_cu #
       if (!rstn)
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++) 
-	   dependancy_issue_cnt[i] <= 11; //depenancy delay
+	   dependancy_issue_cnt[i] <= 11; //depenancy delay, for slides should be less
       end
       else
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++)
-	   if (vd_instr_in_progress[i][5] != 1'b1)
+	   if (start_o[i] && port_group_ready_i[i])
 	   begin
-	      if (dependancy_issue_cnt[i] != 0)
-		dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
+	      dependancy_issue_cnt[i]<=11;	      
 	   end
-	   else 
-	     dependancy_issue_cnt[i]<=11;
+	   else if (dependancy_issue_cnt[i] != 0)
+	     dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
+
       end
    end
 /* -----\/----- EXCLUDED -----\/-----

@@ -6,12 +6,12 @@ Disassembly of section .text:
 
 00000000 <l_ch_batch_first_px-0x3c>:
    0:	00100f13          	li	t5,1
-   4:	00001537          	lui	a0,0x1
-   8:	c4050513          	addi	a0,a0,-960 # c40 <l_finished+0x924>
-   c:	04000593          	li	a1,64
-  10:	10000613          	li	a2,256
+   4:	03100513          	li	a0,49
+   8:	20000593          	li	a1,512
+   c:	00001637          	lui	a2,0x1
+  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x4e4>
   14:	01000693          	li	a3,16
-  18:	00400713          	li	a4,4
+  18:	08000713          	li	a4,128
   1c:	40000a93          	li	s5,1024
   20:	00100b37          	lui	s6,0x100
   24:	00104bb7          	lui	s7,0x104

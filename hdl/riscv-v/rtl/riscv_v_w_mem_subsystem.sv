@@ -3,7 +3,7 @@
 
 module riscv_v_w_mem_subsystem #
   (  
-     parameter integer VLEN = 4096,
+     parameter integer VLEN = 2048,
      parameter integer V_LANES = 4,
      parameter integer CHAINING = 4,
      parameter integer C_BLOCK_SIZE = 64,

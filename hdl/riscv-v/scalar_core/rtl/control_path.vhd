@@ -23,6 +23,7 @@ entity control_path is
     -- Vector core control signals
     scalar_load_req_o       : out std_logic;
     scalar_store_req_o      : out std_logic;
+    vector_instr_ex_o       : out std_logic;
     -- control signals forwarded to datapath and memory
     set_a_zero_o            : out std_logic;
     mem_to_reg_o            : out std_logic_vector(1 downto 0);
@@ -33,7 +34,7 @@ entity control_path is
     rd_we_o                 : out std_logic;
     pc_next_sel_o           : out std_logic;
     data_mem_we_o           : out std_logic_vector(3 downto 0);
-    branch_op_o             : out std_logic_vector(1 downto 0);
+    branch_op_o             : out std_logic_vector(1 downto 0);    
     -- control singals for forwarding
     alu_forward_a_o         : out fwd_a_t;
     alu_forward_b_o         : out fwd_b_t;
@@ -204,6 +205,8 @@ begin
         scalar_load_req_ex  <= '0';
         scalar_store_req_ex <= '0';
         vector_instr_ex_s   <= '0';
+        alu_forward_a_ex     <= dont_fwd_a;
+        alu_forward_b_ex     <= dont_fwd_b;
       elsif(data_ready_i = '1' and instr_ready_i = '1' and ce = '1' and
             (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0')))then
         branch_type_ex_s    <= branch_type_id_s;
@@ -222,6 +225,8 @@ begin
         scalar_load_req_ex  <= scalar_load_req_id;
         scalar_store_req_ex <= scalar_store_req_id;
         vector_instr_ex_s   <= vector_instr_id_s;
+        alu_forward_a_ex     <= alu_forward_a_id;
+        alu_forward_b_ex     <= alu_forward_b_id;
       end if;
       if (reset = '0' or ((control_pass_s = '0' or id_ex_flush_s = '1') and data_ready_i = '1' and instr_ready_i = '1' and
                           (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0'))))then
@@ -250,8 +255,7 @@ begin
         rd_address_mem_s     <= (others => '0');
         scalar_load_req_mem  <= '0';
         scalar_store_req_mem <= '0';
-        alu_forward_a_ex     <= dont_fwd_a;
-        alu_forward_b_ex     <= dont_fwd_b;
+
       elsif (data_ready_i = '1' and instr_ready_i = '1' and ce = '1')then
         funct3_mem_s         <= funct3_ex_s;
         data_mem_we_mem_s    <= data_mem_we_ex_s;
@@ -260,8 +264,7 @@ begin
         rd_address_mem_s     <= rd_address_ex_s;
         scalar_load_req_mem  <= scalar_load_req_ex;
         scalar_store_req_mem <= scalar_store_req_ex;
-        alu_forward_a_ex     <= alu_forward_a_id;
-        alu_forward_b_ex     <= alu_forward_b_id;
+
       end if;
     end if;
   end process;
@@ -378,7 +381,7 @@ begin
   data_mem_re_o <= mem_to_reg_mem_s(1);  -- there is no "11" combination se we can use just upper bit
   pc_en_o       <= pc_en_s and (not fencei_id_s);
   fencei_o      <= fencei_id_s;
-
+  vector_instr_ex_o <= vector_instr_ex_s;
 
 end architecture;
 

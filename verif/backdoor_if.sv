@@ -10,17 +10,20 @@ interface backdoor_instr_if (input clk, logic rstn);
 endinterface:backdoor_instr_if
 
 interface backdoor_v_instr_if (input clk, logic rstn);   
-   logic [3:0] 	  start;
-   logic [3:0] 	  ready;
-   logic [31:0]   v_instruction;
-   logic [31:0]   v_rs1_scalar;
-   logic [31:0]   v_rs2_scalar;
-   logic [11:0]   v_instr_vld;
-   logic [11:0]   v_instr_rdy;
-   logic [2:0] 	  lmul;
-   logic [2:0] 	  sew;
-   logic [31:0]   vl;
-   logic [31:0]   vrf_read_ram [`V_LANES][2][4][`VRF_DEPTH-1:0];
+   logic [3:0] 						 start;
+   logic [3:0] 						 ready;
+   logic [31:0] 					 v_instruction;
+   logic [31:0] 					 v_rs1_scalar;
+   logic [31:0] 					 v_rs2_scalar;
+   logic [11:0] 					 v_instr_vld;
+   logic [11:0] 					 v_instr_rdy;
+   logic [2:0] 						 lmul;
+   logic [2:0] 						 sew;
+   logic [31:0] 					 vl;
+   logic [3:0][`V_LANES-1:0][$clog2(`VRF_DEPTH)-1:0]     vrf_waddr;
+   logic [3:0][`V_LANES-1:0][31:0] 			 vrf_wdata;
+   logic [3:0][`V_LANES-1:0][3:0] 			 vrf_bwen; 
+   logic [31:0] 					 vrf_read_ram [`V_LANES][2][4][`VRF_DEPTH-1:0];
    
 endinterface:backdoor_v_instr_if
 

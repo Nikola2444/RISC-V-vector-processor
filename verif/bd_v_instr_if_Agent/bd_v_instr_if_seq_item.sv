@@ -13,7 +13,7 @@ class bd_v_instr_if_seq_item extends uvm_sequence_item;
    logic [31:0] vl;
    logic [31:0] scalar;
    logic [31:0] scalar2;
-   logic [31:0] vrf_read_ram [`V_LANES][2][4][`VRF_DEPTH-1:0];
+   logic [`V_LANES-1:0][`VRF_DEPTH-1:0][31:0] vrf_read_ram;
 
    `uvm_object_utils_begin(bd_v_instr_if_seq_item)
       `uvm_field_int(v_instruction, UVM_DEFAULT)
@@ -21,6 +21,7 @@ class bd_v_instr_if_seq_item extends uvm_sequence_item;
       `uvm_field_int(lmul, UVM_DEFAULT)
       `uvm_field_int(scalar, UVM_DEFAULT)
       `uvm_field_int(vl, UVM_DEFAULT)
+      `uvm_field_int(vrf_read_ram, UVM_DEFAULT)
    `uvm_object_utils_end
 
    function new (string name = "bd_v_instr_if_seq_item");

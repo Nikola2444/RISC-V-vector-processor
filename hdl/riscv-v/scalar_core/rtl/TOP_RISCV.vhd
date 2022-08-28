@@ -12,7 +12,7 @@ entity scalar_core is
     instr_ready_i       : in  std_logic;
     data_ready_i        : in  std_logic;
     fencei_o            : out std_logic;
-    pc_reg_o            : out std_logic_vector(31 downto 0); 
+    pc_reg_o            : out std_logic_vector(31 downto 0);
     -- Instruction memory interface
     instr_mem_address_o : out std_logic_vector(31 downto 0);
     instr_mem_read_i    : in  std_logic_vector(31 downto 0);
@@ -55,8 +55,9 @@ architecture structural of scalar_core is
   signal rd_we_s       : std_logic;
   signal pc_next_sel_s : std_logic;
 
-  signal if_id_flush_s : std_logic;
-  signal id_ex_flush_s : std_logic;
+  signal if_id_flush_s     : std_logic;
+  signal id_ex_flush_s     : std_logic;
+  signal vector_instr_ex_s : std_logic;
 
   signal alu_forward_a_s    : fwd_a_t;
   signal alu_forward_b_s    : fwd_b_t;
@@ -92,6 +93,7 @@ begin
       rs1_o              => rs1_o,
       rs2_o              => rs2_o,
       vector_stall_i     => vector_stall_i,
+      vector_instr_ex_i  => vector_instr_ex_s,
       -- control signals come from control path
       set_a_zero_i       => set_a_zero_s,
       mem_to_reg_i       => mem_to_reg_s,
@@ -117,7 +119,7 @@ begin
   --flush current instruction
   --instr_mem_flush_o <= '1' when (if_id_flush_s = '1' or instr_ready_i = '0')                     else '0';
   -- stall currnet instruction
-  instr_mem_en_s    <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
+  instr_mem_en_s <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
 
 
 
@@ -137,6 +139,7 @@ begin
       -- Vector core control signals
       scalar_load_req_o       => scalar_load_req_o,
       scalar_store_req_o      => scalar_store_req_o,
+      vector_instr_ex_o       => vector_instr_ex_s,
       -- instruction is read from memory         
       instruction_i           => instr_mem_id_s,
       -- control signals are forwarded to data_path

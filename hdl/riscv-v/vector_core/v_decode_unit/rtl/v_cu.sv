@@ -514,7 +514,8 @@ module v_cu #
 			     port_group_ready_i == 2 ? 1:
 			     port_group_ready_i == 4 ? 2 : 3;
 
-   logic                           slide_in_progress_reg;
+   logic 		  slide_in_progress_reg;
+   logic [W_PORTS_NUM-1:0] reduction_in_progress_reg;
    always@(posedge clk)
    begin
       if (!rstn)
@@ -523,6 +524,20 @@ module v_cu #
 	slide_in_progress_reg <= slide_instr_check;
       else if (port_group_ready_i[0])
 	slide_in_progress_reg <= 0;
+   end
+
+   always@(posedge clk)
+   begin
+      if (!rstn)
+	reduction_in_progress_reg <= '{default:'0};
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM;i++)
+	   if (start_o[i])
+	     reduction_in_progress_reg[i] <= reduction_instr_check;
+	   else if (port_group_ready_i[i])
+	     reduction_in_progress_reg[i] <= 0;
+      end
    end
 
    logic[W_PORTS_NUM-1:0]     reduction_wait_cnt_en;
@@ -609,15 +624,16 @@ module v_cu #
 	    if (slide_in_progress_reg)
 	      dependancy_issue[i]=1'b1;
 	    else if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
-		     (dependancy_issue_cnt != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
+		     (dependancy_issue_cnt[i] != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
 		     (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check))
 	      dependancy_issue[i]=1'b1;
 	 end
 	 else
 	 begin
 	    if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
-		(dependancy_issue_cnt != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
-		 (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check))
+		(dependancy_issue_cnt[i] != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
+		(vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check) || 
+		((vd_instr_in_progress[i][4:0]==v_instr_vs1 || vd_instr_in_progress[i][4:0]==v_instr_vs2) && reduction_in_progress_reg[i]))
 	      dependancy_issue[i]=1'b1;
 	 end
 	 

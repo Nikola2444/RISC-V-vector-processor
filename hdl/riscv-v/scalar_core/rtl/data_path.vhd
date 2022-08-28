@@ -30,6 +30,7 @@ entity data_path is
     rs1_o              : out std_logic_vector(31 downto 0);
     rs2_o              : out std_logic_vector(31 downto 0);
     vector_stall_i     : in  std_logic;
+    vector_instr_ex_i  : in  std_logic;
     -- control signals that are forwarded from data_path
     mem_to_reg_i       : in  std_logic_vector(1 downto 0);
     load_type_i        : in  std_logic_vector(2 downto 0);
@@ -193,7 +194,9 @@ begin
         rd_address_mem_s <= (others => '0');
         pc_reg_ex_s      <= (others => '0');
       elsif (data_ready_i = '1' and instr_ready_i = '1')then
-        alu_result_mem_s <= alu_result_ex_s;
+        if (vector_instr_ex_i = '0')then
+          alu_result_mem_s <= alu_result_ex_s;
+        end if;
         rs2_data_mem_s   <= alu_forward_b_ex_s;
         pc_adder_mem_s   <= pc_adder_ex_s;
         rd_address_mem_s <= rd_address_ex_s;

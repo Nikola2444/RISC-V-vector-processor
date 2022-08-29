@@ -15,9 +15,9 @@ li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
 li x23, 1064960  # Pointer to start of results
 
-addi x6, x11, x0  # Iterator over filters 
+add x6, x11, x0  # Iterator over filters 
 
-addi x2, x22,x0  # Pointer to start of weights
+add x2, x22,x0  # Pointer to start of weights
 
 vsetvli x1, x12, e8, m1	# 8-bit data
 
@@ -27,8 +27,8 @@ addi x24, x21, 0    # First row
 add  x25, x24, x15  # Second row
 add  x26, x25, x15  # Third row
 
-addi x5,  x10, x0  # Iterator over X
-addi x4,  x9,  x0  # Iterator over Y
+add x5,  x10, x0  # Iterator over X
+add x4,  x9,  x0  # Iterator over Y
 
 add x3, x23, x0 # set start address if a result
 
@@ -58,7 +58,7 @@ addi x27, x24, 0 #First row and counting
 addi x28, x25, 0 #Second row and counting
 addi x29, x26, 0 #Third row and counting
 
-vmul.vx       v31, v31, 0     # Reset results
+vmul.vx       v31, v31, x0     # Reset results
 
 #LOAD FIRST PIXEL IN A ROW
 #First row
@@ -84,7 +84,7 @@ vle8.v v8, (x29)
 add x29, x29, x12
 
 # MAC FILTER X IMAGE 3x3
-vmul.vx       v30, v30, 0     # Reset results
+vmul.vx       v30, v30, x0     # Reset results
 vmul.vv       v29, v0,  v10   # Multiply weights and pixels
 vredsum.vs    v31, v29, v31	  # sum to zeroth 
 vmul.vv       v29, v1,  v11   # Multiply weights and pixels
@@ -130,7 +130,7 @@ vle8.v        v8, (x29)
 add x29, x29, x12
 
 # MAC FILTER X IMAGE 3x3
-vmul.vx       v30, v30, 0     # Reset results
+vmul.vx       v30, v30, x0     # Reset results
 vmul.vv       v29, v0,  v10   # Multiply weights and pixels
 vredsum.vs    v31, v29, v31	  # sum to zeroth 
 vmul.vv       v29, v1,  v11   # Multiply weights and pixels
@@ -178,7 +178,7 @@ jal l_start_next_row
 l_ld_filter_finished: nop
 
 addi x23, x23, 1 # results incremented by 1 for next filter
-addi x6, x6 -1
+addi x6, x6, -1
 
 beq x6, x0, l_finised
 

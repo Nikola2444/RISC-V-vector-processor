@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define IM_SIZE 56
-#define IN_D    256
-#define OUT_D   64
+#define IM_SIZE 7
+#define IN_D    2048
+#define OUT_D   512
 
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][IN_D];
 int8_t ifm [IM_SIZE][IM_SIZE][IN_D];
@@ -67,10 +67,10 @@ int main()
     {
       for (int och=15; och>=0; och--)
       {
-        printf("ofm[%d][%d][%d]=%02x ",y,x,och,(unsigned char)ofm[y][x][och]);
+        printf("ofm[%d][%d][%d]=%02x\n",y,x,och,(unsigned char)ofm[y][x][och]);
         //printf("ofm[%d][%d][%d]=%d\n",y,x,och,ofm[y][x][och]);
-        getchar();
       }
+      getchar();
     }
   }
   return 0;

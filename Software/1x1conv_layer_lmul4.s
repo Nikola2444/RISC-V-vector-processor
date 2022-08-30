@@ -18,7 +18,7 @@ add x2,x22,x0  # Pointer to start of weights
 add x3,x23,x0  # Pointer to start of results
 add x5,x10,x0  # Set to track number of pixels
 
-vsetvli x31, x12, e8, m2	# 8-bit data
+vsetvli x31, x12, e8, m4	# 8-bit data
 
 l_ch_batch_first_px: nop
 
@@ -61,13 +61,13 @@ vadd.vx       v28, v20, x0		# mov to result vector
 vmul.vv       v24, v0,  v16    # Multiply weights and pixels
 vredsum.vs    v28, v24, v28	  # sum to zeroth 
 
-vsetvli x31, x13, e8, m2	# 8-bit data / vlen 16
+vsetvli x31, x13, e8, m4	# 8-bit data / vlen 16
 vse8.v v28, (x3)          # load image in v0
 
 addi x5,  x5,  -1           # one pixel done (first batch of output channels)
 add x3, x3, x11          # set x3 to next ofm pixel position
 
-vsetvli x31, x12, e8, m2	# 8-bit data / vlen 64
+vsetvli x31, x12, e8, m4	# 8-bit data / vlen 64
 
 l_ch_batch_other_px: nop
 
@@ -89,10 +89,10 @@ vadd.vx       v28, v20, x0		# mov to result vector
 vmul.vv       v24, v0,  v16    # Multiply weights and pixels
 vredsum.vs    v28, v24, v28	  # sum to zeroth 
 
-vsetvli x31, x13, e8, m1	# 8-bit data / vlen 16
+vsetvli x31, x13, e8, m4	# 8-bit data / vlen 16
 vse8.v v28, (x3)          # load image in v0
 add x3, x3, x11          # set x3 to next ofm pixel position
-vsetvli x31, x12, e8, m1	# 8-bit data / vlen 64
+vsetvli x31, x12, e8, m4	# 8-bit data / vlen 64
 
 addi x5,  x5,  -1           # one pixel done (first batch of output channels)
 

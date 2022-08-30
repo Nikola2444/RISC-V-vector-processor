@@ -10,8 +10,8 @@ module m_cu_tb();
   ///////////////////////////////////////////////////////////////////////////////
   // Local Parameters
   ///////////////////////////////////////////////////////////////////////////////
-  localparam integer VLEN                     = 8192;
-  localparam integer VLANE_NUM                = 4;
+  localparam integer VLEN                     = 16384;
+  localparam integer VLANE_NUM                = 8;
   localparam integer MAX_VECTORS_BUFFD        = 1;
   localparam integer C_M_AXI_ADDR_WIDTH       = 32;
   localparam integer C_M_AXI_DATA_WIDTH       = 32;
@@ -146,10 +146,10 @@ mem_subsys #(
   end
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  assign mcu_vl = 256;
-  int sew_in_bytes = 4;
-  int store1_load2 = 2;
-  int unit1_stride2_index3 = 3;
+  assign mcu_vl = 32;
+  int sew_in_bytes = 1;
+  int store1_load2 = 1;
+  int unit1_stride2_index3 = 1;
   // SCHEDULER DRIVER
   initial
   begin

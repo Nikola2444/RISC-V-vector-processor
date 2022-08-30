@@ -14,7 +14,7 @@ Disassembly of section .text:
   18:	08000713          	li	a4,128
   1c:	40000a93          	li	s5,1024
   20:	00100b37          	lui	s6,0x100
-  24:	00104bb7          	lui	s7,0x104
+  24:	00400bb7          	lui	s7,0x400
   28:	000a8333          	add	t1,s5,zero
   2c:	000b0133          	add	sp,s6,zero
   30:	000b81b3          	add	gp,s7,zero

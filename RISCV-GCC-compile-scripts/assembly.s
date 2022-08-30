@@ -11,7 +11,7 @@ li x14, 128       # Number of batches
 
 li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
-li x23, 1064960  # Pointer to start of results
+li x23, 4194304  # Pointer to start of results
 
 add x6,x21,x0  # Pointer to start of image
 add x2,x22,x0  # Pointer to start of weights

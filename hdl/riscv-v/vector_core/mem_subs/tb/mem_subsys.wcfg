@@ -11,15 +11,18 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="55,719.883 ns"></ZoomStartTime>
-      <ZoomEndTime time="55,909.142 ns"></ZoomEndTime>
-      <Cursor1Time time="55,970.000 ns"></Cursor1Time>
+      <ZoomStartTime time="178.117 ns"></ZoomStartTime>
+      <ZoomEndTime time="565.734 ns"></ZoomEndTime>
+      <Cursor1Time time="312.583 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="276"></NameColumnWidth>
-      <ValueColumnWidth column_width="116"></ValueColumnWidth>
+      <ValueColumnWidth column_width="112"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="52" />
+   <WVObjectSize size="49" />
+   <wave_markers>
+      <marker label="" time="270000" />
+   </wave_markers>
    <wvobject type="logic" fp_name="/m_cu_tb/clk">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
@@ -129,8 +132,8 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/cfg_vl">
-         <obj_property name="ElementShortName">cfg_vl[12:0]</obj_property>
-         <obj_property name="ObjectShortName">cfg_vl[12:0]</obj_property>
+         <obj_property name="ElementShortName">cfg_vl[13:0]</obj_property>
+         <obj_property name="ObjectShortName">cfg_vl[13:0]</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/cfg_store_idx_sew">
          <obj_property name="ElementShortName">cfg_store_idx_sew[2:0]</obj_property>
@@ -206,33 +209,9 @@
          <obj_property name="ElementShortName">store_baseaddr[31:0]</obj_property>
          <obj_property name="ObjectShortName">store_baseaddr[31:0]</obj_property>
       </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_write_done">
-         <obj_property name="ElementShortName">sbuff_write_done</obj_property>
-         <obj_property name="ObjectShortName">sbuff_write_done</obj_property>
-      </wvobject>
       <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_wen">
          <obj_property name="ElementShortName">sbuff_wen</obj_property>
          <obj_property name="ObjectShortName">sbuff_wen</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_ren">
-         <obj_property name="ElementShortName">sbuff_ren</obj_property>
-         <obj_property name="ObjectShortName">sbuff_ren</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_read_stall">
-         <obj_property name="ElementShortName">sbuff_read_stall</obj_property>
-         <obj_property name="ObjectShortName">sbuff_read_stall</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_read_flush">
-         <obj_property name="ElementShortName">sbuff_read_flush</obj_property>
-         <obj_property name="ObjectShortName">sbuff_read_flush</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_read_done">
-         <obj_property name="ElementShortName">sbuff_read_done</obj_property>
-         <obj_property name="ObjectShortName">sbuff_read_done</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/sbuff_not_empty">
-         <obj_property name="ElementShortName">sbuff_not_empty</obj_property>
-         <obj_property name="ObjectShortName">sbuff_not_empty</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="divider1361" type="divider">
@@ -253,12 +232,12 @@
          <obj_property name="ObjectShortName">vlane_store_dvalid</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/vlane_store_data">
-         <obj_property name="ElementShortName">vlane_store_data[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_store_data[0:3][31:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_store_data[7:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_store_data[7:0][31:0]</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/vlane_store_idx">
-         <obj_property name="ElementShortName">vlane_store_idx[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_store_idx[0:3][31:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_store_idx[7:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_store_idx[7:0][31:0]</obj_property>
       </wvobject>
    </wvobject>
    <wvobject fp_name="divider1364" type="divider">
@@ -317,104 +296,70 @@
       <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/store_state_next">
-      <obj_property name="ElementShortName">store_state_next[3:0]</obj_property>
-      <obj_property name="ObjectShortName">store_state_next[3:0]</obj_property>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid">
+      <obj_property name="ElementShortName">sdbuff_rvalid</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_rvalid</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/store_state_reg">
-      <obj_property name="ElementShortName">store_state_reg[3:0]</obj_property>
-      <obj_property name="ObjectShortName">store_state_reg[3:0]</obj_property>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_read_done_i">
+      <obj_property name="ElementShortName">sdbuff_read_done_i</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_read_done_i</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_write_cntr">
-      <obj_property name="ElementShortName">sbuff_write_cntr[10:0]</obj_property>
-      <obj_property name="ObjectShortName">sbuff_write_cntr[10:0]</obj_property>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_read_rdy_i">
+      <obj_property name="ElementShortName">sdbuff_read_rdy_i</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_read_rdy_i</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d">
+      <obj_property name="ElementShortName">sdbuff_rvalid_d[2:0]</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_rvalid_d[2:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <obj_property name="Radix">BINARYRADIX</obj_property>
+      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d[2]">
+         <obj_property name="ElementShortName">[2]</obj_property>
+         <obj_property name="ObjectShortName">[2]</obj_property>
+         <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d[1]">
+         <obj_property name="ElementShortName">[1]</obj_property>
+         <obj_property name="ObjectShortName">[1]</obj_property>
+         <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d[0]">
+         <obj_property name="ElementShortName">[0]</obj_property>
+         <obj_property name="ObjectShortName">[0]</obj_property>
+         <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
+         <obj_property name="UseCustomSignalColor">true</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_read_cntr">
+      <obj_property name="ElementShortName">sdbuff_read_cntr[14:0]</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_read_cntr[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_write_done_o">
-      <obj_property name="ElementShortName">sbuff_write_done_o</obj_property>
-      <obj_property name="ObjectShortName">sbuff_write_done_o</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_read_cntr">
-      <obj_property name="ElementShortName">sbuff_read_cntr[12:0]</obj_property>
-      <obj_property name="ObjectShortName">sbuff_read_cntr[12:0]</obj_property>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_read_cntr_next">
+      <obj_property name="ElementShortName">sdbuff_read_cntr_next[14:0]</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_read_cntr_next[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_read_done_o">
-      <obj_property name="ElementShortName">sbuff_read_done_o</obj_property>
-      <obj_property name="ObjectShortName">sbuff_read_done_o</obj_property>
-   </wvobject>
-   <wvobject type="group" fp_name="group1391">
-      <obj_property name="label">cnt number</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_word_batch_cnt">
-         <obj_property name="ElementShortName">sbuff_word_batch_cnt[10:0]</obj_property>
-         <obj_property name="ObjectShortName">sbuff_word_batch_cnt[10:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_word_cnt">
-         <obj_property name="ElementShortName">sbuff_word_cnt[12:0]</obj_property>
-         <obj_property name="ObjectShortName">sbuff_word_cnt[12:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_byte_cnt">
-         <obj_property name="ElementShortName">sbuff_byte_cnt[12:0]</obj_property>
-         <obj_property name="ObjectShortName">sbuff_byte_cnt[12:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_32b_cnt">
-         <obj_property name="ElementShortName">sbuff_32b_cnt[10:0]</obj_property>
-         <obj_property name="ObjectShortName">sbuff_32b_cnt[10:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-   </wvobject>
-   <wvobject type="group" fp_name="group1459">
-      <obj_property name="label">SDBUFF INTERFACE</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_wen">
-         <obj_property name="ElementShortName">sdbuff_wen[3:0][3:0]</obj_property>
-         <obj_property name="ObjectShortName">sdbuff_wen[3:0][3:0]</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_wdata">
-         <obj_property name="ElementShortName">sdbuff_wdata[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">sdbuff_wdata[0:3][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         <obj_property name="isExpanded"></obj_property>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_wdata[0]">
-            <obj_property name="ElementShortName">[0][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[0][31:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_wdata[1]">
-            <obj_property name="ElementShortName">[1][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[1][31:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_wdata[2]">
-            <obj_property name="ElementShortName">[2][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[2][31:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_wdata[3]">
-            <obj_property name="ElementShortName">[3][31:0]</obj_property>
-            <obj_property name="ObjectShortName">[3][31:0]</obj_property>
-            <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-         </wvobject>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_waddr">
-         <obj_property name="ElementShortName">sdbuff_waddr[8:0]</obj_property>
-         <obj_property name="ObjectShortName">sdbuff_waddr[8:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_rdata">
-         <obj_property name="ElementShortName">sdbuff_rdata[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">sdbuff_rdata[0:3][31:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_raddr">
-         <obj_property name="ElementShortName">sdbuff_raddr[0:3][8:0]</obj_property>
-         <obj_property name="ObjectShortName">sdbuff_raddr[0:3][8:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_byte_cnt">
+      <obj_property name="ElementShortName">sdbuff_byte_cnt[14:0]</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_byte_cnt[14:0]</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/m_cu_tb/write_word_num">
       <obj_property name="ElementShortName">write_word_num[31:0]</obj_property>
@@ -538,16 +483,16 @@
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/m_cu_tb/vlane_load_data">
-         <obj_property name="ElementShortName">vlane_load_data[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_data[0:3][31:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_load_data[7:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_data[7:0][31:0]</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/vlane_load_bwe">
-         <obj_property name="ElementShortName">vlane_load_bwe[0:3][3:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_bwe[0:3][3:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_load_bwe[7:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_bwe[7:0][3:0]</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/vlane_load_idx">
-         <obj_property name="ElementShortName">vlane_load_idx[0:3][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_idx[0:3][31:0]</obj_property>
+         <obj_property name="ElementShortName">vlane_load_idx[7:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_idx[7:0][31:0]</obj_property>
       </wvobject>
       <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_rdy">
          <obj_property name="ElementShortName">vlane_load_rdy</obj_property>
@@ -631,17 +576,9 @@
       <obj_property name="CustomSignalColor">#FFFFFF</obj_property>
       <obj_property name="UseCustomSignalColor">true</obj_property>
    </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/load_state_next">
-      <obj_property name="ElementShortName">load_state_next[3:0]</obj_property>
-      <obj_property name="ObjectShortName">load_state_next[3:0]</obj_property>
-   </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/load_state_reg">
-      <obj_property name="ElementShortName">load_state_reg[3:0]</obj_property>
-      <obj_property name="ObjectShortName">load_state_reg[3:0]</obj_property>
-   </wvobject>
    <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_write_cntr">
-      <obj_property name="ElementShortName">ldbuff_write_cntr[12:0]</obj_property>
-      <obj_property name="ObjectShortName">ldbuff_write_cntr[12:0]</obj_property>
+      <obj_property name="ElementShortName">ldbuff_write_cntr[14:0]</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_write_cntr[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_write_done_o">
@@ -649,8 +586,8 @@
       <obj_property name="ObjectShortName">ldbuff_write_done_o</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_read_cntr">
-      <obj_property name="ElementShortName">ldbuff_read_cntr[10:0]</obj_property>
-      <obj_property name="ObjectShortName">ldbuff_read_cntr[10:0]</obj_property>
+      <obj_property name="ElementShortName">ldbuff_read_cntr[14:0]</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_read_cntr[14:0]</obj_property>
       <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_read_done_o">
@@ -667,37 +604,11 @@
       <obj_property name="label">LDBUFF INTERFACE</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wen">
-         <obj_property name="ElementShortName">ldbuff_wen[3:0][3:0]</obj_property>
-         <obj_property name="ObjectShortName">ldbuff_wen[3:0][3:0]</obj_property>
-         <obj_property name="Radix">HEXRADIX</obj_property>
-         <obj_property name="isExpanded"></obj_property>
-      </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wdata">
-         <obj_property name="ElementShortName">ldbuff_wdata[0:3][35:0]</obj_property>
-         <obj_property name="ObjectShortName">ldbuff_wdata[0:3][35:0]</obj_property>
+         <obj_property name="ElementShortName">ldbuff_wdata[7:0][35:0]</obj_property>
+         <obj_property name="ObjectShortName">ldbuff_wdata[7:0][35:0]</obj_property>
          <obj_property name="Radix">HEXRADIX</obj_property>
          <obj_property name="isExpanded"></obj_property>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wdata[0]">
-            <obj_property name="ElementShortName">[0][35:0]</obj_property>
-            <obj_property name="ObjectShortName">[0][35:0]</obj_property>
-            <obj_property name="Radix">HEXRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wdata[1]">
-            <obj_property name="ElementShortName">[1][35:0]</obj_property>
-            <obj_property name="ObjectShortName">[1][35:0]</obj_property>
-            <obj_property name="Radix">HEXRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wdata[2]">
-            <obj_property name="ElementShortName">[2][35:0]</obj_property>
-            <obj_property name="ObjectShortName">[2][35:0]</obj_property>
-            <obj_property name="Radix">HEXRADIX</obj_property>
-         </wvobject>
-         <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wdata[3]">
-            <obj_property name="ElementShortName">[3][35:0]</obj_property>
-            <obj_property name="ObjectShortName">[3][35:0]</obj_property>
-            <obj_property name="Radix">HEXRADIX</obj_property>
-         </wvobject>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_waddr">
          <obj_property name="ElementShortName">ldbuff_waddr[8:0]</obj_property>
@@ -705,8 +616,8 @@
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_rdata">
-         <obj_property name="ElementShortName">ldbuff_rdata[0:3][35:0]</obj_property>
-         <obj_property name="ObjectShortName">ldbuff_rdata[0:3][35:0]</obj_property>
+         <obj_property name="ElementShortName">ldbuff_rdata[7:0][35:0]</obj_property>
+         <obj_property name="ObjectShortName">ldbuff_rdata[7:0][35:0]</obj_property>
          <obj_property name="Radix">HEXRADIX</obj_property>
          <obj_property name="isExpanded"></obj_property>
       </wvobject>
@@ -720,19 +631,9 @@
       <obj_property name="label">cnt number</obj_property>
       <obj_property name="DisplayName">label</obj_property>
       <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/lbuff_32b_batch_cnt">
-         <obj_property name="ElementShortName">lbuff_32b_batch_cnt[10:0]</obj_property>
-         <obj_property name="ObjectShortName">lbuff_32b_batch_cnt[10:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/lbuff_word_cnt">
-         <obj_property name="ElementShortName">lbuff_word_cnt[12:0]</obj_property>
-         <obj_property name="ObjectShortName">lbuff_word_cnt[12:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/lbuff_byte_cnt">
-         <obj_property name="ElementShortName">lbuff_byte_cnt[12:0]</obj_property>
-         <obj_property name="ObjectShortName">lbuff_byte_cnt[12:0]</obj_property>
+         <obj_property name="ElementShortName">lbuff_word_cnt[14:0]</obj_property>
+         <obj_property name="ObjectShortName">lbuff_word_cnt[14:0]</obj_property>
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
    </wvobject>

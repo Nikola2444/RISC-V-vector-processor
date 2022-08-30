@@ -197,6 +197,7 @@ module m_cu #(
   logic       save_load_type;
   logic [2:0] load_type_reg,load_type_next;
   logic       start_load_write_fsm;
+  logic       sdbuff_read_done_d;
 
   ///////////////////////////////////////////////////////////////////////////////
   // Begin RTL
@@ -231,10 +232,14 @@ module m_cu #(
 
   always_ff @(posedge clk, negedge rstn)
   begin
-    if(!rstn)
+    sdbuff_read_done_d   <= sdbuff_read_done_i;
+    if(!rstn)begin
       sdbuff_rvalid_d      <= 0;
-    else if (!sdbuff_read_stall_o)
+      sdbuff_read_done_d   <= 0;
+    end
+    else if (!sdbuff_read_stall_o)begin
       sdbuff_rvalid_d      <= {sdbuff_rvalid_d[1:0], sdbuff_rvalid};
+    end
   end
 
   always_ff @(posedge clk, negedge rstn)
@@ -245,8 +250,9 @@ module m_cu #(
       sibuff_rvalid_d      <= {sibuff_rvalid_d[1:0], sibuff_rvalid};
   end
 
+
   assign wr_tvalid_o   = !sbuff_read_invalidate ? wr_tvalid_out : 1'b0;
-  assign wr_tvalid_out = sdbuff_read_done_i ? sdbuff_rvalid_d[2] : sdbuff_rvalid_d[1];
+  assign wr_tvalid_out = (sdbuff_read_done_i && sdbuff_rvalid_d[2]) ? sdbuff_rvalid_d[2] : sdbuff_rvalid_d[1];
 
   always_ff @(posedge clk, negedge rstn)
   begin
@@ -457,7 +463,7 @@ module m_cu #(
             sdbuff_rvalid = 1'b1;
             sdbuff_ren_o  = 1'b1;
             
-            if(sdbuff_read_done_i && wr_tready_i) begin
+            if(sdbuff_read_done_i) begin
                sdbuff_rvalid = 1'b0;
                sdbuff_ren_o  = 1'b0;
             end

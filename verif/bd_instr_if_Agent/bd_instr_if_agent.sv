@@ -35,6 +35,7 @@ class bd_instr_if_agent extends uvm_agent;
       /*****************************************************************/
       
       /************Setting to configuration database********************/
+      uvm_config_db#(riscv_v_config)::set(this, "*", "riscv_v_config", cfg);
       uvm_config_db#(virtual backdoor_instr_if)::set(this, "*", "backdoor_instr_if", backdoor_instr_vif);
       uvm_config_db#(virtual backdoor_sc_data_if)::set(this, "*", "backdoor_sc_data_if", backdoor_sc_data_vif);
       uvm_config_db#(virtual backdoor_register_bank_if)::set(this, "*", "backdoor_register_bank_if", backdoor_register_bank_vif);

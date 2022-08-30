@@ -63,24 +63,29 @@ class riscv_v_env extends uvm_env;
       uvm_config_db#(int)::set(this, "bd_instr_agent.mon", "num_of_instr", num_of_instr);
       /*****************************************************************/
       
-      bd_instr_agent   =   bd_instr_if_agent::type_id::create("bd_instr_agent", this);
-      //bd_v_instr_agent   =   bd_v_instr_if_agent::type_id::create("bd_v_instr_agent", this);      
+      bd_instr_agent   = bd_instr_if_agent::type_id::create("bd_instr_agent", this);
       s_axi4_agent     = AXI4_agent::type_id::create("s_axi4_agent", this);
       //if (cfg.use_v_data_backdoor==1)	
 	//bd_v_data_agent  =   bd_v_data_if_agent::type_id::create("bd_v_data_agent", this);	
       //else
-      v_axi4_agent     = AXI4_agent::type_id::create("v_axi4_agent", this);	
-
-      sc_scbd = riscv_sc_scoreboard::type_id::create("sc_scbd", this);
-      //v_scbd = riscv_v_scoreboard::type_id::create("v_scbd", this);
+      v_axi4_agent     = AXI4_agent::type_id::create("v_axi4_agent", this);
+      if (cfg.enable_checking==1)
+      begin
+	 bd_v_instr_agent = bd_v_instr_if_agent::type_id::create("bd_v_instr_agent", this);      
+	 sc_scbd 	       = riscv_sc_scoreboard::type_id::create("sc_scbd", this);
+	 v_scbd 	       = riscv_v_scoreboard::type_id::create("v_scbd", this);
+      end
       
 
    endfunction : build_phase
 
    function void connect_phase(uvm_phase phase);
       super.connect_phase(phase);
-      bd_instr_agent.mon.item_collected_port.connect(sc_scbd.item_collected_imp_s);
-      //bd_v_instr_agent.mon.item_collected_port.connect(v_scbd.item_collected_imp_v);
+      if (cfg.enable_checking==1)
+      begin	 
+	 bd_instr_agent.mon.item_collected_port.connect(sc_scbd.item_collected_imp_s);
+	 bd_v_instr_agent.mon.item_collected_port.connect(v_scbd.item_collected_imp_v);
+      end
    endfunction
 
 endclass : riscv_v_env

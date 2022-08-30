@@ -27,11 +27,12 @@ class bd_instr_if_monitor extends uvm_monitor;
 
    // current transaction
    bd_instr_if_seq_item curr_it;
+   riscv_v_config cfg;
    logic[31:0] store_data_queue[$];
    logic [31:0] collect_prev_instr_mem_addr=0-1;
    logic [31:0] check_prev_instr_mem_addr=0-1;
    int 	       num_of_instr;
-
+   
    // coverage can go here
    // ...
 
@@ -46,6 +47,8 @@ class bd_instr_if_monitor extends uvm_monitor;
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})
       if (!uvm_config_db#(int)::get(this, "", "num_of_instr", num_of_instr))
         `uvm_fatal("NOVIF",{"number of instructions must be set:",get_full_name(),".num_of_instr"})
+      if(!uvm_config_db#(riscv_v_config)::get(this, "", "riscv_v_config", cfg))
+        `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})
       $display("num_of_instruction is: %d",num_of_instr);
    endfunction
 
@@ -63,17 +66,20 @@ class bd_instr_if_monitor extends uvm_monitor;
       end
       forever begin
 	 @(negedge backdoor_instr_vif.clk);
-	 if (backdoor_instr_vif.rstn)
-	 begin
-	    fork
-	       begin		         	  
-		  collect_instruction();
-	       end
+	 if (cfg.enable_checking==1)
+	 begin	 
+	    if (backdoor_instr_vif.rstn)
+	    begin
+	       fork
+		  begin		         	  
+		     collect_instruction();
+		  end
 
-	       begin
-		  collect_and_check_data();
-	       end
-	    join_none
+		  begin
+		     collect_and_check_data();
+		  end
+	       join_none
+	    end
 	 end
 
 	 // End of test mechanism. If program address space is exceeded,

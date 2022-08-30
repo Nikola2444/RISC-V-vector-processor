@@ -140,18 +140,18 @@ module riscv_v_verif_top;
 	ddr_mem[i[31:2]][i[1:0]*8+:8] = (i-256)%64;
  -----/\----- EXCLUDED -----/\----- */
       //Initializing DDR with the input feature map(i.e. image)
-      for (int y=0; y<56; y++)
-	for (int x=0; x<56; x++)
-	  for (int ich=0; ich<256; ich++)
+      for (int y=0; y<`IM_SIZE; y++)
+	for (int x=0; x<`IM_SIZE; x++)
+	  for (int ich=0; ich<`IN_D; ich++)
 	  begin
-	     index = y*56*256+x*256+ich+1024;
-             ddr_mem[index[31:2]][index[1:0]*8+:8]=y*56+x+ich%3;
+	     index = y*`IM_SIZE*`IN_D+x*`IN_D+ich+1024;
+             ddr_mem[index[31:2]][index[1:0]*8+:8]=y*`IM_SIZE+x+ich%3;
 	  end
       //Initializing DDR with filtlthers
-      for (int och=0; och<64; och++)
-	for (int ich=0; ich<256; ich++)
+      for (int och=0; och<`OUT_D; och++)
+	for (int ich=0; ich<`IN_D; ich++)
 	begin
-	   index = och*256+ich+1048576;
+	   index = och*`IN_D+ich+1048576;
 	   ddr_mem[index[31:2]][index[1:0]*8+:8]=((och+ich)-(ich%10));
 	end
       //send data to configuration database

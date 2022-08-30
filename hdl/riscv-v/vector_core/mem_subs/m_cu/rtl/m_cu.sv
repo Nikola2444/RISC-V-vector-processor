@@ -714,7 +714,7 @@ module m_cu #(
         ctrl_rstart   = 1'b1;
         rd_tready_o   = 1'b1;
         ldbuff_wen_o  = rd_tvalid_i;
-        if(rd_tlast_i && rd_tvalid_i) begin
+        if(ctrl_rdone_i) begin
           load_write_state_next = load_write_idle;
           mcu_ld_buffered_o     = 1'b1;
         end

@@ -9,9 +9,9 @@ Disassembly of section .text:
    4:	03100513          	li	a0,49
    8:	20000593          	li	a1,512
    c:	00001637          	lui	a2,0x1
-  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x624>
-  14:	00800693          	li	a3,8
-  18:	04000713          	li	a4,64
+  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x6d0>
+  14:	00400693          	li	a3,4
+  18:	08000713          	li	a4,128
   1c:	40000a93          	li	s5,1024
   20:	00100b37          	lui	s6,0x100
   24:	00400bb7          	lui	s7,0x400
@@ -25,115 +25,72 @@ Disassembly of section .text:
   3c:	00000013          	nop
   40:	000a8333          	add	t1,s5,zero
   44:	02030007          	vle8.v	v0,(t1)
-  48:	97e06f57          	vmul.vx	v30,v30,zero
-  4c:	97a06d57          	vmul.vx	v26,v26,zero
-  50:	02010107          	vle8.v	v2,(sp)
+  48:	97c06e57          	vmul.vx	v28,v28,zero
+  4c:	97406a57          	vmul.vx	v20,v20,zero
+  50:	02010207          	vle8.v	v4,(sp)
   54:	00c10133          	add	sp,sp,a2
-  58:	96012e57          	vmul.vv	v28,v0,v2
-  5c:	03cf2f57          	vredsum.vs	v30,v28,v30
-  60:	02010207          	vle8.v	v4,(sp)
+  58:	96022c57          	vmul.vv	v24,v0,v4
+  5c:	038e2e57          	vredsum.vs	v28,v24,v28
+  60:	02010407          	vle8.v	v8,(sp)
   64:	00c10133          	add	sp,sp,a2
-  68:	3bef4d57          	vslideup.vx	v26,v30,t5
-  6c:	03a04f57          	vadd.vx	v30,v26,zero
-  70:	96022e57          	vmul.vv	v28,v0,v4
-  74:	03cf2f57          	vredsum.vs	v30,v28,v30
-  78:	02010307          	vle8.v	v6,(sp)
+  68:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  6c:	03404e57          	vadd.vx	v28,v20,zero
+  70:	96042c57          	vmul.vv	v24,v0,v8
+  74:	038e2e57          	vredsum.vs	v28,v24,v28
+  78:	02010607          	vle8.v	v12,(sp)
   7c:	00c10133          	add	sp,sp,a2
-  80:	3bef4d57          	vslideup.vx	v26,v30,t5
-  84:	03a04f57          	vadd.vx	v30,v26,zero
-  88:	96032e57          	vmul.vv	v28,v0,v6
-  8c:	03cf2f57          	vredsum.vs	v30,v28,v30
-  90:	02010407          	vle8.v	v8,(sp)
+  80:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  84:	03404e57          	vadd.vx	v28,v20,zero
+  88:	96062c57          	vmul.vv	v24,v0,v12
+  8c:	038e2e57          	vredsum.vs	v28,v24,v28
+  90:	02010807          	vle8.v	v16,(sp)
   94:	00c10133          	add	sp,sp,a2
-  98:	3bef4d57          	vslideup.vx	v26,v30,t5
-  9c:	03a04f57          	vadd.vx	v30,v26,zero
-  a0:	96042e57          	vmul.vv	v28,v0,v8
-  a4:	03cf2f57          	vredsum.vs	v30,v28,v30
-  a8:	02010507          	vle8.v	v10,(sp)
-  ac:	00c10133          	add	sp,sp,a2
-  b0:	3bef4d57          	vslideup.vx	v26,v30,t5
-  b4:	03a04f57          	vadd.vx	v30,v26,zero
-  b8:	96052e57          	vmul.vv	v28,v0,v10
-  bc:	03cf2f57          	vredsum.vs	v30,v28,v30
-  c0:	02010607          	vle8.v	v12,(sp)
-  c4:	00c10133          	add	sp,sp,a2
-  c8:	3bef4d57          	vslideup.vx	v26,v30,t5
-  cc:	03a04f57          	vadd.vx	v30,v26,zero
-  d0:	96062e57          	vmul.vv	v28,v0,v12
-  d4:	03cf2f57          	vredsum.vs	v30,v28,v30
-  d8:	02010707          	vle8.v	v14,(sp)
-  dc:	00c10133          	add	sp,sp,a2
-  e0:	3bef4d57          	vslideup.vx	v26,v30,t5
-  e4:	03a04f57          	vadd.vx	v30,v26,zero
-  e8:	96072e57          	vmul.vv	v28,v0,v14
-  ec:	03cf2f57          	vredsum.vs	v30,v28,v30
-  f0:	02010807          	vle8.v	v16,(sp)
-  f4:	00c10133          	add	sp,sp,a2
-  f8:	3bef4d57          	vslideup.vx	v26,v30,t5
-  fc:	03a04f57          	vadd.vx	v30,v26,zero
- 100:	96082e57          	vmul.vv	v28,v0,v16
- 104:	03cf2f57          	vredsum.vs	v30,v28,v30
- 108:	0016ffd7          	vsetvli	t6,a3,e8,m2,tu,mu
- 10c:	02018f27          	vse8.v	v30,(gp)
- 110:	fff28293          	addi	t0,t0,-1
- 114:	00b181b3          	add	gp,gp,a1
- 118:	00167fd7          	vsetvli	t6,a2,e8,m2,tu,mu
+  98:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  9c:	03404e57          	vadd.vx	v28,v20,zero
+  a0:	96082c57          	vmul.vv	v24,v0,v16
+  a4:	038e2e57          	vredsum.vs	v28,v24,v28
+  a8:	0016ffd7          	vsetvli	t6,a3,e8,m2,tu,mu
+  ac:	02018e27          	vse8.v	v28,(gp)
+  b0:	fff28293          	addi	t0,t0,-1
+  b4:	00b181b3          	add	gp,gp,a1
+  b8:	00167fd7          	vsetvli	t6,a2,e8,m2,tu,mu
 
-0000011c <l_ch_batch_other_px>:
- 11c:	00000013          	nop
- 120:	00c30333          	add	t1,t1,a2
- 124:	02030007          	vle8.v	v0,(t1)
- 128:	97e06f57          	vmul.vx	v30,v30,zero
- 12c:	96012e57          	vmul.vv	v28,v0,v2
- 130:	03cf2f57          	vredsum.vs	v30,v28,v30
- 134:	96022e57          	vmul.vv	v28,v0,v4
- 138:	3bef4d57          	vslideup.vx	v26,v30,t5
- 13c:	03a04f57          	vadd.vx	v30,v26,zero
- 140:	03cf2f57          	vredsum.vs	v30,v28,v30
- 144:	96032e57          	vmul.vv	v28,v0,v6
- 148:	3bef4d57          	vslideup.vx	v26,v30,t5
- 14c:	03a04f57          	vadd.vx	v30,v26,zero
- 150:	03cf2f57          	vredsum.vs	v30,v28,v30
- 154:	96042e57          	vmul.vv	v28,v0,v8
- 158:	3bef4d57          	vslideup.vx	v26,v30,t5
- 15c:	03a04f57          	vadd.vx	v30,v26,zero
- 160:	03cf2f57          	vredsum.vs	v30,v28,v30
- 164:	96052e57          	vmul.vv	v28,v0,v10
- 168:	3bef4d57          	vslideup.vx	v26,v30,t5
- 16c:	03a04f57          	vadd.vx	v30,v26,zero
- 170:	03cf2f57          	vredsum.vs	v30,v28,v30
- 174:	96062e57          	vmul.vv	v28,v0,v12
- 178:	3bef4d57          	vslideup.vx	v26,v30,t5
- 17c:	03a04f57          	vadd.vx	v30,v26,zero
- 180:	03cf2f57          	vredsum.vs	v30,v28,v30
- 184:	96072e57          	vmul.vv	v28,v0,v14
- 188:	3bef4d57          	vslideup.vx	v26,v30,t5
- 18c:	03a04f57          	vadd.vx	v30,v26,zero
- 190:	03cf2f57          	vredsum.vs	v30,v28,v30
- 194:	96082e57          	vmul.vv	v28,v0,v16
- 198:	3bef4d57          	vslideup.vx	v26,v30,t5
- 19c:	03a04f57          	vadd.vx	v30,v26,zero
- 1a0:	03cf2f57          	vredsum.vs	v30,v28,v30
- 1a4:	0006ffd7          	vsetvli	t6,a3,e8,m1,tu,mu
- 1a8:	02018f27          	vse8.v	v30,(gp)
- 1ac:	00b181b3          	add	gp,gp,a1
- 1b0:	00067fd7          	vsetvli	t6,a2,e8,m1,tu,mu
- 1b4:	fff28293          	addi	t0,t0,-1
- 1b8:	00028463          	beqz	t0,1c0 <l_ch_batch_exit>
- 1bc:	f61ff0ef          	jal	ra,11c <l_ch_batch_other_px>
+000000bc <l_ch_batch_other_px>:
+  bc:	00000013          	nop
+  c0:	00c30333          	add	t1,t1,a2
+  c4:	02030007          	vle8.v	v0,(t1)
+  c8:	97c06e57          	vmul.vx	v28,v28,zero
+  cc:	96022c57          	vmul.vv	v24,v0,v4
+  d0:	038e2e57          	vredsum.vs	v28,v24,v28
+  d4:	96042c57          	vmul.vv	v24,v0,v8
+  d8:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  dc:	03404e57          	vadd.vx	v28,v20,zero
+  e0:	038e2e57          	vredsum.vs	v28,v24,v28
+  e4:	96062c57          	vmul.vv	v24,v0,v12
+  e8:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  ec:	03404e57          	vadd.vx	v28,v20,zero
+  f0:	96082c57          	vmul.vv	v24,v0,v16
+  f4:	038e2e57          	vredsum.vs	v28,v24,v28
+  f8:	0006ffd7          	vsetvli	t6,a3,e8,m1,tu,mu
+  fc:	02018e27          	vse8.v	v28,(gp)
+ 100:	00b181b3          	add	gp,gp,a1
+ 104:	00067fd7          	vsetvli	t6,a2,e8,m1,tu,mu
+ 108:	fff28293          	addi	t0,t0,-1
+ 10c:	00028463          	beqz	t0,114 <l_ch_batch_exit>
+ 110:	fadff0ef          	jal	ra,bc <l_ch_batch_other_px>
 
-000001c0 <l_ch_batch_exit>:
- 1c0:	00000013          	nop
- 1c4:	fff70713          	addi	a4,a4,-1
- 1c8:	000502b3          	add	t0,a0,zero
- 1cc:	00db8bb3          	add	s7,s7,a3
- 1d0:	000b81b3          	add	gp,s7,zero
- 1d4:	00070463          	beqz	a4,1dc <l_finished>
- 1d8:	e65ff0ef          	jal	ra,3c <l_ch_batch_first_px>
+00000114 <l_ch_batch_exit>:
+ 114:	00000013          	nop
+ 118:	fff70713          	addi	a4,a4,-1
+ 11c:	000502b3          	add	t0,a0,zero
+ 120:	00db8bb3          	add	s7,s7,a3
+ 124:	000b81b3          	add	gp,s7,zero
+ 128:	00070463          	beqz	a4,130 <l_finished>
+ 12c:	f11ff0ef          	jal	ra,3c <l_ch_batch_first_px>
 
-000001dc <l_finished>:
- 1dc:	00000013          	nop
- 1e0:	00000013          	nop
- 1e4:	00000013          	nop
- 1e8:	00000013          	nop
- 1ec:	00000013          	nop
+00000130 <l_finished>:
+ 130:	00000013          	nop
+ 134:	00000013          	nop
+ 138:	00000013          	nop
+ 13c:	00000013          	nop
+ 140:	00000013          	nop

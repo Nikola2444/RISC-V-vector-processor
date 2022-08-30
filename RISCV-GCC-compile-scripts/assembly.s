@@ -100,8 +100,11 @@ vredsum.vs    v30, v28, v30	  # sum to zeroth
 vsetvli x31, x13, e8, m2	# 8-bit data / vlen 16
 vse8.v v30, (x3)          # load image in v0
 
+addi x5,  x5,  -1           # one pixel done (first batch of output channels)
 add x3, x3, x11          # set x3 to next ofm pixel position
+
 vsetvli x31, x12, e8, m2	# 8-bit data / vlen 64
+
 
 l_ch_batch_other_px: nop
 

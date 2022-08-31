@@ -398,7 +398,9 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	 for (int i=0; i<tr.vl<<width[1:0]; i++)
 	 begin
 	    vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8]=v_axi4_vif.ddr_mem[src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8];
-	    src_element_idx ++;
+	    src_element_idx++;
+	    //$display("load_ddr_mem: ddr_mem[%d][%d]=%x",src_element_idx[31:2], src_element_idx[1:0], v_axi4_vif.ddr_mem[src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8]);
+	    //$display("vrf_mem: vrf_mem[%d][%d][%d]=%x",vd, i[31:2], i[1:0], vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8]);
 	 end // for (int i=0; i<tr.vl; i++)
       end
       if (mop==2'b10)

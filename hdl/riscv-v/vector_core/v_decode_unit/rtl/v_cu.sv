@@ -219,9 +219,11 @@ module v_cu #
 	 
 	 if(instr_vld_reg[12] && instr_rdy_reg[12]) // config instruction received
 	 begin
+/* -----\/----- EXCLUDED -----\/-----
 	    vector_instr_reg <= vector_instr_i;
 	    instr_vld_reg    <= instr_vld_i;
 	    instr_rdy_reg    <= instr_rdy_o;
+ -----/\----- EXCLUDED -----/\----- */
 	    vtype_reg 	     <= vtype_next;	 
 	    vl_reg 	     <= vl_next;
 	 end

@@ -530,7 +530,7 @@ module complete_sublane_driver
       .clk_i(clk_i),
       .rst_i(rst_i),
       
-      .vl_i(dp0_reg.vl),
+      .vl_i(dp0_next.vl),
       .shift_en_i(shift_data_validation),
       .shift_partial_i(shift_partial),
       .load_i(load_data_validation),
@@ -585,8 +585,8 @@ module complete_sublane_driver
       request_write_control_o = 1'b0;
       ready_for_load_o 	      = 0;
       waddr_cnt_en 	      = 0;
-
       dp0_next 		      = dp0_reg;
+      dp0_next.store_data_valid = 0;
       next_state 	      = current_state;
 
       case(current_state)
@@ -659,7 +659,13 @@ module complete_sublane_driver
 		     raddr_cnt_en 	   = 1;
                   end
                   7'b0000100 : begin                                            // STORE
-                     next_state 	       = READ_MODE;
+		     if (main_cnt == dp0_next.read_limit-1)
+		     begin
+			main_cnt_en = 0;
+			next_state  = IDLE;
+		     end
+		     else
+		       next_state 	       = READ_MODE;
        		     dp0_next.vrf_read_sew     = 2'b10;
                      dp0_next.store_data_valid = 1;
                   end
@@ -668,6 +674,15 @@ module complete_sublane_driver
                      dp0_next.store_load_index_valid = 1;
 		     dp0_next.vrf_read_sew 	     = 2'b10;
                      next_state 		     = READ_MODE;
+		     if (main_cnt == dp0_next.read_limit)
+		     begin
+		       main_cnt_en    = 0;
+                       next_state 	       = IDLE;
+		     end
+		     else
+		     begin
+		       next_state 	       = READ_MODE;
+		     end
                   end
                   7'b0010000 : begin                                            // LOAD
 		     dp0_next.vrf_write_sew  = 2'b10;
@@ -732,7 +747,7 @@ module complete_sublane_driver
                   end                                   
                end
                4'b0010 : begin                                            // STORE		  
-                  if(read_limit_comp) begin                       
+                  if(read_limit_comp) begin		     
                      next_state 	       = IDLE;
                      dp0_next.store_data_valid = 0;
                   end

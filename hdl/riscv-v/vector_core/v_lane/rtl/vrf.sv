@@ -309,24 +309,24 @@ module vrf #
 	       sdp_bwe_bram #(/*AUTO_INSTPARAM*/
 			      // Parameters
 			      .NB_COL		(NUM_OF_BYTES),
-			      .COL_WIDTH		(8),
-			      .RAM_DEPTH		(MEM_DEPTH),
+			      .COL_WIDTH	(8),
+			      .RAM_DEPTH	(MEM_DEPTH),
 			      .RAM_PERFORMANCE	(RAM_PERFORMANCE),
-			      .INIT_FILE		(""))
+			      .INIT_FILE	(""))
 	       READ_RAMs(/*AUTO_INST*/
-			  // Outputs
-			  .doutb		(read_ram_dout[i][j]),
-			  // Inputs
-			  .addra		(read_ram_waddr[i][j]),
-			  .addrb		(read_ram_raddr[i][j]),
-			  .dina		(read_ram_din[i][j]),
-			  .clka		(clk2),
-			  .wea		(read_ram_bwe[i][j]),
+			 // Outputs
+			 .doutb		(read_ram_dout[i][j]),
+			 // Inputs
+			 .addra		(read_ram_waddr[i][j]),
+			 .addrb		(read_ram_raddr[i][j]),
+			 .dina		(read_ram_din[i][j]),
+			 .clka		(clk2),
+			 .wea		(read_ram_bwe[i][j]),
 		  
-			  .enb		(read_ram_ren[i][j]),
-			  .clkb		(read_clk),
-			  .rstb		(1'b0),
-			  .regceb		(read_ram_oreg_en[i][j]));
+			 .enb		(read_ram_ren[i][j]),
+			 .clkb		(read_clk),
+			 .rstb		(1'b0),
+			 .regceb	(read_ram_oreg_en[i][j]));
 	    end
 	    else
 	    begin
@@ -344,8 +344,7 @@ module vrf #
 			  .addrb	(read_ram_raddr[i][j]),
 			  .dina		(read_ram_din[i][j]),
 			  .clka		(clk2),
-			  .wea		(read_ram_bwe[i][j]!=0),
-		  
+			  .wea		(read_ram_bwe[i][j]!=0),		  
 			  .enb		(read_ram_ren[i][j]),
 			  .clkb		(read_clk),
 			  .rstb		(1'b0),

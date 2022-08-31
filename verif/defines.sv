@@ -3,6 +3,6 @@
 `define OUT_D   512
 `define INSTR_MEM_SIZE
 `define DDR_DEPTH 1500000
-`define V_LANES  4
-`define VLEN  16384
+`define V_LANES  8
+`define VLEN  4096
 `define VRF_DEPTH `VLEN/`V_LANES

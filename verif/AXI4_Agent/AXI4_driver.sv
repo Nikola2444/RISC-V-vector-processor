@@ -5,12 +5,16 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
    `uvm_component_utils(AXI4_driver)
    
    //logic [31:0] ddr_mem[4096];
-   typedef enum {rd_idle_phase, rd_phase} read_fsm;
+   typedef enum {rd_idle_phase, rd_phase, rd_init_delay_phase} read_fsm;
    read_fsm axi_read_channel = rd_idle_phase;
 
-   typedef enum {wr_idle_phase, wr_phase, resp_phase} write_fsm;
+   typedef enum {wr_idle_phase, wr_phase, wr_init_delay_phase, resp_phase} write_fsm;
    write_fsm axi_write_channel = wr_idle_phase;
 
+   localparam READ_INIT_DELAY=30;
+   localparam WRITE_INIT_DELAY=30;
+   int rd_delay_clk_num=0;
+   int wr_delay_clk_num=0;
    virtual interface axi4_if vif;
    function new(string name = "AXI4_driver", uvm_component parent = null);
       super.new(name,parent);
@@ -53,15 +57,24 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
                vif.m_axi_arready = 0;
                vif.m_axi_rvalid = 0;          
                if (vif.m_axi_arvalid) begin
-		  axi_read_channel = rd_phase;
+		  //axi_read_channel = rd_phase;
+		  axi_read_channel = rd_init_delay_phase;
 		  vif.m_axi_arready = 1'b1;
 		  rd_transfer_base_addr = vif.m_axi_araddr/4;
 		  //$display("going to rd phase");
 		  read_burst_length = vif.m_axi_arlen;
                end
             end
+	    rd_init_delay_phase:begin
+	       vif.m_axi_arready = 1'b0;
+	       rd_delay_clk_num++;
+	       if (rd_delay_clk_num>READ_INIT_DELAY)
+	       begin
+		  axi_read_channel = rd_phase;
+		  rd_delay_clk_num=0;
+	       end		   
+	    end
             rd_phase: begin
-               vif.m_axi_arready = 1'b0;
                vif.m_axi_rdata = vif.ddr_mem[rd_transfer_base_addr + num_of_data_read];
                //vif.m_axi_rvalid = $random();
                vif.m_axi_rvalid = 1'b1;
@@ -97,13 +110,21 @@ class AXI4_driver extends uvm_driver#(AXI4_seq_item);
                vif.m_axi_wready = 0;               
                if (vif.m_axi_awvalid) begin
 		  vif.m_axi_awready = 1;
-		  axi_write_channel = wr_phase;
+		  axi_write_channel = wr_init_delay_phase;
 		  wr_transfer_base_addr = vif.m_axi_awaddr/4;
 		  write_burst_length = vif.m_axi_awlen;
                end
             end
-            wr_phase: begin
+	    wr_init_delay_phase:begin
                vif.m_axi_awready = 1'b0;        
+	       wr_delay_clk_num++;
+	       if (wr_delay_clk_num>WRITE_INIT_DELAY)
+	       begin
+		  axi_write_channel = wr_phase;
+		  wr_delay_clk_num=0;
+	       end		   
+	    end
+            wr_phase: begin
                vif.m_axi_wready = $random();         
                if (vif.m_axi_wready && vif.m_axi_wvalid) begin
 		  vif.ddr_mem[wr_transfer_base_addr+i]=vif.m_axi_wdata[31:0];

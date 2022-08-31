@@ -668,7 +668,7 @@ module m_cu #(
         if(ldbuff_read_done_i && vlane_load_rdy_i) begin
           ldbuff_ren_o          = 1'b0;
           ldbuff_rvalid         = 1'b0;
-          if(ldbuff_rvalid_d==3'b100)
+          if(ldbuff_rvalid_d==2'b10)
             load_read_state_next = load_read_idle;
         end
         if(!vlane_load_rdy_i) begin

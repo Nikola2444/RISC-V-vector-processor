@@ -5,7 +5,7 @@
 
 module m_cu #(
   parameter integer VLEN                     = 8192,
-  parameter integer VLANE_NUM               = 8 ,
+  parameter integer VLANE_NUM                = 8 ,
   parameter integer MAX_VECTORS_BUFFD        = 1 ,
   parameter integer C_M_AXI_ADDR_WIDTH       = 32,
   parameter integer C_M_AXI_DATA_WIDTH       = 32,
@@ -271,7 +271,8 @@ module m_cu #(
       libuff_rvalid_d      <= {libuff_rvalid_d[1:0], libuff_rvalid};
   end
 
-  assign vlane_load_dvalid_o = ldbuff_read_done_i ? ldbuff_rvalid_d[2] : ldbuff_rvalid_d[1];
+  //assign vlane_load_dvalid_o = ldbuff_read_done_i ? ldbuff_rvalid_d[2] : ldbuff_rvalid_d[1];
+  assign vlane_load_dvalid_o =  ldbuff_rvalid_d[1];
 
   // save store configuration
   always_ff @(posedge clk, negedge rstn)
@@ -594,8 +595,8 @@ module m_cu #(
     endcase
   end
 
-  assign ldbuff_read_flush_o     = (ldbuff_rvalid_d[2:0]==0);
-  assign vlane_load_last_o       = (ldbuff_rvalid_d==3'b100);
+  assign ldbuff_read_flush_o     = (ldbuff_rvalid_d[1:0]==0);
+  assign vlane_load_last_o       = (ldbuff_rvalid_d[1:0]==2'b10);
   // READ READ READ READ READ READ READ READ READ
   // MAIN LOAD FSM M_CU NEXTSTATE & CONTROL
   always_comb begin

@@ -601,8 +601,9 @@ module buff_array #(
       ldbuff_read_cntr <= ldbuff_read_cntr_next;
     end
   end
+
   assign ldbuff_read_cntr_next = ldbuff_read_cntr + ((VLANE_NUM)<<2);
-  assign ldbuff_read_done_o = (ldbuff_read_cntr_next >= ldbuff_byte_cnt);
+  assign ldbuff_read_done_o = (ldbuff_read_cntr >= ldbuff_byte_cnt);
 
   // Write counter addresses write ports of index load buffers
   // Each load buffer is then selected with libuff_wen_i
@@ -614,6 +615,7 @@ module buff_array #(
       libuff_write_cntr <= libuff_write_cntr_next;
     end
   end
+
   assign libuff_write_cntr_next = libuff_write_cntr + (VLANE_NUM)*4;
   assign libuff_write_done_o    = (libuff_write_cntr_next >= libuff_byte_cnt);
   assign libuff_not_empty_o     = (libuff_write_cntr != 0);

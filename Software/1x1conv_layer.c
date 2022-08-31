@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
-#define IM_SIZE 7
-#define IN_D    512
-#define OUT_D   2048
-#define REPEAT_NUM 50
+#define IM_SIZE 56
+#define IN_D    64
+#define OUT_D   256
+#define REPEAT_NUM 1
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][IN_D];
 int8_t ifm [IM_SIZE][IM_SIZE][IN_D];
 int8_t filter [OUT_D][IN_D];
@@ -57,9 +57,9 @@ int main()
 		    /*   lane2+=ifm[y][x][ich]*filter[och][ich]; */
 		    /* if(ich%4==3) */
 		    /*   lane3+=ifm[y][x][ich]*filter[och][ich]; */
-		    /* inter[y][x][och][ich]=(ifm[y][x][ich]*filter[och][ich]); */
-		    //printf("inter[%d][%d][%d][%d]=%02x \t\t ifm=%02x \t filter=%02x\n",y,x,och,ich,(unsigned char)inter[y][x][och][ich],(unsigned char)ifm[y][x][ich],(unsigned char)filter[och][ich]);
-		    //getchar();
+		     inter[y][x][och][ich]=(ifm[y][x][ich]*filter[och][ich]);
+		    printf("inter[%d][%d][%d][%d]=%02x \t\t ifm=%02x \t filter=%02x\n",y,x,och,ich,(unsigned char)inter[y][x][och][ich],(unsigned char)ifm[y][x][ich],(unsigned char)filter[och][ich]);
+		    getchar();
 		  }
 		//printf("subtotals ln0: %02x ln1: %02x ln2: %02x ln3: %02x\n",(unsigned char)lane0,(unsigned char)lane1,(unsigned char)lane2,(unsigned char)lane3);
 		//printf("ofm[%d][%d][%d]=%02x ",y,x,och,(unsigned char)ofm[y][x][och]);
@@ -82,7 +82,7 @@ int main()
   {
     for (int x=0; x<IM_SIZE; x++)
     {
-      for (int och=7; och>=0; och--)
+      for (int och=15; och>=0; och--)
       {
         printf("ofm[%d][%d][%d]=%02x\n",y,x,och,(unsigned char)ofm[y][x][och]);
         //printf("ofm[%d][%d][%d]=%d\n",y,x,och,ofm[y][x][och]);

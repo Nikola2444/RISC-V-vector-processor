@@ -11,15 +11,15 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="240.779 ns"></ZoomStartTime>
-      <ZoomEndTime time="2,201.903 ns"></ZoomEndTime>
-      <Cursor1Time time="1,601.558 ns"></Cursor1Time>
+      <ZoomStartTime time="782.400 ns"></ZoomStartTime>
+      <ZoomEndTime time="1,043.601 ns"></ZoomEndTime>
+      <Cursor1Time time="1,000.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="276"></NameColumnWidth>
-      <ValueColumnWidth column_width="108"></ValueColumnWidth>
+      <ValueColumnWidth column_width="104"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="54" />
+   <WVObjectSize size="59" />
    <wave_markers>
       <marker label="" time="230000" />
    </wave_markers>
@@ -484,49 +484,6 @@
          <obj_property name="ObjectShortName">ldbuff_not_empty</obj_property>
       </wvobject>
    </wvobject>
-   <wvobject fp_name="divider1361" type="divider">
-      <obj_property name="label">VLANE INTERFACE</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="BkColor">#00FFFF</obj_property>
-   </wvobject>
-   <wvobject type="group" fp_name="group1360">
-      <obj_property name="label">VLANE LOAD IF</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/m_cu_tb/vlane_load_data">
-         <obj_property name="ElementShortName">vlane_load_data[7:0][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_data[7:0][31:0]</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/vlane_load_bwe">
-         <obj_property name="ElementShortName">vlane_load_bwe[7:0][3:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_bwe[7:0][3:0]</obj_property>
-      </wvobject>
-      <wvobject type="array" fp_name="/m_cu_tb/vlane_load_idx">
-         <obj_property name="ElementShortName">vlane_load_idx[7:0][31:0]</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_idx[7:0][31:0]</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_rdy">
-         <obj_property name="ElementShortName">vlane_load_rdy</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_rdy</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_ivalid">
-         <obj_property name="ElementShortName">vlane_load_ivalid</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_ivalid</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_dvalid">
-         <obj_property name="ElementShortName">vlane_load_dvalid</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_dvalid</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_last">
-         <obj_property name="ElementShortName">vlane_load_last</obj_property>
-         <obj_property name="ObjectShortName">vlane_load_last</obj_property>
-      </wvobject>
-   </wvobject>
-   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/ldbuff_rvalid_d">
-      <obj_property name="ElementShortName">ldbuff_rvalid_d[2:0]</obj_property>
-      <obj_property name="ObjectShortName">ldbuff_rvalid_d[2:0]</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-   </wvobject>
    <wvobject fp_name="divider1364" type="divider">
       <obj_property name="label">AXIM INTERFACE</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -570,6 +527,49 @@
          <obj_property name="ObjectShortName">rd_tlast</obj_property>
       </wvobject>
    </wvobject>
+   <wvobject fp_name="divider1361" type="divider">
+      <obj_property name="label">VLANE INTERFACE</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="BkColor">#00FFFF</obj_property>
+   </wvobject>
+   <wvobject type="group" fp_name="group1360">
+      <obj_property name="label">VLANE LOAD IF</obj_property>
+      <obj_property name="DisplayName">label</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+      <wvobject type="array" fp_name="/m_cu_tb/vlane_load_data">
+         <obj_property name="ElementShortName">vlane_load_data[7:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_data[7:0][31:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/m_cu_tb/vlane_load_bwe">
+         <obj_property name="ElementShortName">vlane_load_bwe[7:0][3:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_bwe[7:0][3:0]</obj_property>
+      </wvobject>
+      <wvobject type="array" fp_name="/m_cu_tb/vlane_load_idx">
+         <obj_property name="ElementShortName">vlane_load_idx[7:0][31:0]</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_idx[7:0][31:0]</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_rdy">
+         <obj_property name="ElementShortName">vlane_load_rdy</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_rdy</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_ivalid">
+         <obj_property name="ElementShortName">vlane_load_ivalid</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_ivalid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_dvalid">
+         <obj_property name="ElementShortName">vlane_load_dvalid</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_dvalid</obj_property>
+      </wvobject>
+      <wvobject type="logic" fp_name="/m_cu_tb/vlane_load_last">
+         <obj_property name="ElementShortName">vlane_load_last</obj_property>
+         <obj_property name="ObjectShortName">vlane_load_last</obj_property>
+      </wvobject>
+   </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/ldbuff_rvalid_d">
+      <obj_property name="ElementShortName">ldbuff_rvalid_d[2:0]</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_rvalid_d[2:0]</obj_property>
+      <obj_property name="isExpanded"></obj_property>
+   </wvobject>
    <wvobject fp_name="divider1367" type="divider">
       <obj_property name="label">LOAD INTERMEDIATE SIGNALS</obj_property>
       <obj_property name="DisplayName">label</obj_property>
@@ -611,10 +611,13 @@
       <obj_property name="Radix">BINARYRADIX</obj_property>
       <obj_property name="isExpanded"></obj_property>
    </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/ldbuff_rvalid">
+      <obj_property name="ElementShortName">ldbuff_rvalid</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_rvalid</obj_property>
+   </wvobject>
    <wvobject type="group" fp_name="group1475">
       <obj_property name="label">LDBUFF INTERFACE</obj_property>
       <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
       <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_wdata">
          <obj_property name="ElementShortName">ldbuff_wdata[7:0][35:0]</obj_property>
          <obj_property name="ObjectShortName">ldbuff_wdata[7:0][35:0]</obj_property>
@@ -638,15 +641,34 @@
          <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
       </wvobject>
    </wvobject>
-   <wvobject type="group" fp_name="group1392">
-      <obj_property name="label">cnt number</obj_property>
-      <obj_property name="DisplayName">label</obj_property>
-      <obj_property name="isExpanded"></obj_property>
-      <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/lbuff_word_cnt">
-         <obj_property name="ElementShortName">lbuff_word_cnt[14:0]</obj_property>
-         <obj_property name="ObjectShortName">lbuff_word_cnt[14:0]</obj_property>
-         <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
-      </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_byte_cnt">
+      <obj_property name="ElementShortName">ldbuff_byte_cnt[14:0]</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_byte_cnt[14:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_read_cntr">
+      <obj_property name="ElementShortName">ldbuff_read_cntr[14:0]</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_read_cntr[14:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/ldbuff_read_cntr_next">
+      <obj_property name="ElementShortName">ldbuff_read_cntr_next[14:0]</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_read_cntr_next[14:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF00FF</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/ldbuff_read_stall_o">
+      <obj_property name="ElementShortName">ldbuff_read_stall_o</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_read_stall_o</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/ldbuff_read_flush_o">
+      <obj_property name="ElementShortName">ldbuff_read_flush_o</obj_property>
+      <obj_property name="ObjectShortName">ldbuff_read_flush_o</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/m_cu_tb/read_word_num">
       <obj_property name="ElementShortName">read_word_num[31:0]</obj_property>

@@ -74,7 +74,6 @@ l_ch_batch_other_px: nop
 add           x6, x6, x12     # next pixel
 vle8.v        v0, (x6)        # load pixel in v0  ~ fixed for all output pixels
 vmul.vx       v28,  v28, x0   #reset results to zero
-vmul.vx       v20,  v20, x0   #reset results to zero
 
 vmul.vv       v24, v0,  v4    # Multiply weights and pixels 0
 

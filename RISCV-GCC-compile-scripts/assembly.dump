@@ -9,7 +9,7 @@ Disassembly of section .text:
    4:	03100513          	li	a0,49
    8:	20000593          	li	a1,512
    c:	00001637          	lui	a2,0x1
-  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x6c0>
+  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x6c4>
   14:	00400693          	li	a3,4
   18:	08000713          	li	a4,128
   1c:	40000a93          	li	s5,1024
@@ -60,41 +60,40 @@ Disassembly of section .text:
   c0:	00c30333          	add	t1,t1,a2
   c4:	02030007          	vle8.v	v0,(t1)
   c8:	97c06e57          	vmul.vx	v28,v28,zero
-  cc:	97406a57          	vmul.vx	v20,v20,zero
-  d0:	96022c57          	vmul.vv	v24,v0,v4
-  d4:	038e2e57          	vredsum.vs	v28,v24,v28
-  d8:	96042c57          	vmul.vv	v24,v0,v8
-  dc:	3bcf4a57          	vslideup.vx	v20,v28,t5
-  e0:	03404e57          	vadd.vx	v28,v20,zero
-  e4:	038e2e57          	vredsum.vs	v28,v24,v28
-  e8:	96062c57          	vmul.vv	v24,v0,v12
-  ec:	3bcf4a57          	vslideup.vx	v20,v28,t5
-  f0:	03404e57          	vadd.vx	v28,v20,zero
-  f4:	038e2e57          	vredsum.vs	v28,v24,v28
-  f8:	96082c57          	vmul.vv	v24,v0,v16
-  fc:	3bcf4a57          	vslideup.vx	v20,v28,t5
- 100:	03404e57          	vadd.vx	v28,v20,zero
- 104:	038e2e57          	vredsum.vs	v28,v24,v28
- 108:	0026ffd7          	vsetvli	t6,a3,e8,m4,tu,mu
- 10c:	02018e27          	vse8.v	v28,(gp)
- 110:	00b181b3          	add	gp,gp,a1
- 114:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
- 118:	fff28293          	addi	t0,t0,-1
- 11c:	00028463          	beqz	t0,124 <l_ch_batch_exit>
- 120:	f9dff0ef          	jal	ra,bc <l_ch_batch_other_px>
+  cc:	96022c57          	vmul.vv	v24,v0,v4
+  d0:	038e2e57          	vredsum.vs	v28,v24,v28
+  d4:	96042c57          	vmul.vv	v24,v0,v8
+  d8:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  dc:	03404e57          	vadd.vx	v28,v20,zero
+  e0:	038e2e57          	vredsum.vs	v28,v24,v28
+  e4:	96062c57          	vmul.vv	v24,v0,v12
+  e8:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  ec:	03404e57          	vadd.vx	v28,v20,zero
+  f0:	038e2e57          	vredsum.vs	v28,v24,v28
+  f4:	96082c57          	vmul.vv	v24,v0,v16
+  f8:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  fc:	03404e57          	vadd.vx	v28,v20,zero
+ 100:	038e2e57          	vredsum.vs	v28,v24,v28
+ 104:	0026ffd7          	vsetvli	t6,a3,e8,m4,tu,mu
+ 108:	02018e27          	vse8.v	v28,(gp)
+ 10c:	00b181b3          	add	gp,gp,a1
+ 110:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
+ 114:	fff28293          	addi	t0,t0,-1
+ 118:	00028463          	beqz	t0,120 <l_ch_batch_exit>
+ 11c:	fa1ff0ef          	jal	ra,bc <l_ch_batch_other_px>
 
-00000124 <l_ch_batch_exit>:
- 124:	00000013          	nop
- 128:	fff70713          	addi	a4,a4,-1
- 12c:	000502b3          	add	t0,a0,zero
- 130:	00db8bb3          	add	s7,s7,a3
- 134:	000b81b3          	add	gp,s7,zero
- 138:	00070463          	beqz	a4,140 <l_finished>
- 13c:	f01ff0ef          	jal	ra,3c <l_ch_batch_first_px>
+00000120 <l_ch_batch_exit>:
+ 120:	00000013          	nop
+ 124:	fff70713          	addi	a4,a4,-1
+ 128:	000502b3          	add	t0,a0,zero
+ 12c:	00db8bb3          	add	s7,s7,a3
+ 130:	000b81b3          	add	gp,s7,zero
+ 134:	00070463          	beqz	a4,13c <l_finished>
+ 138:	f05ff0ef          	jal	ra,3c <l_ch_batch_first_px>
 
-00000140 <l_finished>:
+0000013c <l_finished>:
+ 13c:	00000013          	nop
  140:	00000013          	nop
  144:	00000013          	nop
  148:	00000013          	nop
  14c:	00000013          	nop
- 150:	00000013          	nop

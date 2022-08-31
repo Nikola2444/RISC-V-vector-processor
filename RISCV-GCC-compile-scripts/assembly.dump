@@ -8,7 +8,7 @@ Disassembly of section .text:
    0:	00100f13          	li	t5,1
    4:	00001537          	lui	a0,0x1
    8:	c4050513          	addi	a0,a0,-960 # c40 <l_finished+0x924>
-   c:	03600613          	li	a2,54
+   c:	04000613          	li	a2,64
   10:	10000593          	li	a1,256
   14:	01000693          	li	a3,16
   18:	01000713          	li	a4,16

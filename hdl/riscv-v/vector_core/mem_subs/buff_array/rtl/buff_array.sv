@@ -294,8 +294,8 @@ module buff_array #(
   //assign sdbuff_read_cntr_iincr = store_type_i[2] ? 4*(VLANE_NUM/2) : ((VLANE_NUM/2)<<cfg_store_data_sew_i[1:0]);
   assign sdbuff_read_cntr_iincr = 4*(VLANE_NUM/2);
   assign sdbuff_read_cntr_nnext = sdbuff_read_cntr + sdbuff_read_cntr_iincr;
-  assign sdbuff_read_done_o     = (sdbuff_read_cntr_next >= sdbuff_byte_cnt);
-  assign sdbuff_read_rdy_o      = (sbuff_write_cntr > sdbuff_read_cntr);
+  assign sdbuff_read_done_o     = (sdbuff_read_cntr >= sdbuff_byte_cnt);
+  assign sdbuff_read_rdy_o      = (sbuff_write_cntr >= sdbuff_read_cntr && sbuff_write_cntr!=0);
   assign sibuff_read_rdy_o      = (sbuff_write_cntr > sibuff_read_cntr);
   // NNEXT: Needed to prepare data on time when addressing high performance BRAMs
   // When read cntr passes the treshold of VLANE_NUM/2 this counter will increment setting the next address for

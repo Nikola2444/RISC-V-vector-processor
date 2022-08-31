@@ -252,7 +252,8 @@ module m_cu #(
 
 
   assign wr_tvalid_o   = !sbuff_read_invalidate ? wr_tvalid_out : 1'b0;
-  assign wr_tvalid_out = (sdbuff_read_done_i && sdbuff_rvalid_d[2]) ? sdbuff_rvalid_d[2] : sdbuff_rvalid_d[1];
+  //assign wr_tvalid_out = (sdbuff_read_done_i && sdbuff_rvalid_d[2]) ? sdbuff_rvalid_d[2] : sdbuff_rvalid_d[1];
+  assign wr_tvalid_out =  sdbuff_rvalid_d[1];
 
   always_ff @(posedge clk, negedge rstn)
   begin
@@ -437,7 +438,7 @@ module m_cu #(
     sibuff_ren_o            = 1'b0;
     sibuff_rvalid           = 1'b0;
     ctrl_wstart             = 1'b0;
-    sdbuff_rvalid               = 1'b0;
+    sdbuff_rvalid           = 1'b0;
     store_read_fsm_done     = 1'b0;
 
     case (store_read_state_reg)
@@ -474,7 +475,7 @@ module m_cu #(
          end
          else begin //data not ready in buffer
             sdbuff_read_stall_o   = 1'b1;
-            sdbuff_ren_o 	  = 1'b0;
+            sdbuff_ren_o 	      = 1'b0;
             sbuff_read_invalidate = 1'b1;
          end
 	 if(ctrl_wdone_i)begin

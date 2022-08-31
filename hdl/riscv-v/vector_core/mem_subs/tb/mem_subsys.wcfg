@@ -11,17 +11,17 @@
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="178.117 ns"></ZoomStartTime>
-      <ZoomEndTime time="565.734 ns"></ZoomEndTime>
-      <Cursor1Time time="312.583 ns"></Cursor1Time>
+      <ZoomStartTime time="240.779 ns"></ZoomStartTime>
+      <ZoomEndTime time="2,201.903 ns"></ZoomEndTime>
+      <Cursor1Time time="1,601.558 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
       <NameColumnWidth column_width="276"></NameColumnWidth>
-      <ValueColumnWidth column_width="112"></ValueColumnWidth>
+      <ValueColumnWidth column_width="108"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="49" />
+   <WVObjectSize size="54" />
    <wave_markers>
-      <marker label="" time="270000" />
+      <marker label="" time="230000" />
    </wave_markers>
    <wvobject type="logic" fp_name="/m_cu_tb/clk">
       <obj_property name="ElementShortName">clk</obj_property>
@@ -321,24 +321,35 @@
       <obj_property name="UseCustomSignalColor">true</obj_property>
       <obj_property name="isExpanded"></obj_property>
       <obj_property name="Radix">BINARYRADIX</obj_property>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d[2]">
-         <obj_property name="ElementShortName">[2]</obj_property>
-         <obj_property name="ObjectShortName">[2]</obj_property>
-         <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
-         <obj_property name="UseCustomSignalColor">true</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d[1]">
-         <obj_property name="ElementShortName">[1]</obj_property>
-         <obj_property name="ObjectShortName">[1]</obj_property>
-         <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
-         <obj_property name="UseCustomSignalColor">true</obj_property>
-      </wvobject>
-      <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid_d[0]">
-         <obj_property name="ElementShortName">[0]</obj_property>
-         <obj_property name="ObjectShortName">[0]</obj_property>
-         <obj_property name="CustomSignalColor">#FAAFBE</obj_property>
-         <obj_property name="UseCustomSignalColor">true</obj_property>
-      </wvobject>
+   </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_rvalid">
+      <obj_property name="ElementShortName">sdbuff_rvalid</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_rvalid</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_read_stall_o">
+      <obj_property name="ElementShortName">sdbuff_read_stall_o</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_read_stall_o</obj_property>
+      <obj_property name="CustomSignalColor">#800000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sdbuff_read_flush_o">
+      <obj_property name="ElementShortName">sdbuff_read_flush_o</obj_property>
+      <obj_property name="ObjectShortName">sdbuff_read_flush_o</obj_property>
+      <obj_property name="CustomSignalColor">#800000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="logic" fp_name="/m_cu_tb/mem_subsys_inst/m_cu_instance/sbuff_read_invalidate">
+      <obj_property name="ElementShortName">sbuff_read_invalidate</obj_property>
+      <obj_property name="ObjectShortName">sbuff_read_invalidate</obj_property>
+      <obj_property name="CustomSignalColor">#800000</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+   </wvobject>
+   <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sbuff_write_cntr">
+      <obj_property name="ElementShortName">sbuff_write_cntr[14:0]</obj_property>
+      <obj_property name="ObjectShortName">sbuff_write_cntr[14:0]</obj_property>
+      <obj_property name="CustomSignalColor">#FF0080</obj_property>
+      <obj_property name="UseCustomSignalColor">true</obj_property>
+      <obj_property name="Radix">UNSIGNEDDECRADIX</obj_property>
    </wvobject>
    <wvobject type="array" fp_name="/m_cu_tb/mem_subsys_inst/buff_array_instance/sdbuff_read_cntr">
       <obj_property name="ElementShortName">sdbuff_read_cntr[14:0]</obj_property>

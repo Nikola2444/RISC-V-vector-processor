@@ -146,7 +146,7 @@ mem_subsys #(
   end
    
    // NOTE: CHANGE TIS CONFIGURATION TOO !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  assign mcu_vl = 32;
+  assign mcu_vl = 256;
   int sew_in_bytes = 1;
   int store1_load2 = 1;
   int unit1_stride2_index3 = 1;

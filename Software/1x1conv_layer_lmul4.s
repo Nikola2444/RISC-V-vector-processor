@@ -75,19 +75,30 @@ add           x6, x6, x12     # next pixel
 vle8.v        v0, (x6)        # load pixel in v0  ~ fixed for all output pixels
 vmul.vx       v28,  v28, x0   #reset results to zero
 
-vmul.vv       v24, v0,  v4    # Multiply weights and pixels
-vredsum.vs    v28, v24, v28	  # sum to zeroth 
-vmul.vv       v24, v0,  v8    # Multiply weights and pixels
-vslideup.vx   v20, v28, x30		# slide up result by one each time 
-vadd.vx       v28, v20, x0		# mov to result vector
+vmul.vv       v24, v0,  v4    # Multiply weights and pixels 0
 
-vredsum.vs    v28, v24, v28	  # sum to zeroth 
-vmul.vv       v24, v0,  v12    # Multiply weights and pixels
-vslideup.vx   v20, v28, x30		# slide up result by one each time 
-vadd.vx       v28, v20, x0		# mov to result vector
+vredsum.vs    v28, v24, v28	  # sum to zeroth  0
 
-vmul.vv       v24, v0,  v16    # Multiply weights and pixels
-vredsum.vs    v28, v24, v28	  # sum to zeroth 
+vmul.vv       v24, v0,  v8    # Multiply weights and pixels 1
+
+vslideup.vx   v20, v28, x30		# slide up result by one each time  0
+vadd.vx       v28, v20, x0		# mov to result vector 0
+
+vredsum.vs    v28, v24, v28	  # sum to zeroth 1
+
+vmul.vv       v24, v0,  v12    # Multiply weights and pixels 2
+
+vslideup.vx   v20, v28, x30		# slide up result by one each time 1
+vadd.vx       v28, v20, x0		# mov to result vector 1
+
+vredsum.vs    v28, v24, v28	  # sum to zeroth 2
+
+vmul.vv       v24, v0,  v16    # Multiply weights and pixels 3
+
+vslideup.vx   v20, v28, x30		# slide up result by one each time 2
+vadd.vx       v28, v20, x0		# mov to result vector 2
+
+vredsum.vs    v28, v24, v28	  # sum to zeroth 3
 
 vsetvli x31, x13, e8, m4	# 8-bit data / vlen 16
 vse8.v v28, (x3)          # load image in v0

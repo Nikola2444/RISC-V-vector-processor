@@ -9,7 +9,7 @@ Disassembly of section .text:
    4:	03100513          	li	a0,49
    8:	20000593          	li	a1,512
    c:	00001637          	lui	a2,0x1
-  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x6d0>
+  10:	80060613          	addi	a2,a2,-2048 # 800 <l_finished+0x6c4>
   14:	00400693          	li	a3,4
   18:	08000713          	li	a4,128
   1c:	40000a93          	li	s5,1024
@@ -69,28 +69,31 @@ Disassembly of section .text:
   e4:	96062c57          	vmul.vv	v24,v0,v12
   e8:	3bcf4a57          	vslideup.vx	v20,v28,t5
   ec:	03404e57          	vadd.vx	v28,v20,zero
-  f0:	96082c57          	vmul.vv	v24,v0,v16
-  f4:	038e2e57          	vredsum.vs	v28,v24,v28
-  f8:	0026ffd7          	vsetvli	t6,a3,e8,m4,tu,mu
-  fc:	02018e27          	vse8.v	v28,(gp)
- 100:	00b181b3          	add	gp,gp,a1
- 104:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
- 108:	fff28293          	addi	t0,t0,-1
- 10c:	00028463          	beqz	t0,114 <l_ch_batch_exit>
- 110:	fadff0ef          	jal	ra,bc <l_ch_batch_other_px>
+  f0:	038e2e57          	vredsum.vs	v28,v24,v28
+  f4:	96082c57          	vmul.vv	v24,v0,v16
+  f8:	3bcf4a57          	vslideup.vx	v20,v28,t5
+  fc:	03404e57          	vadd.vx	v28,v20,zero
+ 100:	038e2e57          	vredsum.vs	v28,v24,v28
+ 104:	0026ffd7          	vsetvli	t6,a3,e8,m4,tu,mu
+ 108:	02018e27          	vse8.v	v28,(gp)
+ 10c:	00b181b3          	add	gp,gp,a1
+ 110:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
+ 114:	fff28293          	addi	t0,t0,-1
+ 118:	00028463          	beqz	t0,120 <l_ch_batch_exit>
+ 11c:	fa1ff0ef          	jal	ra,bc <l_ch_batch_other_px>
 
-00000114 <l_ch_batch_exit>:
- 114:	00000013          	nop
- 118:	fff70713          	addi	a4,a4,-1
- 11c:	000502b3          	add	t0,a0,zero
- 120:	00db8bb3          	add	s7,s7,a3
- 124:	000b81b3          	add	gp,s7,zero
- 128:	00070463          	beqz	a4,130 <l_finished>
- 12c:	f11ff0ef          	jal	ra,3c <l_ch_batch_first_px>
+00000120 <l_ch_batch_exit>:
+ 120:	00000013          	nop
+ 124:	fff70713          	addi	a4,a4,-1
+ 128:	000502b3          	add	t0,a0,zero
+ 12c:	00db8bb3          	add	s7,s7,a3
+ 130:	000b81b3          	add	gp,s7,zero
+ 134:	00070463          	beqz	a4,13c <l_finished>
+ 138:	f05ff0ef          	jal	ra,3c <l_ch_batch_first_px>
 
-00000130 <l_finished>:
- 130:	00000013          	nop
- 134:	00000013          	nop
- 138:	00000013          	nop
+0000013c <l_finished>:
  13c:	00000013          	nop
  140:	00000013          	nop
+ 144:	00000013          	nop
+ 148:	00000013          	nop
+ 14c:	00000013          	nop

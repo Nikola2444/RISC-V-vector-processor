@@ -19,7 +19,7 @@ Disassembly of section .text:
   2c:	000b0133          	add	sp,s6,zero
   30:	000b81b3          	add	gp,s7,zero
   34:	000502b3          	add	t0,a0,zero
-  38:	00167fd7          	vsetvli	t6,a2,e8,m2,tu,mu
+  38:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
 
 0000003c <l_ch_batch_first_px>:
   3c:	00000013          	nop
@@ -49,11 +49,11 @@ Disassembly of section .text:
   9c:	03404e57          	vadd.vx	v28,v20,zero
   a0:	96082c57          	vmul.vv	v24,v0,v16
   a4:	038e2e57          	vredsum.vs	v28,v24,v28
-  a8:	0016ffd7          	vsetvli	t6,a3,e8,m2,tu,mu
+  a8:	0026ffd7          	vsetvli	t6,a3,e8,m4,tu,mu
   ac:	02018e27          	vse8.v	v28,(gp)
   b0:	fff28293          	addi	t0,t0,-1
   b4:	00b181b3          	add	gp,gp,a1
-  b8:	00167fd7          	vsetvli	t6,a2,e8,m2,tu,mu
+  b8:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
 
 000000bc <l_ch_batch_other_px>:
   bc:	00000013          	nop
@@ -71,10 +71,10 @@ Disassembly of section .text:
   ec:	03404e57          	vadd.vx	v28,v20,zero
   f0:	96082c57          	vmul.vv	v24,v0,v16
   f4:	038e2e57          	vredsum.vs	v28,v24,v28
-  f8:	0006ffd7          	vsetvli	t6,a3,e8,m1,tu,mu
+  f8:	0026ffd7          	vsetvli	t6,a3,e8,m4,tu,mu
   fc:	02018e27          	vse8.v	v28,(gp)
  100:	00b181b3          	add	gp,gp,a1
- 104:	00067fd7          	vsetvli	t6,a2,e8,m1,tu,mu
+ 104:	00267fd7          	vsetvli	t6,a2,e8,m4,tu,mu
  108:	fff28293          	addi	t0,t0,-1
  10c:	00028463          	beqz	t0,114 <l_ch_batch_exit>
  110:	fadff0ef          	jal	ra,bc <l_ch_batch_other_px>

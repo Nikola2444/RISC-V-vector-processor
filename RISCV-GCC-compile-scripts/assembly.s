@@ -3,15 +3,15 @@
 
 li x30, 1        # Slide amt
 
-li x10, 3136     # Iterator over pixels
-li x11, 64       # Iterator over output filters
-li x12, 256      # Number of Pixels/Weights
+li x10, 49       # Iterator over pixels
+li x11, 2048     # Iterator over output filters [OUTPUT DIM]
+li x12, 512      # Number of Pixels/Weights [INPUT DIM]
 li x13, 16       # Number of output channels per batch
-li x14, 4        # Number of batches
+li x14, 128      # Number of batches
 
 li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
-li x23, 1064960  # Pointer to start of results
+li x23, 4194304  # Pointer to start of results
 
 add x6,x21,x0  # Pointer to start of image
 add x2,x22,x0  # Pointer to start of weights

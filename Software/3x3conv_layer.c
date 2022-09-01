@@ -16,13 +16,13 @@ int8_t ofm [IM_SIZE][IM_SIZE][OUT_D]={0};
 int main()
 {
   // Initialize values
-  for (int y=0; y<IM_SIZE; y++)
+  for (int y=0; y<IM_SIZE+2*PD_SIZE; y++)
   {
-    for (int x=0; x<IM_SIZE; x++)
+    for (int x=0; x<IM_SIZE+2*PD_SIZE; x++)
     {
       for (int ich=0; ich<IN_D; ich++)
       {
-         if(x==0 || x==IM_SIZE || y==0 || y==IM_SIZE)
+         if(x==0 || x==(IM_SIZE+2*PD_SIZE-1) || y==0 || y==(IM_SIZE+2*PD_SIZE-1))
            ifm[y][x][ich]=0;
          else
            ifm[y][x][ich]=y*IM_SIZE+x+ich%3;

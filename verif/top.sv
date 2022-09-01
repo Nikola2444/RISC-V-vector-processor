@@ -135,11 +135,7 @@ module riscv_v_verif_top;
    initial begin
       //init DDR
       num_of_instr=read_instr_from_dump_file(assembly_file_path, ddr_mem);
-/* -----\/----- EXCLUDED -----\/-----
-      for (logic[31:0] i=256; i < 262144; i++)
-	ddr_mem[i[31:2]][i[1:0]*8+:8] = (i-256)%64;
- -----/\----- EXCLUDED -----/\----- */
-      //Initializing DDR with the input feature map(i.e. image)
+      `ifdef CONV_1X1
       for (int y=0; y<`IM_SIZE; y++)
 	for (int x=0; x<`IM_SIZE; x++)
 	  for (int ich=0; ich<`IN_D; ich++)
@@ -154,6 +150,27 @@ module riscv_v_verif_top;
 	   index = och*`IN_D+ich+1048576;
 	   ddr_mem[index[31:2]][index[1:0]*8+:8]=((och+ich)-(ich%10));
 	end
+      `else
+      for (int y=0; y<`IM_SIZE+2*`PD_SIZE; y++)
+	for (int x=0; x<`IM_SIZE+2*`PD_SIZE; x++)
+	  for (int ich=0; ich<`IN_D; ich++)
+	  begin
+	     index = y*(`IM_SIZE+2*`PD_SIZE)*`IN_D+x*`IN_D+ich+1024;
+             if(x==0 || x==(`IM_SIZE+2*`PD_SIZE-1) || y==0 || y==(`IM_SIZE+2*`PD_SIZE-1))
+	       ddr_mem[index[31:2]][index[1:0]*8+:8]=0;
+	     else
+               ddr_mem[index[31:2]][index[1:0]*8+:8]=y*`IM_SIZE+x+ich%3;
+	  end
+      //Initializing DDR with filtlthers
+      for (int och=0; och<`OUT_D; och++)
+	for (int fy=0; fy<`FR_SIZE; fy++)
+	  for (int fx=0; fx<`FR_SIZE; fx++)
+	    for (int ich=0; ich<`IN_D; ich++)
+	    begin
+	       index = och*`FR_SIZE*`FR_SIZE*`IN_D+fy*`FR_SIZE*`IN_D+fx*`IN_D+ich+1048576;
+	       ddr_mem[index[31:2]][index[1:0]*8+:8]=((och+ich)-(ich%10));
+	    end
+      `endif
       //send data to configuration database
       uvm_config_db#(virtual axi4_if)::set(null, "uvm_test_top.env", "v_axi4_if", v_axi4_vif);
       uvm_config_db#(virtual axi4_if)::set(null, "uvm_test_top.env", "s_axi4_if", s_axi4_vif);

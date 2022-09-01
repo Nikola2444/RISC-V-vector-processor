@@ -32,7 +32,7 @@ module m_cu #(
   output logic                                   mcu_ld_buffered_o       ,
   input  logic                                   mcu_ld_vld_i            ,
   // MCU => BUFF_ARRAY CONFIG IF [general]
-  input  logic [31:0]                           mcu_vl_i                ,
+  input  logic [31:0]                            mcu_vl_i                ,
   output logic [$clog2(VLEN)-1:0]                cfg_vl_o                ,
   // MCU => BUFF_ARRAY CONFIG IF [stores]
   output logic [2:0]                             cfg_store_data_lmul_o   ,

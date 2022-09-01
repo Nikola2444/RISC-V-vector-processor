@@ -16,9 +16,9 @@ int8_t ofm [IM_SIZE][IM_SIZE][OUT_D]={0};
 int main()
 {
   // Initialize values
-  for (int y=0; y<IM_SIZE; y++)
+  for (int y=0; y<IM_SIZE+PD_SIZE; y++)
   {
-    for (int x=0; x<IM_SIZE; x++)
+    for (int x=0; x<IM_SIZE+PD_SIZE; x++)
     {
       for (int ich=0; ich<IN_D; ich++)
       {

@@ -53,52 +53,52 @@ Disassembly of section .text:
   a4:	000c0d93          	mv	s11,s8
   a8:	000c8e13          	mv	t3,s9
   ac:	000d0e93          	mv	t4,s10
-  b0:	97f06fd7          	vmul.vx	v31,v31,zero
-  b4:	020d8007          	vle8.v	v0,(s11)
-  b8:	00cd8db3          	add	s11,s11,a2
-  bc:	020d8087          	vle8.v	v1,(s11)
-  c0:	00cd8db3          	add	s11,s11,a2
-  c4:	020d8107          	vle8.v	v2,(s11)
-  c8:	00cd8db3          	add	s11,s11,a2
-  cc:	020e0187          	vle8.v	v3,(t3)
-  d0:	00ce0e33          	add	t3,t3,a2
-  d4:	020e0207          	vle8.v	v4,(t3)
-  d8:	00ce0e33          	add	t3,t3,a2
-  dc:	020e0287          	vle8.v	v5,(t3)
-  e0:	00ce0e33          	add	t3,t3,a2
-  e4:	020e8307          	vle8.v	v6,(t4)
-  e8:	00ce8eb3          	add	t4,t4,a2
-  ec:	020e8387          	vle8.v	v7,(t4)
-  f0:	00ce8eb3          	add	t4,t4,a2
-  f4:	020e8407          	vle8.v	v8,(t4)
-  f8:	00ce8eb3          	add	t4,t4,a2
-  fc:	97e06f57          	vmul.vx	v30,v30,zero
- 100:	96052ed7          	vmul.vv	v29,v0,v10
- 104:	03dfafd7          	vredsum.vs	v31,v29,v31
- 108:	9615aed7          	vmul.vv	v29,v1,v11
- 10c:	03dfafd7          	vredsum.vs	v31,v29,v31
- 110:	96262ed7          	vmul.vv	v29,v2,v12
- 114:	03dfafd7          	vredsum.vs	v31,v29,v31
- 118:	9636aed7          	vmul.vv	v29,v3,v13
- 11c:	03dfafd7          	vredsum.vs	v31,v29,v31
- 120:	96472ed7          	vmul.vv	v29,v4,v14
- 124:	03dfafd7          	vredsum.vs	v31,v29,v31
- 128:	9657aed7          	vmul.vv	v29,v5,v15
- 12c:	03dfafd7          	vredsum.vs	v31,v29,v31
- 130:	96682ed7          	vmul.vv	v29,v6,v16
- 134:	03dfafd7          	vredsum.vs	v31,v29,v31
- 138:	9678aed7          	vmul.vv	v29,v7,v17
- 13c:	03dfafd7          	vredsum.vs	v31,v29,v31
- 140:	96892ed7          	vmul.vv	v29,v8,v18
- 144:	03dfafd7          	vredsum.vs	v31,v29,v31
- 148:	000f70d7          	vsetvli	ra,t5,e8,m1,tu,mu
- 14c:	02018fa7          	vse8.v	v31,(gp)
- 150:	00b181b3          	add	gp,gp,a1
- 154:	000670d7          	vsetvli	ra,a2,e8,m1,tu,mu
- 158:	fff28293          	addi	t0,t0,-1
+  b0:	020d8007          	vle8.v	v0,(s11)
+  b4:	00cd8db3          	add	s11,s11,a2
+  b8:	020d8087          	vle8.v	v1,(s11)
+  bc:	00cd8db3          	add	s11,s11,a2
+  c0:	020d8107          	vle8.v	v2,(s11)
+  c4:	00cd8db3          	add	s11,s11,a2
+  c8:	020e0187          	vle8.v	v3,(t3)
+  cc:	00ce0e33          	add	t3,t3,a2
+  d0:	020e0207          	vle8.v	v4,(t3)
+  d4:	00ce0e33          	add	t3,t3,a2
+  d8:	020e0287          	vle8.v	v5,(t3)
+  dc:	00ce0e33          	add	t3,t3,a2
+  e0:	020e8307          	vle8.v	v6,(t4)
+  e4:	00ce8eb3          	add	t4,t4,a2
+  e8:	020e8387          	vle8.v	v7,(t4)
+  ec:	00ce8eb3          	add	t4,t4,a2
+  f0:	020e8407          	vle8.v	v8,(t4)
+  f4:	00ce8eb3          	add	t4,t4,a2
+  f8:	97f06fd7          	vmul.vx	v31,v31,zero
+  fc:	96052ed7          	vmul.vv	v29,v0,v10
+ 100:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 104:	9615aed7          	vmul.vv	v29,v1,v11
+ 108:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 10c:	96262ed7          	vmul.vv	v29,v2,v12
+ 110:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 114:	9636aed7          	vmul.vv	v29,v3,v13
+ 118:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 11c:	96472ed7          	vmul.vv	v29,v4,v14
+ 120:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 124:	9657aed7          	vmul.vv	v29,v5,v15
+ 128:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 12c:	96682ed7          	vmul.vv	v29,v6,v16
+ 130:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 134:	9678aed7          	vmul.vv	v29,v7,v17
+ 138:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 13c:	96892ed7          	vmul.vv	v29,v8,v18
+ 140:	03dfafd7          	vredsum.vs	v31,v29,v31
+ 144:	000f70d7          	vsetvli	ra,t5,e8,m1,tu,mu
+ 148:	02018fa7          	vse8.v	v31,(gp)
+ 14c:	00b181b3          	add	gp,gp,a1
+ 150:	000670d7          	vsetvli	ra,a2,e8,m1,tu,mu
+ 154:	fff28293          	addi	t0,t0,-1
 
-0000015c <l_next_3_same_row>:
- 15c:	00000013          	nop
+00000158 <l_next_3_same_row>:
+ 158:	00000013          	nop
+ 15c:	97f06fd7          	vmul.vx	v31,v31,zero
  160:	02104057          	vadd.vx	v0,v1,zero
  164:	022040d7          	vadd.vx	v1,v2,zero
  168:	020d8107          	vle8.v	v2,(s11)
@@ -111,7 +111,7 @@ Disassembly of section .text:
  184:	028043d7          	vadd.vx	v7,v8,zero
  188:	020e8407          	vle8.v	v8,(t4)
  18c:	00ce8eb3          	add	t4,t4,a2
- 190:	97e06f57          	vmul.vx	v30,v30,zero
+ 190:	97f06fd7          	vmul.vx	v31,v31,zero
  194:	96052ed7          	vmul.vv	v29,v0,v10
  198:	03dfafd7          	vredsum.vs	v31,v29,v31
  19c:	9615aed7          	vmul.vv	v29,v1,v11
@@ -135,9 +135,9 @@ Disassembly of section .text:
  1e4:	00b181b3          	add	gp,gp,a1
  1e8:	000670d7          	vsetvli	ra,a2,e8,m1,tu,mu
  1ec:	fff28293          	addi	t0,t0,-1
- 1f0:	00029463          	bnez	t0,1f8 <l_next_3_same_row+0x9c>
+ 1f0:	00029463          	bnez	t0,1f8 <l_next_3_same_row+0xa0>
  1f4:	e0dff06f          	j	0 <l_ld_next_filter-0x3c>
- 1f8:	f65ff0ef          	jal	ra,15c <l_next_3_same_row>
+ 1f8:	f61ff0ef          	jal	ra,158 <l_next_3_same_row>
 
 000001fc <l_row_finished>:
  1fc:	00000013          	nop

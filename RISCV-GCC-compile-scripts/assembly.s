@@ -58,7 +58,6 @@ addi x27, x24, 0 #First row and counting
 addi x28, x25, 0 #Second row and counting
 addi x29, x26, 0 #Third row and counting
 
-vmul.vx       v31, v31, x0     # Reset results
 
 #LOAD FIRST PIXEL IN A ROW
 #First row
@@ -84,7 +83,7 @@ vle8.v v8, (x29)
 add x29, x29, x12
 
 # MAC FILTER X IMAGE 3x3
-vmul.vx       v30, v30, x0     # Reset results
+vmul.vx       v31, v31, x0     # Reset results
 vmul.vv       v29, v0,  v10   # Multiply weights and pixels
 vredsum.vs    v31, v29, v31	  # sum to zeroth 
 vmul.vv       v29, v1,  v11   # Multiply weights and pixels
@@ -113,6 +112,7 @@ addi x5, x5, -1
 
 l_next_3_same_row: nop
 
+vmul.vx       v31, v31, x0     # Reset results
 # Load another 3 pixels, shift to left the ones being reused
 vadd.vx       v0, v1, x0
 vadd.vx       v1, v2, x0
@@ -130,7 +130,7 @@ vle8.v        v8, (x29)
 add x29, x29, x12
 
 # MAC FILTER X IMAGE 3x3
-vmul.vx       v30, v30, x0     # Reset results
+vmul.vx       v31, v31, x0     # Reset results
 vmul.vv       v29, v0,  v10   # Multiply weights and pixels
 vredsum.vs    v31, v29, v31	  # sum to zeroth 
 vmul.vv       v29, v1,  v11   # Multiply weights and pixels

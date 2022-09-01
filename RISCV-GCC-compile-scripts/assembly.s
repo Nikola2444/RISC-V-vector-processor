@@ -13,7 +13,7 @@ li x15, 3712   # Input feature map row size
 
 li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
-li x23, 1064960  # Pointer to start of results
+li x23, 4194304  # Pointer to start of results
 
 add x6, x11, x0  # Iterator over filters 
 

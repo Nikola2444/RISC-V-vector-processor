@@ -16,7 +16,7 @@ Disassembly of section .text:
   20:	e8078793          	addi	a5,a5,-384 # e80 <l_finished+0xc50>
   24:	40000a93          	li	s5,1024
   28:	00100b37          	lui	s6,0x100
-  2c:	00104bb7          	lui	s7,0x104
+  2c:	00400bb7          	lui	s7,0x400
   30:	00058333          	add	t1,a1,zero
   34:	000b0133          	add	sp,s6,zero
   38:	000670d7          	vsetvli	ra,a2,e8,m1,tu,mu
@@ -150,7 +150,7 @@ Disassembly of section .text:
 
 00000218 <l_ld_filter_finished>:
  218:	00000013          	nop
- 21c:	001b8b93          	addi	s7,s7,1 # 104001 <l_finished+0x103dd1>
+ 21c:	001b8b93          	addi	s7,s7,1 # 400001 <l_finished+0x3ffdd1>
  220:	fff30313          	addi	t1,t1,-1
  224:	00031463          	bnez	t1,22c <l_ld_filter_finished+0x14>
  228:	dd9ff06f          	j	0 <l_ld_next_filter-0x3c>

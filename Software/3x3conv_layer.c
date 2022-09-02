@@ -7,7 +7,7 @@
 #define IN_D    64
 #define OUT_D   64
 #define FR_SIZE 3
-//#define PRINT_INTERMEDIATE
+#define PRINT_INTERMEDIATE
 
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][FR_SIZE][FR_SIZE][IN_D];
 int8_t ifm [IM_SIZE+PD_SIZE][IM_SIZE+PD_SIZE][IN_D];
@@ -63,6 +63,7 @@ int main()
               #endif
             }
             #ifdef PRINT_INTERMEDIATE
+            printf("ofm[macd]=%02x\n",ofm[y][x][och]);
             getchar();
             #endif
           }

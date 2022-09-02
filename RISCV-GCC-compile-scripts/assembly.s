@@ -112,7 +112,6 @@ addi x5, x5, -1
 
 l_next_3_same_row: nop
 
-vmul.vx       v31, v31, x0     # Reset results
 # Load another 3 pixels, shift to left the ones being reused
 vadd.vx       v0, v1, x0
 vadd.vx       v1, v2, x0
@@ -157,7 +156,7 @@ vsetvli       x1, x12, e8, m1	# 8-bit data
 
 addi x5, x5, -1
 
-beq x5, x0, l_ld_row_finished
+beq x5, x0, l_row_finished
 
 jal l_next_3_same_row
 
@@ -165,6 +164,7 @@ l_row_finished: nop
 
 #go to next row
 
+add  x5, x9, x0 # reset row counter
 addi x4, x4, -1
 
 add x24, x25, x0 

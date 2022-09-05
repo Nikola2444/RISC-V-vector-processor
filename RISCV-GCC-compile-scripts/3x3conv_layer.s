@@ -13,7 +13,7 @@ li x15, 3712   # Input feature map row size
 
 li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
-li x23, 1064960  # Pointer to start of results
+li x23, 4194304  # Pointer to start of results
 
 add x6, x11, x0  # Iterator over filters 
 
@@ -58,7 +58,6 @@ addi x27, x24, 0 #First row and counting
 addi x28, x25, 0 #Second row and counting
 addi x29, x26, 0 #Third row and counting
 
-vmul.vx       v31, v31, x0     # Reset results
 
 #LOAD FIRST PIXEL IN A ROW
 #First row
@@ -84,7 +83,7 @@ vle8.v v8, (x29)
 add x29, x29, x12
 
 # MAC FILTER X IMAGE 3x3
-vmul.vx       v30, v30, x0     # Reset results
+vmul.vx       v31, v31, x0     # Reset results
 vmul.vv       v29, v0,  v10   # Multiply weights and pixels
 vredsum.vs    v31, v29, v31	  # sum to zeroth 
 vmul.vv       v29, v1,  v11   # Multiply weights and pixels
@@ -130,7 +129,7 @@ vle8.v        v8, (x29)
 add x29, x29, x12
 
 # MAC FILTER X IMAGE 3x3
-vmul.vx       v30, v30, x0     # Reset results
+vmul.vx       v31, v31, x0     # Reset results
 vmul.vv       v29, v0,  v10   # Multiply weights and pixels
 vredsum.vs    v31, v29, v31	  # sum to zeroth 
 vmul.vv       v29, v1,  v11   # Multiply weights and pixels
@@ -157,7 +156,7 @@ vsetvli       x1, x12, e8, m1	# 8-bit data
 
 addi x5, x5, -1
 
-beq x5, x0, l_ld_row_finished
+beq x5, x0, l_row_finished
 
 jal l_next_3_same_row
 
@@ -165,6 +164,7 @@ l_row_finished: nop
 
 #go to next row
 
+add  x5, x9, x0 # reset row counter
 addi x4, x4, -1
 
 add x24, x25, x0 

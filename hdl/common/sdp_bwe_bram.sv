@@ -22,7 +22,7 @@ module sdp_bwe_bram #(
   input 			  regceb                         // Output register enable
 );
 
-  reg [(NB_COL*COL_WIDTH)-1:0] BRAM [RAM_DEPTH-1:0];
+  reg [(NB_COL*COL_WIDTH)-1:0] BRAM [RAM_DEPTH-1:0]='{default:'0};
   reg [(NB_COL*COL_WIDTH)-1:0] ram_data = {(NB_COL*COL_WIDTH){1'b0}};
   reg [(NB_COL*COL_WIDTH)-1:0] in_data_reg = {(NB_COL*COL_WIDTH){1'b0}};
 

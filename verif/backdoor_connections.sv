@@ -334,6 +334,7 @@ assign backdoor_v_data_vif.wr_tvalid_o = DUT.riscv_v_inst.wr_tvalid_o;
 /***********************************************************/
 // Vector core VRF backdoor interface
 //LANE0 VRF_INIT
+/* -----\/----- EXCLUDED -----\/-----
 assign DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.gen_lvt_banks[0].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[0][0];
 assign DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.gen_lvt_banks[1].gen_RAMs[0].gen_BRAM.LVT_RAMs.BRAM = vrf_lvt[0][1];
 
@@ -449,6 +450,7 @@ generate
       assign DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[7].vector_lane_inst.VRF_inst.gen_read_banks[1].gen_RAMs[3].gen_BRAM.READ_RAMs.BRAM = vrf_read_ram[7][1][3];   
    end
 endgenerate
+ -----/\----- EXCLUDED -----/\----- */
 
 
 //assign DUT.riscv_v_inst.vector_core_inst.v_dpu_inst.VL_instances[0].vector_lane_inst.VRF_inst.gen_read_banks[0].gen_RAMs[0].gen_BRAM.READ_BRAMs.BRAM = vrf_lvt;

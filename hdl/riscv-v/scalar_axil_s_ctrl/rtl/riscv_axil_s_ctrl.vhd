@@ -19,6 +19,8 @@ entity riscv_axil_s_ctrl is
 		ce_o	: out std_logic;
 		axi_base_address_o : out std_logic_vector(31 downto 0);
 		pc_reg_i : in std_logic_vector(31 downto 0);
+		fin_interrupt_i : in std_logic;
+		interrupt_o : in std_logic;
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -221,6 +223,11 @@ begin
 	      slv_reg3 <= (others => '0');
 	    else
 	      loc_addr := axi_awaddr(ADDR_LSB + OPT_MEM_ADDR_BITS downto ADDR_LSB);
+        -- If interrupt happens
+        if(fin_interrupt_i='1') then
+          slv_reg3 <= x"00000001";
+        end if;
+        -- Else typlical axi write
 	      if (slv_reg_wren = '1') then
 	        case loc_addr is
 	          when b"00" =>
@@ -244,7 +251,9 @@ begin
 	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
 	                -- Respective byte enables are asserted as per write strobes                   
 	                -- slave registor 3
-	                slv_reg3(byte_index*8+7 downto byte_index*8) <= S_AXI_WDATA(byte_index*8+7 downto byte_index*8);
+                  if(S_AXI_WDATA(0)='1')then
+                    slv_reg3 <= (others => '0');
+                  end if;
 	              end if;
 	            end loop;
 	          when others =>

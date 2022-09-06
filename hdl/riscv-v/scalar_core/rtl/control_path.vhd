@@ -45,6 +45,7 @@ entity control_path is
     pc_en_o                 : out std_logic;
     if_id_en_o              : out std_logic;
     fencei_o                : out std_logic;
+    fin_interrupt_o         : out std_logic;
     -- detect read from data memory
     data_mem_re_o           : out std_logic
     );
@@ -77,6 +78,7 @@ architecture behavioral of control_path is
   signal rs2_in_use_id_s : std_logic;
   signal alu_src_a_id_s  : std_logic;
   signal alu_src_b_id_s  : std_logic;
+  signal fin_interrupt_id_s : std_logic;
 
   signal data_mem_we_id_s : std_logic;
   signal rd_we_id_s       : std_logic;
@@ -91,8 +93,8 @@ architecture behavioral of control_path is
   
 
   signal fencei_id_s : std_logic;
-  --*********       EXECUTE       **************
 
+  --*********       EXECUTE       **************
   signal scalar_load_req_ex  : std_logic;
   signal scalar_store_req_ex : std_logic;
   signal branch_type_ex_s    : std_logic_vector(1 downto 0);
@@ -114,6 +116,8 @@ architecture behavioral of control_path is
   signal bcc_ex_s         : std_logic;
   signal branch_conf_ex_s : std_logic;
 
+  signal fin_interrupt_ex_s : std_logic;
+
   --*********       MEMORY        **************
 
   signal scalar_load_req_mem  : std_logic;
@@ -125,12 +129,16 @@ architecture behavioral of control_path is
 
   signal rd_address_mem_s : std_logic_vector (4 downto 0);
 
+  signal fin_interrupt_mem_s : std_logic;
+
   --*********      WRITEBACK      **************
 
   signal funct3_wb_s     : std_logic_vector(2 downto 0);
   signal rd_we_wb_s      : std_logic;
   signal mem_to_reg_wb_s : std_logic_vector(1 downto 0);
   signal rd_address_wb_s : std_logic_vector (4 downto 0);
+
+  signal fin_interrupt_wb_s : std_logic;
 
 begin
 
@@ -225,8 +233,9 @@ begin
         scalar_load_req_ex  <= scalar_load_req_id;
         scalar_store_req_ex <= scalar_store_req_id;
         vector_instr_ex_s   <= vector_instr_id_s;
-        alu_forward_a_ex     <= alu_forward_a_id;
-        alu_forward_b_ex     <= alu_forward_b_id;
+        alu_forward_a_ex    <= alu_forward_a_id;
+        alu_forward_b_ex    <= alu_forward_b_id;
+        fin_interrupt_ex_s  <= fin_interrupt_id_s;
       end if;
       if (reset = '0' or ((control_pass_s = '0' or id_ex_flush_s = '1') and data_ready_i = '1' and instr_ready_i = '1' and
                           (vector_stall_i = '0' or (vector_stall_i = '1' and vector_instr_ex_s = '0'))))then
@@ -264,6 +273,7 @@ begin
         rd_address_mem_s     <= rd_address_ex_s;
         scalar_load_req_mem  <= scalar_load_req_ex;
         scalar_store_req_mem <= scalar_store_req_ex;
+        fin_interrupt_mem_s  <= fin_interrupt_ex_s;
 
       end if;
     end if;
@@ -284,6 +294,7 @@ begin
         rd_we_wb_s      <= rd_we_mem_s;
         mem_to_reg_wb_s <= mem_to_reg_mem_s;
         rd_address_wb_s <= rd_address_mem_s;
+        fin_interrupt_wb_s  <= fin_interrupt_mem_s;
       end if;
     end if;
   end process;
@@ -307,6 +318,7 @@ begin
       rs1_in_use_o       => rs1_in_use_id_s,
       rs2_in_use_o       => rs2_in_use_id_s,
       fencei_o           => fencei_id_s,
+      fin_interrupt_o    => fin_interrupt_id_s,
       alu_2bit_op_o      => alu_2bit_op_id_s,
       -- Signals going to hazard unit and vector core
       scalar_load_req_o  => scalar_load_req_id,
@@ -351,6 +363,7 @@ begin
       scalar_load_req_i       => scalar_load_req_id,
       scalar_store_req_i      => scalar_store_req_id,
       vector_instr_i          => vector_instr_ex_s,
+      fin_interrupt_i         => fin_interrupt_id_s,
       ---------------------------------------------------
       pc_en_o                 => pc_en_s,
       if_id_en_o              => if_id_en_s,
@@ -382,6 +395,9 @@ begin
   pc_en_o       <= pc_en_s and (not fencei_id_s);
   fencei_o      <= fencei_id_s;
   vector_instr_ex_o <= vector_instr_ex_s;
+
+  -- When interrupt comes to writeback phase, trigger it
+  fin_interrupt_o <= fin_interrupt_wb_s;
 
 end architecture;
 

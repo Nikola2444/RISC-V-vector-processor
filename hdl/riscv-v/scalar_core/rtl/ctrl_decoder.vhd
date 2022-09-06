@@ -20,6 +20,7 @@ entity ctrl_decoder is
     scalar_store_req_o : out std_logic;
     vector_instr_o     : out std_logic;
     fencei_o           : out std_logic;
+    fin_interrupt_o    : out std_logic;
     alu_2bit_op_o      : out std_logic_vector(1 downto 0)
 
     );
@@ -45,6 +46,7 @@ begin
     scalar_store_req_o <= '0';
     vector_instr_o     <= '0';
     fencei_o           <= '0';
+    fin_interrupt_o    <= '0';
     case opcode_i is
       when "0000011" =>                 --LOAD
         mem_to_reg_o      <= "10";
@@ -95,15 +97,15 @@ begin
         set_a_zero_o <= '1';
         rd_we_o      <= '1';
         alu_src_b_o  <= '1';
-      when "0000111" =>                 -- vector load
+      when "0000111" =>                 -- VECTOR LOAD
         vector_instr_o <= '1';
         rs1_in_use_o   <= '1';
         rs2_in_use_o   <= '1';
-      when "0100111" =>                 -- vector store
+      when "0100111" =>                 -- VECTOR STORE
         vector_instr_o <= '1';
         rs1_in_use_o   <= '1';
         rs2_in_use_o   <= '1';
-      when "1010111" =>                 -- vector arith                
+      when "1010111" =>                 -- VECTOR ARITH
         vector_instr_o <= '1';
         case funct3_i is
           when "100"=>
@@ -112,8 +114,10 @@ begin
             rs1_in_use_o <= '1';
           when others =>
         end case;
-      when "0001111" =>                 --FENCE.I
+      when "0001111" =>                 -- FENCE.I
         fencei_o <= '1';
+      when "1111111" =>                 -- FORCE INTERRUPT
+        fin_interrupt_o <= '1';
       when others =>
     end case;
   end process;

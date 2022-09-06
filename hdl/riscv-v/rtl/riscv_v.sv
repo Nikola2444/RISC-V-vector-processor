@@ -16,6 +16,7 @@ module riscv_v #
    input 	     instr_ready_i,
    input 	     data_ready_i,
    output     [31:0] pc_reg_o,
+   output        fin_interrupt_o,
    
    // Instruction memory interface
    output [31:0]     instr_mem_address_o,
@@ -72,6 +73,7 @@ module riscv_v #
       .fencei_o                (fencei_o),
       .instr_mem_address_o     ( instr_mem_address_o),
       .pc_reg_o                (pc_reg_o),
+      .fin_interrupt_o         (fin_interrupt_o),
       .instr_mem_read_i        ( instr_mem_read_i),
       // Vector if
       .all_v_stores_executed_i ( all_v_stores_executed),

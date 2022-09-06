@@ -18,6 +18,7 @@ entity hazard_unit is
         all_v_loads_executed_i:in std_logic;
         vector_stall_i  : in std_logic;
         vector_instr_i: in std_logic;
+        fin_interrupt_i  : in std_logic;
         -- control outputs
         pc_en_o          : out std_logic;
         if_id_en_o       : out std_logic;
@@ -44,11 +45,13 @@ begin
             en_s <= '0';
         elsif ((scalar_load_req_i = '1' and not(all_v_stores_executed_i) = '1') or
                (scalar_store_req_i = '1' and (not(all_v_stores_executed_i) = '1' or not(all_v_loads_executed_i ) = '1'))) then 
-            -- defualt, dont do anything
             en_s <= '0';
         elsif (vector_stall_i = '1' and vector_instr_i = '1') then --we are_checking_ex_phase_instr
             en_s <= '0';
+        elsif (fin_interrupt_i = '1' and not(all_v_stores_executed_i) = '1') then --we are_checking_ex_phase_instr
+            en_s <= '0';
         else
+        -- defualt, dont do anything
             en_s <= '1';
         end if;
     end process;

@@ -13,6 +13,7 @@ entity scalar_core is
     data_ready_i        : in  std_logic;
     fencei_o            : out std_logic;
     pc_reg_o            : out std_logic_vector(31 downto 0);
+    fin_interrupt_o     : out std_logic;
     -- Instruction memory interface
     instr_mem_address_o : out std_logic_vector(31 downto 0);
     instr_mem_read_i    : in  std_logic_vector(31 downto 0);
@@ -34,7 +35,6 @@ entity scalar_core is
     rs1_o           : out std_logic_vector(31 downto 0);
     rs2_o           : out std_logic_vector(31 downto 0);
     --------------------------------------------------------------------------------------------
-
 
     -- Data memory interface      
     data_mem_address_o : out std_logic_vector(31 downto 0);
@@ -122,7 +122,6 @@ begin
   instr_mem_en_s <= '0' when (if_id_en_s = '0' or data_ready_i = '0' or vector_stall_i = '1') else '1';
 
 
-
   -- Control_path instance
   control_path_1 : entity work.control_path
     port map (
@@ -132,6 +131,7 @@ begin
       instr_ready_i           => instr_ready_i,
       data_ready_i            => data_ready_i,
       reset                   => reset,
+      fin_interrupt_o         => fin_interrupt_o,
       -- Vector core status signals
       all_v_stores_executed_i => all_v_stores_executed_i,
       all_v_loads_executed_i  => all_v_loads_executed_i,

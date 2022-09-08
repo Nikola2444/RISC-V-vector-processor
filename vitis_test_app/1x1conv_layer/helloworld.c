@@ -60,6 +60,13 @@
 
 // NOTE: UNCOMMENT FOR DEBUG SIGNALS
 #define DBG_PRINTS
+//#define USE_INTERRUPT
+
+#ifdef USE_INTERRUPT
+// Interrupt parameters
+#define INTC_DEVICE_ID 		XPAR_PS7_SCUGIC_0_DEVICE_ID
+#define RISCVV_INTR_ID		XPAR_FABRIC_RISCV_V_0_INTERRUPT_O_INTR
+#endif
 
 // SUPPORT CONSTANTS
 #define MEMORY_SIZE       8192*1024
@@ -79,6 +86,15 @@
 #define IN_D    512
 #define OUT_D   16
 
+// Interrupt variables
+void riscvv_interrupt_handler(void *intc_inst_ptr);
+
+#ifdef USE_INTERRUPT
+u32 enable_intr_system(u32 DeviceID);
+void disable_intr_system();
+static XScuGic INTCInst;
+#endif
+volatile int riscvv_intr_done;
 
 volatile u32 main_memory [MEMORY_SIZE]        = {0};
 u8 ifm    [IM_SIZE][IM_SIZE]       [IN_D];
@@ -91,12 +107,21 @@ int main()
   int read_pc = 0;
   int read_ce = 0;
   int read_int = 0;
+  riscvv_intr_done = 0;
+  int status;
 
   unsigned int missmatches = 0;
 
   volatile u8  * main_memory_bw = (u8 *) main_memory; // byte-wise access to main memory
 
+  // Initialize platform
   init_platform();
+
+  // Initialize interrupt system
+  #ifdef USE_INTERRUPT
+  status = enable_intr_system(INTC_DEVICE_ID);
+  #endif
+
   // Invalidate range of memory which we are using as main
   Xil_DCacheInvalidateRange((int)main_memory,MEMORY_SIZE);
   Xil_ICacheInvalidateRange((int)main_memory,MEMORY_SIZE);
@@ -104,6 +129,7 @@ int main()
   // Explicitly reset memory
   for(int i = 0; i < MEMORY_SIZE; i++)
     main_memory[i] = 0;
+
 
   #ifdef DBG_PRINTS
   // Read register values to make sure processor isn't running
@@ -268,7 +294,6 @@ int main()
   printf(".\n");
   #endif
 
-
   /*
   read_pc  = Xil_In32(USR_RISCV_PC);
   printf("\nPC value: %d\n",read_pc/4);
@@ -332,9 +357,48 @@ int main()
   else
     printf("\n***** TEST PASSED!\n");
 
+  printf("\nInterrupt status : %d \n", riscvv_intr_done);
 
 
   print("done.\n");
+  #ifdef USE_INTERRUPT
+  disable_intr_system();
+  #endif 
   cleanup_platform();
   return 0;
 }
+
+#ifdef USE_INTERRUPT
+u32 enable_intr_system(u32 DeviceId)
+{
+  // Setup interrupt handlers and general interrupt controller
+  XScuGic_Config *IntcConfig;
+  int status;
+  IntcConfig = XScuGic_LookupConfig(DeviceId);
+
+  status = XScuGic_CfgInitialize(&INTCInst, IntcConfig, IntcConfig->CpuBaseAddress);
+  if(status != XST_SUCCESS)
+    return XST_FAILURE;
+  XScuGic_SetPriorityTriggerType(&INTCInst, RISCVV_INTR_ID, 0xA8, 3);
+
+  status = XScuGic_Connect(&INTCInst, RISCVV_INTR_ID, (Xil_ExceptionHandler)riscvv_interrupt_handler, (void *)&INTCInst);
+  if(status != XST_SUCCESS)
+    return XST_FAILURE;
+  XScuGic_Enable(&INTCInst, RISCVV_INTR_ID);
+
+  Xil_ExceptionInit();
+  Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT, (Xil_ExceptionHandler)XScuGic_InterruptHandler, &INTCInst);
+  Xil_ExceptionEnable();
+
+  return XST_SUCCESS;
+}
+void disable_intr_system()
+{
+  // Disable interrupt system
+	XScuGic_Disconnect(&INTCInst, RISCVV_INTR_ID);
+}
+void riscvv_interrupt_handler(void *intc_inst_ptr)
+{
+	riscvv_intr_done = 1;
+}
+#endif

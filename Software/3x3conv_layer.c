@@ -10,7 +10,7 @@
 #define PRINT_INTERMEDIATE
 
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][FR_SIZE][FR_SIZE][IN_D];
-int8_t ifm [IM_SIZE+PD_SIZE][IM_SIZE+PD_SIZE][IN_D];
+int8_t ifm [IM_SIZE+2*PD_SIZE][IM_SIZE+2*PD_SIZE][IN_D];
 int8_t filter [OUT_D][FR_SIZE][FR_SIZE][IN_D];
 int8_t ofm [IM_SIZE][IM_SIZE][OUT_D]={0};
 

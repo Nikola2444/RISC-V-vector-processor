@@ -45,9 +45,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <inttypes.h>
-//#include <time.h>
-#include "xtime_l.h"
 
+#include "xtime_l.h"
 #include "xil_cache.h"
 #include "xil_printf.h"
 #include "xil_io.h"
@@ -58,16 +57,15 @@
 #include "xil_exception.h"
 #include "xscugic.h"
 
-
 #include "assembly.h"
 
 // TODO: UNCOMMENT TO CHANGE BEHAVIOUR *************************
-//#define DBG_PRINTS
+#define DBG_PRINTS
 #define USE_INTERRUPT
 // ***********************************************************
 
-#ifdef USE_INTERRUPT
 // Interrupt parameters
+#ifdef USE_INTERRUPT
 #define INTC_DEVICE_ID 		XPAR_PS7_SCUGIC_0_DEVICE_ID
 #define RISCVV_INTR_ID		XPAR_FABRIC_RISCV_V_0_INTERRUPT_O_INTR
 #endif
@@ -75,7 +73,7 @@
 // SUPPORT CONSTANTS
 #define MEMORY_SIZE       8192*1024
 
-#define BATCH_SIZE        16
+
 #define IMAGE_START       1024
 #define FILTER_START      1048576
 #define RESULT_START      4194304
@@ -86,9 +84,12 @@
 #define USR_RISCV_PC          (XPAR_RISCV_V_0_BASEADDR + 8)
 #define USR_RISCV_INTERRUPT   (XPAR_RISCV_V_0_BASEADDR + 12)
 
-#define IM_SIZE 3
-#define IN_D    512
-#define OUT_D   16
+#define IM_SIZE           28
+#define IN_D              512
+#define OUT_D             128
+#define BATCH_SIZE        16  // Only for 1x1 assembly
+#define PD_SIZE           0
+#define FR_SIZE           1
 
 // Interrupt variables
 void riscvv_interrupt_handler(void *intc_inst_ptr);
@@ -100,10 +101,10 @@ static XScuGic INTCInst;
 #endif
 volatile int riscvv_intr_done;
 
-volatile u32 main_memory [MEMORY_SIZE]        = {0};
-u8 ifm    [IM_SIZE][IM_SIZE]       [IN_D];
-u8 filter                   [OUT_D][IN_D];
-u8 ofm    [IM_SIZE][IM_SIZE][OUT_D]       ={0};
+volatile u32 main_memory [MEMORY_SIZE]={0};
+u8 ifm    [IM_SIZE+2*PD_SIZE][IM_SIZE+2*PD_SIZE][IN_D];
+u8 filter [OUT_D][FR_SIZE][FR_SIZE][IN_D];
+u8 ofm    [IM_SIZE][IM_SIZE][OUT_D]={0};
 u8 ro_ofm;
 
 // For measuring execution time
@@ -142,7 +143,7 @@ int main()
   Xil_DCacheInvalidateRange((int)main_memory,MEMORY_SIZE);
   Xil_ICacheInvalidateRange((int)main_memory,MEMORY_SIZE);
 
-  // Explicitly reset memory
+  // Explicitly reset memory to null commands
   for(int i = 0; i < MEMORY_SIZE; i++)
     main_memory[i] = 0;
   // Reset interrupt flag
@@ -153,7 +154,7 @@ int main()
   read_pc  = Xil_In32(USR_RISCV_PC);
   read_ce  = Xil_In32(USR_RISCV_CE);
   read_int = Xil_In32(USR_RISCV_INTERRUPT);
-  printf("\nPC value: %d\n CE value: %d\n INT value: %d\n",read_pc,read_ce,read_int);
+  printf("\nPC value: %d\nCE value: %d\nINT value: %d\n",read_pc,read_ce,read_int);
   #endif
 
   // Processor needs to know base adress of memory,
@@ -165,8 +166,13 @@ int main()
 
   // Find size of assembly program (machine code), then initialize memory
   size_t assembly_num_el = sizeof(assembly)/sizeof(assembly[0]);
-  for (int i=0; i<assembly_num_el; i++)
-    main_memory[i] = assembly[i];
+  for (int i=0; i<assembly_num_el; i++){
+    if(i<assembly_num_el)
+      main_memory[i] = assembly[i];
+    else
+      main_memory[i] = 0x00000013;
+  }
+
   // Check if it's initialized
   #ifdef DBG_PRINTS
   printf("\n\n***** Checking memory array after initialization with machine code *****\n");
@@ -180,13 +186,16 @@ int main()
   #endif
 
   // Initialize input feature map (Image)
-  for (int y=0; y<IM_SIZE; y++)
+  for (int y=0; y<IM_SIZE+2*PD_SIZE; y++)
   {
-    for (int x=0; x<IM_SIZE; x++)
+    for (int x=0; x<IM_SIZE+2*PD_SIZE; x++)
     {
       for (int ich=0; ich<IN_D; ich++)
       {
-        ifm[y][x][ich]=y*IM_SIZE+x+ich%3;
+        if(PD_SIZE!=0 && (x==0 || x==(IM_SIZE+2*PD_SIZE-1) || y==0 || y==(IM_SIZE+2*PD_SIZE-1)))
+          ifm[y][x][ich]=0;
+        else
+          ifm[y][x][ich]=y*IM_SIZE+x+ich%3;
         main_memory_bw[IMAGE_START+(y*IM_SIZE*IN_D)+(x*IN_D)+ich]=ifm[y][x][ich];
       }
     }
@@ -205,10 +214,16 @@ int main()
   // Initialize filters
   for (int och=0; och<OUT_D; och++)
   {
-    for (int ich=0; ich<IN_D; ich++)
+    for (int fy=0; fy<FR_SIZE; fy++)
     {
-      filter[och][ich]=((och+ich)-(ich%10));
-      main_memory_bw[FILTER_START+(och*IN_D)+ich]=filter[och][ich];
+      for (int fx=0; fx<FR_SIZE; fx++)
+      {
+        for (int ich=0; ich<IN_D; ich++)
+        {
+          filter[och][fy][fx][ich]=((och+ich)-(ich%10));
+          main_memory_bw[FILTER_START+(och*FR_SIZE*FR_SIZE*IN_D)+(fy*FR_SIZE*IN_D)+(fx*IN_D)+ich]=filter[och][fy][fx][ich];
+        }
+      }
     }
   }
   #ifdef DBG_PRINTS
@@ -235,6 +250,9 @@ int main()
   #endif
 
   // Reference model (Expected results)***************************************************
+  // Enable caches for reference model
+  Xil_DCacheEnable();
+  Xil_ICacheEnable();
   XTime_GetTime(&sw_start);
   for (int y=0; y<IM_SIZE; y++)
   {
@@ -242,16 +260,25 @@ int main()
     {
       for (int och=0; och<OUT_D; och++)
       {
-        ofm[y][x][och] = 0;
-        for (int ich=0; ich<IN_D; ich++)
+        for (int fy=0; fy<FR_SIZE; fy++)
         {
-          ofm[y][x][och]+=(ifm[y][x][ich]*filter[och][ich]);
+          for (int fx=0; fx<FR_SIZE; fx++)
+          {
+            ofm[y][x][och] = 0;
+            for (int ich=0; ich<IN_D; ich++)
+            {
+              ofm[y][x][och]+=(ifm[y+fy][x+fx][ich]*filter[och][fy][fx][ich]);
+            }
+          }
         }
       }
     }
   }
   //sw_end = clock();
   XTime_GetTime(&sw_end);
+  // Disable the cache after done with reference
+  Xil_DCacheDisable();
+  Xil_ICacheDisable();
 
   // Calculate processor execution time
   sw_exe_time = 1.0 * (sw_end - sw_start) / (COUNTS_PER_SECOND/1000000);
@@ -265,14 +292,13 @@ int main()
     printf("%d:%02x;  ",(och),(unsigned char)ofm[0][0][och]);
   }
   #endif
-
   
   #ifdef DBG_PRINTS
   // Read register values
   read_pc  = Xil_In32(USR_RISCV_PC);
   read_ce  = Xil_In32(USR_RISCV_CE);
   read_int = Xil_In32(USR_RISCV_INTERRUPT);
-  printf("\nPC value: %d\n CE value: %d\n INT value: %d\n",read_pc,read_ce,read_int);
+  printf("\nPC value: %d\nCE value: %d\nINT value: %d\n",read_pc,read_ce,read_int);
   #endif
 
   //**********************************EXECUTION****************************************
@@ -285,7 +311,7 @@ int main()
   read_pc  = Xil_In32(USR_RISCV_PC);
   read_ce  = Xil_In32(USR_RISCV_CE);
   read_int = Xil_In32(USR_RISCV_INTERRUPT);
-  printf("\nPC value: %d\n CE value: %d\n INT value: %d\n",read_pc,read_ce,read_int);
+  printf("\nPC value: %d\nCE value: %d\nINT value: %d\n",read_pc,read_ce,read_int);
   #endif
 
   // Wait until finished
@@ -293,10 +319,9 @@ int main()
   // Calculate vector execution time
   hw_exe_time = 1.0 * (hw_end - hw_start) / (COUNTS_PER_SECOND/1000000);
 
-
   // We can stop execution now, no need for processor to run
   Xil_Out32(USR_RISCV_CE, (u32)0);
-  //***********************************EXECUTION****************************************
+  //**********************************************************************************
 
   #ifdef DBG_PRINTS
   printf("\n\n* Data is printed in format addr:data *\n");
@@ -315,7 +340,7 @@ int main()
   read_pc  = Xil_In32(USR_RISCV_PC);
   read_ce  = Xil_In32(USR_RISCV_CE);
   read_int = Xil_In32(USR_RISCV_INTERRUPT);
-  printf("\nPC value: %d\n CE value: %d\n INT value: %d\n",read_pc,read_ce,read_int);
+  printf("\nPC value: %d\nCE value: %d\nINT value: %d\n",read_pc,read_ce,read_int);
   #endif
 
   printf("\n...Checking results...\n");
@@ -325,7 +350,7 @@ int main()
     {
       for (int och=0; och<OUT_D; och++)
       {
-        ro_ofm = ofm[y][x][(och/16+1)*BATCH_SIZE-(och%BATCH_SIZE)-1];
+        ro_ofm = ofm[y][x][(och/BATCH_SIZE+1)*BATCH_SIZE-(och%BATCH_SIZE)-1];
         if (ro_ofm!=main_memory_bw[RESULT_START+(y*IM_SIZE*OUT_D+x*OUT_D+och)])
         {
           missmatches++;
@@ -340,12 +365,11 @@ int main()
   else
     printf("\n***** TEST PASSED! **********\n");
 
-
   // Calculate execution time
-  printf("\nRISCV-V execution time [us] : %f, ARM execution time [us]: %f\n",hw_exe_time,sw_exe_time);
-
-
+  printf("\nRISCV-V execution time [us] : %.2f, ARM execution time [us]: %.2f\n",hw_exe_time,sw_exe_time);
+  printf("Acceleration:%.2f\n",sw_exe_time/hw_exe_time);
   print("done.\n");
+
   #ifdef USE_INTERRUPT
   printf("\nInterrupt status : %d \n", riscvv_intr_done);
   disable_intr_system();
@@ -359,8 +383,8 @@ int main()
 
 
 
-#ifdef USE_INTERRUPT
 // INTERRUPT RELATED FUNCTIONS ******************************************************************
+#ifdef USE_INTERRUPT
 u32 enable_intr_system(u32 DeviceId)
 {
   // Setup interrupt handlers and general interrupt controller
@@ -384,14 +408,22 @@ u32 enable_intr_system(u32 DeviceId)
 
   return XST_SUCCESS;
 }
+
 void disable_intr_system()
 {
   // Disable interrupt system
 	XScuGic_Disconnect(&INTCInst, RISCVV_INTR_ID);
 }
+
 void riscvv_interrupt_handler(void *intc_inst_ptr)
 {
+  // Interrupt done
 	riscvv_intr_done = 1;
+  // Reset interrupt flag
+  Xil_Out32(USR_RISCV_INTERRUPT, (u32)1);
+  // Stop processor
+  Xil_Out32(USR_RISCV_CE, (u32)0);
+  // Program executed, stop time
   XTime_GetTime(&hw_end);
 }
 #endif

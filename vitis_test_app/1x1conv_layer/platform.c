@@ -101,6 +101,9 @@ init_platform()
     /* ps7_init();*/
     /* psu_init();*/
     disable_caches();
+    Xil_DCacheDisable();
+    Xil_ICacheDisable();
+
     init_uart();
 }
 

@@ -20,7 +20,7 @@ entity riscv_axil_s_ctrl is
 		axi_base_address_o : out std_logic_vector(31 downto 0);
 		pc_reg_i : in std_logic_vector(31 downto 0);
 		fin_interrupt_i : in std_logic;
-		interrupt_o : in std_logic;
+		interrupt_o : out std_logic;
 		-- User ports ends
 		-- Do not modify the ports beyond this line
 
@@ -247,15 +247,9 @@ begin
 	              end if;
 	            end loop;
 	          when b"11" =>
-	            for byte_index in 0 to (C_S_AXI_DATA_WIDTH/8-1) loop
-	              if ( S_AXI_WSTRB(byte_index) = '1' ) then
-	                -- Respective byte enables are asserted as per write strobes                   
-	                -- slave registor 3
-                  if(S_AXI_WDATA(0)='1')then
-                    slv_reg3 <= (others => '0');
-                  end if;
-	              end if;
-	            end loop;
+              if(S_AXI_WDATA(0)='1')then
+                slv_reg3 <= (others => '0');
+              end if;
 	          when others =>
 	            slv_reg0 <= slv_reg0;
 	            slv_reg1 <= slv_reg1;
@@ -400,6 +394,7 @@ begin
 	ce_o <= slv_reg0(0);
 	axi_base_address_o <= slv_reg1;
 
+  interrupt_o <= slv_reg3(0);
 
 	-- User logic ends
 

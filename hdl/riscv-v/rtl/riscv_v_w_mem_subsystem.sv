@@ -44,7 +44,7 @@ module riscv_v_w_mem_subsystem #
 	s_m_axi_awcache, s_m_axi_awprot, s_m_axi_awqos, s_m_axi_awuser,
 	s_m_axi_wuser, s_m_axi_arid, s_m_axi_arsize, s_m_axi_arburst,
 	s_m_axi_arlock, s_m_axi_arcache, s_m_axi_arprot, s_m_axi_arqos,
-	s_m_axi_aruser,
+	s_m_axi_aruser, interrupt_o,
 	// Inputs
 	clk, clk2, rstn, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
 	v_m_axi_rvalid, v_m_axi_rdata, v_m_axi_rlast, v_m_axi_bvalid,
@@ -165,6 +165,8 @@ module riscv_v_w_mem_subsystem #
     output logic [31:0] 			     pc_reg;           // will be just a way to see from sogtware where the PC is currently
     `endif
 
+    output logic         			     interrupt_o;  // will be just a way to see from software when the instruction end
+
     `ifdef INCLUDE_DBG_SIGNALS
     output logic [31:0] 			     lane0_store_data; 
     output logic         			     lane0_store_dvalid;
@@ -280,19 +282,19 @@ module riscv_v_w_mem_subsystem #
     logic 				         ce ; // will be clock enable to start/stop processor
     logic [31:0] 			     axi_base_address; // will be the starting address in DDR of machine code 
     logic [31:0] 			     pc_reg; // will be just a way to see from sogtware where the PC is currently
-
     `endif
+    logic                  fin_interrupt_s;
 
    // SCALAR CACHE <=> SCALAR AXI FULL CONTROLLER
-   logic [31:0] 			     axi_write_address;
-   logic 				     axi_write_init;
-   logic [31:0] 			     axi_write_data;
-   logic 				     axi_write_next;
-   logic 				     axi_write_done;
-   logic [31:0] 			     axi_read_address;
-   logic 				     axi_read_init;
-   logic [31:0] 			     axi_read_data;
-   logic 				     axi_read_next;
+   logic [31:0] axi_write_address;
+   logic        axi_write_init;
+   logic [31:0] axi_write_data;
+   logic        axi_write_next;
+   logic        axi_write_done;
+   logic [31:0] axi_read_address;
+   logic        axi_read_init;
+   logic [31:0] axi_read_data;
+   logic        axi_read_next;
 
    // SCALAR CORE <=> CACHE
    logic [31:0] 			     instr_mem_address;
@@ -410,6 +412,7 @@ module riscv_v_w_mem_subsystem #
       .rstn                (rstn               ),
       .fencei_o            (fencei             ),
       .pc_reg_o            (pc_reg             ),
+      .fin_interrupt_o     (fin_interrupt_s    ),
       .instr_ready_i       (instr_ready        ),
       .data_ready_i        (data_ready         ),
       .instr_mem_address_o (instr_mem_address  ),
@@ -548,6 +551,8 @@ module riscv_v_w_mem_subsystem #
 		.ce_o	              (ce),
 		.axi_base_address_o (axi_base_address),
 		.pc_reg_i           (pc_reg),
+		.fin_interrupt_i    (fin_interrupt_s),
+		.interrupt_o        (interrupt_o),
 		.S_AXI_ACLK	        (s_axi_aclk),
 		.S_AXI_ARESETN	    (s_axi_aresetn),
 		.S_AXI_AWADDR	      (s_axi_awaddr),
@@ -570,6 +575,8 @@ module riscv_v_w_mem_subsystem #
 		.S_AXI_RVALID	      (s_axi_rvalid),
 		.S_AXI_RREADY	      (s_axi_rready)
 	);
+`else
+  assign interrupt_o = fin_interrupt_s;
 `endif
 endmodule
 

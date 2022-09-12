@@ -210,6 +210,7 @@ module riscv_v_verif_top;
    begin
       
       
+/* -----\/----- EXCLUDED -----\/-----
       //init lvt_rams
 
       vrf_vlane_col = 0;
@@ -238,6 +239,7 @@ module riscv_v_verif_top;
 	    vrf_read_ram[i][1][3][j[31:2]][j[1:0]*8 +: 8]=j[(i%4)*8 +: 8] ^ 0;
 	 end
       end
+ -----/\----- EXCLUDED -----/\----- */
    end
 
    // clock generation

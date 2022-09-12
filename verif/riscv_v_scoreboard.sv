@@ -2,7 +2,7 @@
 `uvm_analysis_imp_decl(_v)
 `include "defines.sv"
 class riscv_v_scoreboard extends uvm_scoreboard;
-
+   
    // control fileds
    bit checks_enable = 1;
    bit coverage_enable = 1;
@@ -21,12 +21,14 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    virtual interface backdoor_v_instr_if backdoor_v_instr_vif;
    uvm_analysis_imp_v#(bd_v_instr_if_seq_item, riscv_v_scoreboard) item_collected_imp_v;
    
-   logic [31:0] vrf_read_ram [31:0][`VLEN/32-1:0] =  '{default:'0};;
+   logic [31:0] vrf_read_ram [31:0][`VLEN/32-1:0] =  '{default:'0};
 
    typedef enum logic [6:0] {v_arith=7'b1010111, v_store=7'b0100111, v_load=7'b0000111} vector_opcodes;
    
    logic [6:0] 	opcode;
    int 		skip_2_instructions = 0;
+   logic[31:0]  store_queue[$][$];
+   logic [31:0] store_instr_queue[$];
    
    `uvm_component_utils_begin(riscv_v_scoreboard)
       `uvm_field_int(checks_enable, UVM_DEFAULT)
@@ -72,31 +74,55 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 
       $cast(tr_clone, tr.clone());
 
-/* -----\/----- EXCLUDED -----\/-----
-      for (int lane=0; lane<`V_LANES; lane++)
-	for (int i=0; i< `VRF_DEPTH; i++)
-	  $display("tr_clone.vrf_read_ram[%d][%d]=%x", lane, i, tr_clone.vrf_read_ram[lane][i]);
- -----/\----- EXCLUDED -----/\----- */
-
       `uvm_info(get_type_name(),
                 $sformatf("V_SCBD:vMonitor sent...\n%s", tr_clone.sprint()),
                 UVM_FULL)
       num_of_vector_instr++;
+      //$display("received instruction is: %x", tr_clone.v_instruction);
+      //if (tr.store_check==1)
+	//store_check_func(tr);
       if (tr_clone.v_instruction[6:0]==v_load)
-	load_instr_check(tr_clone);
-      if (tr_clone.v_instruction[6:0]==v_arith && (tr_clone.v_instruction[31:26]==6'b001110 || tr_clone.v_instruction[31:26]==6'b001111)) // slides
-	slide_instr_check(tr_clone);
+	load_instr(tr_clone);
+      else if (tr_clone.v_instruction[6:0]==v_arith && (tr_clone.v_instruction[31:26]==6'b001110 || tr_clone.v_instruction[31:26]==6'b001111)) // slides
+	slide_instr(tr_clone);
       else if (tr_clone.v_instruction[6:0]==v_arith)
-	arith_instr_check(tr_clone);
+	arith_instr(tr_clone);
+      //else if (tr_clone.v_instruction[6:0]==v_store)
+	//store_instr(tr_clone);
       
-	//arith_instr_check(tr_clone);
+	//arith_instr(tr_clone);
 	
-	//arith_instr_check(tr_clone);
+	//arith_instr(tr_clone);
       
    endfunction: write_v
       
+   function void store_check_func(bd_v_instr_if_seq_item tr);
+      int missmatch=0;
+      logic [31:0] v_instruction = store_instr_queue[0];
+      logic [4:0]  vd 		 = store_instr_queue[0][11:7];      
+      for (int i=0; i<store_queue[0].size(); i++)
+      begin
+	 assert (store_queue[0][i] == tr.store_data[i])	   
+	   else
+	   begin
+	      `uvm_error("VECTOR_MISSMATCH", $sformatf("instruction: %0x \t expected result[%0d]: %0x, dut_result[%0d]: %0x", store_instr_queue[0], 
+						       i, store_queue[0][i], i, tr.store_data[i]))
+	      missmatch=1;
+	   end
+      end
 
-   function void arith_instr_check(bd_v_instr_if_seq_item tr);
+      if (missmatch == 1)
+	missmatch_num++;
+      else
+      begin
+	 `uvm_info(get_type_name(), $sformatf("V_MATCH: instruction: %0x", store_instr_queue[0]), UVM_MEDIUM)
+	 match_num++;
+      end
+      store_queue.delete(0);      
+      store_instr_queue.delete(0);
+
+   endfunction
+   function void arith_instr(bd_v_instr_if_seq_item tr);
       logic [4:0] vs1;
       logic [4:0] vs2;
       logic [4:0] vd;
@@ -223,7 +249,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	 
 	 
       end // for (int i=0; i<tr.vl; i++)
-      cmp_exp_with_real(tr);
+      //cmp_exp_with_real(tr);
    endfunction
 
 
@@ -305,7 +331,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    endfunction // sc_calculate_arith
 
 
-   function void slide_instr_check(bd_v_instr_if_seq_item tr);
+   function void slide_instr(bd_v_instr_if_seq_item tr);
       logic [4:0] vs1;
       logic [4:0] vs2;
       logic [4:0] vd;
@@ -356,11 +382,11 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	    src_element_idx--;
 	 end // for (int i=0; i<tr.vl; i++)
       end
-      cmp_exp_with_real(tr);
+      //cmp_exp_with_real(tr);
       
-   endfunction // slide_instr_check
+   endfunction // slide_instr
 
-   function void load_instr_check(bd_v_instr_if_seq_item tr);
+   function void load_instr(bd_v_instr_if_seq_item tr);
       logic [4:0] vs1;
       logic [4:0] vs2;
       logic [4:0] vd;
@@ -419,8 +445,62 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	 end // for (int i=0; i<tr.vl; i++)
       end
       
-      cmp_exp_with_real(tr);
-   endfunction // load_instr_check
+      //cmp_exp_with_real(tr);
+   endfunction // load_instr
+
+   function void store_instr(bd_v_instr_if_seq_item tr);
+      logic [4:0] vs1;
+      logic [4:0] vs2;
+      logic [4:0] vd;
+      logic 	  vm;
+      logic [2:0] width;
+      logic [5:0] funct6;
+      logic [1:0] mop;
+
+
+
+      int 	   src_element_idx;
+      int 	   element_idx;
+      int 	   vrf_vlane;
+      int 	   byte_sel=0;
+      int 	   dest_byte_sel;
+      logic [7:0]  dut_vrf_data;
+      int 	   match=0;
+      logic [1:0]  sew;
+      logic [31:0] res;
+      int store_idx;
+      vs1=tr.v_instruction[19:15];
+      vs2=tr.v_instruction[24:20];
+      vd=tr.v_instruction[11:7];
+      vm=tr.v_instruction[25];
+      width=tr.v_instruction[14:12];
+      mop = tr.v_instruction[27:26];
+      funct6=tr.v_instruction[31:26];
+      store_idx=store_queue.size();
+      $display("store queue size: %d", store_queue.size());
+      store_instr_queue.push_back(tr.v_instruction);
+      $display("store instr queue size: %d", store_instr_queue.size());
+
+      if (mop==2'b00)//regular store
+      begin
+	 for (int i=0; i<tr.vl<<width[1:0]; i++)
+	 begin
+	    store_queue[store_idx][i[31:2]][i[1:0]*8 +: 8]=vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8];
+	    src_element_idx++;
+	    //$display("load_ddr_mem: ddr_mem[%d][%d]=%x",src_element_idx[31:2], src_element_idx[1:0], v_axi4_vif.ddr_mem[src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8]);
+	    //$display("vrf_mem: vrf_mem[%d][%d][%d]=%x",vd, i[31:2], i[1:0], vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8]);
+	 end // for (int i=0; i<tr.vl; i++)
+      end
+      if (mop==2'b10)//indexed store
+      begin
+	 for (int i=0; i<tr.vl<<tr.sew; i++)
+	 begin
+	    store_queue[store_idx][i[31:2]][i[1:0]*8 +: 8]=vrf_read_ram[vd][i[31:2]][i[1:0]*8 +: 8];	    	    	    
+	 end // for (int i=0; i<tr.vl; i++)
+      end
+      
+      //cmp_exp_with_real(tr);
+   endfunction // store_instr
 
 
    function void cmp_exp_with_real(bd_v_instr_if_seq_item tr);

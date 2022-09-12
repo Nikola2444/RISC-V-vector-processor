@@ -8,11 +8,13 @@ parameter CMD_WIDTH = 4;
 class bd_v_instr_if_seq_item extends uvm_sequence_item;
 
    logic [31:0] v_instruction;
-   logic [2:0] sew;
-   logic [2:0] lmul;
+   logic [2:0]  sew;
+   logic [2:0]  lmul;
    logic [31:0] vl;
    logic [31:0] scalar;
    logic [31:0] scalar2;
+   logic        store_check;
+   logic [31:0] store_data[$];
    logic [`V_LANES-1:0][`VRF_DEPTH-1:0][31:0] vrf_read_ram;
 
    `uvm_object_utils_begin(bd_v_instr_if_seq_item)
@@ -22,6 +24,8 @@ class bd_v_instr_if_seq_item extends uvm_sequence_item;
       `uvm_field_int(scalar, UVM_DEFAULT)
       `uvm_field_int(vl, UVM_DEFAULT)
       `uvm_field_int(vrf_read_ram, UVM_DEFAULT)
+      `uvm_field_int(store_check, UVM_DEFAULT)
+
    `uvm_object_utils_end
 
    function new (string name = "bd_v_instr_if_seq_item");

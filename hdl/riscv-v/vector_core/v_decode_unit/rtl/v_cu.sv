@@ -125,7 +125,7 @@ module v_cu #
    logic [31:0] 				     vl_reg, vl_next;
    logic [2:0] 					     sew_o;
    logic [$clog2(VLEN)-1:0] 			     vlmax;
-   typedef logic [7:0][2:0][$clog2(VLEN):0] 	     vlmax_array_type;
+   typedef logic [7:0][2:0][$clog2(VLEN)-1:0] 	     vlmax_array_type;
    
    localparam vlmax_array_type vlmax_array=init_vlmax();
    // Depending on sew and lmul maximum vector length changes. Function
@@ -160,7 +160,6 @@ module v_cu #
    logic [8*$clog2(MEM_DEPTH)-1:0] vrf_starting_raddr1_reg;
    logic 			   vrf_starting_addr_vld_reg;
 
-   logic 			   alloc_port_vld;
    
    // Signals needed dependancy checking
    logic [$clog2(W_PORTS_NUM)-1:0] allocated_port;
@@ -196,7 +195,7 @@ module v_cu #
       begin
 	 if (dependancy_issue==0)
 	 begin
-	    if(instr_vld_i[12:0] & instr_rdy_o[12:0])// config instruction received
+	    if((instr_vld_i[12:0] & instr_rdy_o[12:0]) != 0)// config instruction received
 	    begin
 	       vector_instr_reg	      <= vector_instr_i;
 	       instr_vld_reg 	      <= instr_vld_i;
@@ -244,7 +243,7 @@ module v_cu #
    //extracting vlmax based on sew and lmul
    assign vlmax=vlmax_array[vtype_next[2:0]][vtype_next[5:3]];
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
-		    v_instr_vd != 0 ? vlmax : vl_reg;
+		    v_instr_vd != 0 ? {{32-$clog2(VLEN){1'b0}},vlmax} : vl_reg;
    
    assign v_instr_funct3       = vector_instr_reg[14:12];
    
@@ -286,7 +285,6 @@ module v_cu #
       .start_o		(start_o),
       .store_driver_o   (store_driver_o),
       .op3_port_sel_o	(op3_sel_o),
-      .alloc_port_vld_o	(alloc_port_vld),
       .slide_instr_check_i(slide_instr_check),
       .dependancy_issue_i(dependancy_issue),
       // Inputs
@@ -471,12 +469,14 @@ module v_cu #
 
 
    
-   assign store_load_index_mux_sel_o=start_o;
+   assign store_load_index_mux_sel_o=start_o == 1 ? 1 :
+				     start_o == 2 ? 3 :
+				     start_o == 4 ? 5 : 7;
 
    assign reduction_op_o  = reduction_instr_check;
-   assign slide_type_o    = (sew_o == 2'b00 && (scalar_rs1_reg == VLANE_NUM*4)) || 
-			    (sew_o == 2'b01 && (scalar_rs1_reg == VLANE_NUM*2)) || 
-			    (sew_o == 2'b10 && (scalar_rs1_reg == VLANE_NUM)) ? LP_FAST_SLIDE : LP_SLOW_SLIDE;
+   assign slide_type_o    = (sew_o == 3'b000 && (scalar_rs1_reg == VLANE_NUM*4)) || 
+			    (sew_o == 3'b001 && (scalar_rs1_reg == VLANE_NUM*2)) || 
+			    (sew_o == 3'b010 && (scalar_rs1_reg == VLANE_NUM)) ? LP_FAST_SLIDE : LP_SLOW_SLIDE;
 		       
    
    
@@ -493,15 +493,15 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 4'h8 : 
-			 slide_instr_check ? LP_VRF_DELAY : 4'h7;
+   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 'h8 : 
+			 slide_instr_check ? LP_VRF_DELAY : 'h7;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    assign vrf_oreg_ren = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;
    
    assign vrf_write_sew_o  = slide_instr_check && slide_type_o == LP_SLOW_SLIDE ? 2'b00 :
-			   widening_instr_check ? sew_o + 1 : sew_o; // NOTE: check this. We should check if widening instructions is in play
+			   widening_instr_check ? sew_o[1:0] + 1 : sew_o[1:0]; // NOTE: check this. We should check if widening instructions is in play
                                                                        // TODO: take into account narrowing instructions
    
    assign op2_sel_o = vector_vector_check ? 2'b00 :
@@ -527,8 +527,8 @@ module v_cu #
    // NOTE: we need to somehow provide information about sign, rounding, saturation, width change, mask operation, width of each operand...
    always_comb
    begin
-      alu_opmode_o = 6'b000000;
-      if (instr_vld_reg[10:8]) // Check is instr is: OPIVI||OPIVX||OPIVV
+      alu_opmode_o = 'h0;
+      if (instr_vld_reg[10:8]!=0) // Check is instr is: OPIVI||OPIVX||OPIVV
 	case(v_instr_funct6)
 	   6'b000000: alu_opmode_o = add_op;
 	   //6'b000001: 
@@ -584,9 +584,9 @@ module v_cu #
 	   //6'b110000: alu_opmode_o = add_op; // Vector widening reduction add
 	   6'b110000: alu_opmode_o = add_op; // Vector widening reduction addu
 	   6'b110001: alu_opmode_o = add_op; // Vector widening reduction addu
-	   
+	   default: alu_opmode_o = 'h0;
 	endcase // case (funct6)
-      else if (instr_vld_reg[7:6])// Check is instr is: OPMVX||OPMVV
+      else if (instr_vld_reg[7:6]!=0)// Check is instr is: OPMVX||OPMVV
 	case(v_instr_funct6)
 	   6'b000000: alu_opmode_o = add_op;
 	   6'b000001: alu_opmode_o = and_op;
@@ -657,7 +657,8 @@ module v_cu #
 	   6'b111100: alu_opmode_o = mulu_add_op; //vwmaccu
 	   6'b111101: alu_opmode_o = mul_add_op; //vwmacc
 	   6'b111110: alu_opmode_o = mulus_add_op; //vwmaccus
-	   6'b111111: alu_opmode_o = mulsu_add_op; //vwmaccsu	   
+	   6'b111111: alu_opmode_o = mulsu_add_op; //vwmaccsu
+	   default: alu_opmode_o = 'h0;
 	endcase // case (funct6)      
    end
 

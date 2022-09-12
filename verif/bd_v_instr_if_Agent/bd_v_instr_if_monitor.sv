@@ -89,6 +89,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 `uvm_info(get_type_name(),
                 $sformatf("V_MONITOR: VECTOR INSTRUCTION STARTED,  v_instruction: %x", vif.v_instruction),
                 UVM_HIGH)
+
 	 curr_it 	       = bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
 	 curr_it.v_instruction = vif.v_instruction;
 	 curr_it.sew 	       = vif.sew;
@@ -97,20 +98,22 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 curr_it.scalar        = vif.v_rs1_scalar;
 	 curr_it.scalar2       = vif.v_rs2_scalar;
 	 curr_it.store_check   = 0;
-	 //item_collected_port.write(curr_it);
+	 
+	 item_collected_port.write(curr_it);
+	 curr_it=null;
       end
-      #1
+      #1;
       if (v_axi4_vif.m_axi_wvalid && v_axi4_vif.m_axi_wready)
       begin
-	 //store_data.push_back(v_axi4_vif.m_axi_wdata);
+	 store_data.push_back(v_axi4_vif.m_axi_wdata);
 	 if (v_axi4_vif.m_axi_wlast)begin
 	    curr_it = bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
-	    //curr_it.store_data=store_data;
-	    //curr_it.store_check=1;
+	    curr_it.store_data=store_data;
+	    curr_it.store_check=1;
 	    //$display("store_check function called, dut_result: %x", store_data[0]);
-	    //item_collected_port.write(curr_it);
+	    item_collected_port.write(curr_it);
 	    store_data.delete();
-	    //curr_it.store_data.delete();
+	    curr_it=null;
 	 end
       end
 

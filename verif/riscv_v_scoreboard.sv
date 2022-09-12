@@ -79,16 +79,16 @@ class riscv_v_scoreboard extends uvm_scoreboard;
                 UVM_FULL)
       num_of_vector_instr++;
       //$display("received instruction is: %x", tr_clone.v_instruction);
-      //if (tr.store_check==1)
-	//store_check_func(tr);
+      if (tr.store_check==1)
+	store_check_func(tr);
       if (tr_clone.v_instruction[6:0]==v_load)
 	load_instr(tr_clone);
       else if (tr_clone.v_instruction[6:0]==v_arith && (tr_clone.v_instruction[31:26]==6'b001110 || tr_clone.v_instruction[31:26]==6'b001111)) // slides
 	slide_instr(tr_clone);
       else if (tr_clone.v_instruction[6:0]==v_arith)
 	arith_instr(tr_clone);
-      //else if (tr_clone.v_instruction[6:0]==v_store)
-	//store_instr(tr_clone);
+      else if (tr_clone.v_instruction[6:0]==v_store)
+	store_instr(tr_clone);
       
 	//arith_instr(tr_clone);
 	
@@ -479,7 +479,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       store_idx=store_queue.size();
       $display("store queue size: %d", store_queue.size());
       store_instr_queue.push_back(tr.v_instruction);
-      $display("store instr queue size: %d", store_instr_queue.size());
+      //$display("store instr queue size: %d", store_instr_queue.size());
 
       if (mop==2'b00)//regular store
       begin
@@ -503,6 +503,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    endfunction // store_instr
 
 
+/* -----\/----- EXCLUDED -----\/-----
    function void cmp_exp_with_real(bd_v_instr_if_seq_item tr);
       int 	   vrf_addr_offset;
       int 	   vreg_to_update;
@@ -561,6 +562,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD MATCH NUMBER: %0d", match_num), UVM_LOW);
       `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD MISSMATCH NUMBER: %0d ", missmatch_num), UVM_LOW);
    endfunction : report_phase
+ -----/\----- EXCLUDED -----/\----- */
 
    
 endclass : riscv_v_scoreboard

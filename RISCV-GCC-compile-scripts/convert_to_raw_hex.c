@@ -40,8 +40,9 @@ int main(void) {
     }
 
     fprintf(header_file,"0x00000013,\n");
-    fprintf(header_file,"0xffffffff,\n");
-    fprintf(header_file,"0xff9ff0ef\n};");
+    fprintf(header_file,"0xffffffff\n");
+    //fprintf(header_file,"0xff9ff0ef\n};");
+    fprintf(header_file,"};\n");
     fclose(input_file);
     free(contents);
 

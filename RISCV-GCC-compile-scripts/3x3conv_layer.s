@@ -8,7 +8,6 @@ li x10, 56     # Iterator over pixels
 li x11, 64     # Iterator over output filters
 li x12, 64     # Number of Pixels/Weights
 li x13, 16     # Number of output channels per batch
-li x14, 4      # Number of batches
 li x15, 3712   # Input feature map row size
 
 li x21, 1024     # Pointer to start of image
@@ -180,7 +179,7 @@ l_ld_filter_finished: nop
 addi x23, x23, 1 # results incremented by 1 for next filter
 addi x6, x6, -1
 
-beq x6, x0, l_finised
+beq x6, x0, l_finished
 
 jal l_ld_next_filter
 

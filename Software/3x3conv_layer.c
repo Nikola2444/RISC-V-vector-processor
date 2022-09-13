@@ -2,12 +2,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define IM_SIZE 56
+#define IM_SIZE 3
 #define PD_SIZE 1
 #define IN_D    64
-#define OUT_D   64
+#define OUT_D   4
 #define FR_SIZE 3
-#define PRINT_INTERMEDIATE
+//#define PRINT_INTERMEDIATE
 
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][FR_SIZE][FR_SIZE][IN_D];
 int8_t ifm [IM_SIZE+2*PD_SIZE][IM_SIZE+2*PD_SIZE][IN_D];
@@ -30,7 +30,6 @@ int main()
       }
     }
   }
-
   for (int och=0; och<OUT_D; och++)
     for (int fy=0; fy<FR_SIZE; fy++)
       for (int fx=0; fx<FR_SIZE; fx++)
@@ -56,7 +55,7 @@ int main()
             	printf("inter[%d][%d][%d][%d][%d][%d]=%02x \t\t ifm[memloc:%d]=%02x \t filter=%02x\n",
                 y,x,och,fy,fx,ich, 
                 (unsigned char)inter[y][x][och][fy][fx][ich],
-                (1024+(y+fy)*58*64+(x+fx)*64+ich),
+                (1024+(y+fy)*(IM_SIZE+2*PD_SIZE)*(IN_D)+(x+fx)*(IN_D)+ich),
                 (unsigned char)ifm[y+fy][x+fx][ich],
                 (unsigned char)filter[och][fy][fx][ich]);
 
@@ -69,8 +68,8 @@ int main()
           }
         }
         //printf("subtotals ln0: %02x ln1: %02x ln2: %02x ln3: %02x\n",(unsigned char)lane0,(unsigned char)lane1,(unsigned char)lane2,(unsigned char)lane3);
-        printf("ofm[%d][%d][%d]=%02x ",y,x,och,(unsigned char)ofm[y][x][och]);
-        getchar();
+        //printf("ofm[%d][%d][%d]=%02x ",y,x,och,(unsigned char)ofm[y][x][och]);
+        //getchar();
       }
     }
   }

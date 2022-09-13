@@ -262,11 +262,11 @@ module buff_array #(
       endcase
     end
   end
-  assign single_word_store   = !store_type_i[2]; // Not unit-stride => an y of other two is sigle word per xfer
+  assign single_word_store   = !store_type_i[2] || (sdbuff_byte_cnt<4); // Not unit-stride => an y of other two is sigle word per xfer
   assign ctrl_wstrb_msk_en_o = single_word_store;
 
   assign ctrl_waddr_offset_o = {store_targetaddr_reg[31:2], 2'b00}; // align per 32-bit TODO: double-check this
-  assign ctrl_wxfer_size_o   = store_type_i[2] ? (sdbuff_byte_cnt) : 4;
+  assign ctrl_wxfer_size_o   = single_word_store ? 4 : (sdbuff_byte_cnt) ;
 
   // Number of expected stores
   always_ff @(posedge clk) begin

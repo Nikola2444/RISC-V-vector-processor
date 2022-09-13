@@ -3,11 +3,11 @@
 
 li x30, 1        # Slide amt
 
-li x10, 9       # Iterator over pixels
-li x11, 16      # Iterator over output filters [OUTPUT DIM]
-li x12, 512     # Number of Pixels/Weights [INPUT DIM]
-li x13, 16      # Number of output channels per batch
-li x14, 1       # Number of batches
+li x10, 3136     # Iterator over pixels
+li x12, 128      # Number of Pixels/Weights [INPUT DIM]
+li x11, 512      # Iterator over output filters [OUTPUT DIM]
+li x13, 16       # Number of output channels per batch [BATCH_SIZE]
+li x14, 8        # Number of batches [OUT_D / BATCH_SIZE]
 
 li x21, 1024     # Pointer to start of image
 li x22, 1048576  # Pointer to start of weights
@@ -283,6 +283,7 @@ add  x3, x23, x0 # reset result pointer
 beq x14, x0, l_finished
 jal l_ch_batch_first_px
 l_finished: nop
+nop
 nop
 nop
 nop

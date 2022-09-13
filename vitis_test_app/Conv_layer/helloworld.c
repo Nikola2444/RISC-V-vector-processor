@@ -84,7 +84,7 @@
 #define USR_RISCV_PC          (XPAR_RISCV_V_0_BASEADDR + 8)
 #define USR_RISCV_INTERRUPT   (XPAR_RISCV_V_0_BASEADDR + 12)
 
-#define IM_SIZE           28
+#define IM_SIZE           56
 #define IN_D              512
 #define OUT_D             128
 #define BATCH_SIZE        16  // Only for 1x1 assembly
@@ -196,7 +196,7 @@ int main()
           ifm[y][x][ich]=0;
         else
           ifm[y][x][ich]=y*IM_SIZE+x+ich%3;
-        main_memory_bw[IMAGE_START+(y*IM_SIZE*IN_D)+(x*IN_D)+ich]=ifm[y][x][ich];
+        main_memory_bw[IMAGE_START+(y*(IM_SIZE+2*PD_SIZE)*IN_D)+(x*IN_D)+ich]=ifm[y][x][ich];
       }
     }
   }
@@ -253,18 +253,20 @@ int main()
   // Enable caches for reference model
   Xil_DCacheEnable();
   Xil_ICacheEnable();
+  // Start timer
   XTime_GetTime(&sw_start);
+
   for (int y=0; y<IM_SIZE; y++)
   {
     for (int x=0; x<IM_SIZE; x++)
     {
       for (int och=0; och<OUT_D; och++)
       {
+        ofm[y][x][och] = 0;
         for (int fy=0; fy<FR_SIZE; fy++)
         {
           for (int fx=0; fx<FR_SIZE; fx++)
           {
-            ofm[y][x][och] = 0;
             for (int ich=0; ich<IN_D; ich++)
             {
               ofm[y][x][och]+=(ifm[y+fy][x+fx][ich]*filter[och][fy][fx][ich]);
@@ -315,7 +317,10 @@ int main()
   #endif
 
   // Wait until finished
-  while(!riscvv_intr_done);
+  while(!riscvv_intr_done)
+  {
+
+  };
   // Calculate vector execution time
   hw_exe_time = 1.0 * (hw_end - hw_start) / (COUNTS_PER_SECOND/1000000);
 
@@ -354,7 +359,7 @@ int main()
         if (ro_ofm!=main_memory_bw[RESULT_START+(y*IM_SIZE*OUT_D+x*OUT_D+och)])
         {
           missmatches++;
-          printf("Missmatch! %02x:%02x\n",ro_ofm, main_memory_bw[RESULT_START+(y*IM_SIZE*OUT_D+x*OUT_D+och)]);
+          //printf("Missmatch @%d ! %02x:%02x\n",RESULT_START+(y*IM_SIZE*OUT_D+x*OUT_D+och),ro_ofm, main_memory_bw[RESULT_START+(y*IM_SIZE*OUT_D+x*OUT_D+och)]);
         }
       }
     }

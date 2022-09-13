@@ -74,7 +74,7 @@ module scheduler
 
    assign v_instr_opcode       = vector_instr_reg[6:0];
    assign v_instr_funct3       = vector_instr_reg[14:12];
-   assign v_instr_funct6       = vector_instr_reg[31:25];
+   assign v_instr_funct6       = vector_instr_reg[31:26];
    assign v_instr_mop          = vector_instr_reg[27:26];
    assign v_instr_funct6_upper = vector_instr_reg[31:29];
 
@@ -115,7 +115,7 @@ module scheduler
 
    //if the instructions is indexed load, for the next instruction we insert the second part of that instruction which is
    // a simple vector load.
-   assign v_idx_ld_part2    = {vector_instr_reg[31:28],2'b00,vector_instr_reg[25:15],sew_i, vector_instr_reg[11:0]};
+   assign v_idx_ld_part2    = {vector_instr_reg[31:28],2'b00,vector_instr_reg[25:15],{1'b0, sew_i}, vector_instr_reg[11:0]};
 
    assign vector_instr_next =  (v_idx_unordered_check && v_ld_instr_check) ?  v_idx_ld_part2 : vector_instr_i;
 
@@ -290,10 +290,10 @@ module scheduler
 			     (v_ld_instr_check && !mcu_ld_buffered_reg);
 
 
-   assign mcu_rs1_o        = scalar_rs1_reg;
-   assign mcu_rs2_o        = scalar_rs2_reg;
-   assign data_width_o = vector_instr_i[14:12];
-   assign mop_o        = vector_instr_i[27:26];
+   //assign mcu_rs1_o        = scalar_rs1_reg;
+   //assign mcu_rs2_o        = scalar_rs2_reg;
+   //assign data_width_o = vector_instr_i[14:12];
+   //assign mop_o        = vector_instr_i[27:26];
    assign vector_instr_o = vector_instr_reg;
    assign scalar_rs1_o = scalar_rs1_reg;
    assign scalar_rs2_o = scalar_rs2_reg;

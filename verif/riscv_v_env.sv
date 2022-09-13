@@ -57,6 +57,7 @@ class riscv_v_env extends uvm_env;
       uvm_config_db#(virtual axi4_if)::set(this, "s_axi4_agent", "axi4_if", s_axi4_vif);
       uvm_config_db#(virtual backdoor_instr_if)::set(this, "bd_instr_agent", "backdoor_instr_if", backdoor_instr_vif);
       uvm_config_db#(virtual backdoor_v_instr_if)::set(this, "bd_v_instr_agent", "backdoor_v_instr_if", backdoor_v_instr_vif);
+      uvm_config_db#(virtual axi4_if)::set(this, "bd_v_instr_agent", "v_axi4_if", v_axi4_vif);
       uvm_config_db#(virtual backdoor_v_instr_if)::set(this, "v_scbd", "backdoor_v_instr_if", backdoor_v_instr_vif);
       uvm_config_db#(virtual backdoor_sc_data_if)::set(this, "bd_instr_agent", "backdoor_sc_data_if", backdoor_sc_data_vif);
       uvm_config_db#(virtual backdoor_register_bank_if)::set(this, "bd_instr_agent", "backdoor_register_bank_if", backdoor_register_bank_vif);

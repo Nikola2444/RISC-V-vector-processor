@@ -66,7 +66,7 @@ class bd_instr_if_monitor extends uvm_monitor;
       end
       forever begin
 	 @(negedge backdoor_instr_vif.clk);
-	 if (cfg.enable_checking==1)
+	 if (cfg.enable_scalar_checking==1)
 	 begin	 
 	    if (backdoor_instr_vif.rstn)
 	    begin
@@ -78,7 +78,7 @@ class bd_instr_if_monitor extends uvm_monitor;
 		  begin
 		     collect_and_check_data();
 		  end
-	       join_none
+	       join
 	    end
 	 end
 
@@ -95,27 +95,15 @@ class bd_instr_if_monitor extends uvm_monitor;
       if (!collect_stall && backdoor_instr_vif.instr_ready)      
       begin
 	 collect_prev_instr_mem_addr = backdoor_instr_vif.instr_mem_address;
-//	    if (backdoor_instr_vif.instr_mem_read[2:0] != 3'b111) // scalar instruction
-//	    begin	
-	 sc_instr_queue.push_back(backdoor_instr_vif.instr_mem_read); //save non store instr
-	 sc_instr_addr_queue.push_back(backdoor_instr_vif.instr_mem_address); //save non store instr
-//	    end
-/* -----\/----- EXCLUDED -----\/-----
-	    else
-	    begin
-	       //v_instr_queue.push_back(backdoor_instr_vif.instr_mem_read);
-	       sc_instr_queue.push_back(0); //save non store instr
-	       sc_instr_addr_queue.push_back(backdoor_instr_vif.instr_mem_address); //save non store instr
-	    end
- -----/\----- EXCLUDED -----/\----- */
-
+	 //sc_instr_queue.push_back(backdoor_instr_vif.instr_mem_read); //save non store instr
+	 //sc_instr_addr_queue.push_back(backdoor_instr_vif.instr_mem_address); //save non store instr
       end
    endtask // collect_instruction
 
    task collect_and_check_data();
       logic [0:31][31:0] sc_reg_bank;
       logic 		 check_stall;
-	fork
+      //fork
 	   begin // non store thread
 	      check_stall = backdoor_instr_vif.instr_mem_address == check_prev_instr_mem_addr;
 	      if (sc_instr_queue.size() != 0 && !check_stall && backdoor_instr_vif.instr_ready)
@@ -123,24 +111,26 @@ class bd_instr_if_monitor extends uvm_monitor;
 		 check_prev_instr_mem_addr = backdoor_instr_vif.instr_mem_address;
 		 curr_it=bd_instr_if_seq_item::type_id::create("seq_item", this);
 		 curr_it.scalar_reg_bank_new=backdoor_register_bank_vif.scalar_reg_bank;
-		 curr_it.instruction = sc_instr_queue.pop_front();
-		 curr_it.instruction_addr=sc_instr_addr_queue.pop_front();
+		 //curr_it.instruction = sc_instr_queue.pop_front();
+		 //curr_it.instruction_addr=sc_instr_addr_queue.pop_front();
 		 if (curr_it.instruction[6:0] == 7'b1100011)
 		   curr_it.store_data = store_data_queue.pop_front();
 		 //$display ("New_reg bank: %x, time: %d", curr_it.scalar_reg_bank_new, $time);
-		 item_collected_port.write(curr_it);		 
+		 //item_collected_port.write(curr_it);		 
 	      end
 	   end // non store thread
 	   
 
+/* -----\/----- EXCLUDED -----\/-----
 	   begin // store thread
 	      if (backdoor_sc_data_vif.data_mem_we_o)
 	      begin		 
 		 store_data_queue.push_front(backdoor_sc_data_vif.data_mem_write_o);		 		 
 	      end
 	   end // store thread
+ -----/\----- EXCLUDED -----/\----- */
 
-	join_none
+	//join_none
    endtask // collect_and_check_data
 
    

@@ -7,7 +7,7 @@ class bd_v_instr_if_agent extends uvm_agent;
    bd_v_instr_if_monitor mon;
    
    virtual interface backdoor_v_instr_if backdoor_v_instr_vif;
-
+   virtual interface axi4_if v_axi4_vif;
    // configuration
    riscv_v_config cfg;
    int value;   
@@ -25,13 +25,18 @@ class bd_v_instr_if_agent extends uvm_agent;
       if (!uvm_config_db#(virtual backdoor_v_instr_if)::get(this, "", "backdoor_v_instr_if", backdoor_v_instr_vif))
         `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".vif"})      
 
+      if (!uvm_config_db#(virtual axi4_if)::get(this, "", "v_axi4_if", v_axi4_vif))
+        `uvm_fatal("NOVIF",{"virtual interface must be set:",get_full_name(),".v_axi4_vif"})
+
       if(!uvm_config_db#(riscv_v_config)::get(this, "", "riscv_v_config", cfg))
         `uvm_fatal("NOCONFIG",{"Config object must be set for: ",get_full_name(),".cfg"})
+
       
       /*****************************************************************/
       
       /************Setting to configuration database********************/
       uvm_config_db#(virtual backdoor_v_instr_if)::set(this, "*", "backdoor_v_instr_if", backdoor_v_instr_vif);
+      uvm_config_db#(virtual axi4_if)::set(this, "*", "v_axi4_if", v_axi4_vif);
 
       /*****************************************************************/
       

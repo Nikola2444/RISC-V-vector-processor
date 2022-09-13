@@ -21,9 +21,9 @@ file mkdir $releaseDir
 # Create project
 create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
 # TODO CHANGE BASED ON VIVADO VERSION
-set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
+#set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
 #set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
-#set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
+set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
 
 create_bd_design "riscv_v_axi_bd"
 update_compile_order -fileset sources_1

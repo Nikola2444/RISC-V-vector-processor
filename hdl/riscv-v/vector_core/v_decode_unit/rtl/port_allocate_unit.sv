@@ -13,20 +13,20 @@ module port_allocate_unit#
     output logic [W_PORTS_NUM-1:0] 	   start_o,
     input logic [W_PORTS_NUM-1:0] 	   port_rdy_i,
     output logic [$clog2(R_PORTS_NUM)-1:0] op3_port_sel_o,
-    output logic [1:0] 			   store_driver_o,
+    output logic [1:0] 			   store_driver_o
     
 
-    output 				   alloc_port_vld_o
+
     );
 
-   logic [$clog2(W_PORTS_NUM)-1:0] 	   port_group_to_allocate_reg, port_group_to_allocate_next;
-   logic [R_PORTS_NUM/2-1:0] 		   r_port_status;
-   logic [3:0]				   store_in_progress_reg;
-   logic [3:0] 				   load_in_progress_reg;
-   logic [1:0] 				   store_driver_idx;
-
-   
-
+   logic [$clog2(W_PORTS_NUM)-1:0] port_group_to_allocate_reg, port_group_to_allocate_next;
+   logic [R_PORTS_NUM/2-1:0]	   r_port_status;
+   logic [3:0]			   store_in_progress_reg;
+   logic [3:0]			   load_in_progress_reg;
+   logic [1:0]			   store_driver_idx;
+   logic			   alloc_port_vld;
+   logic [1:0]			   load_driver_idx;
+   logic mvv_101xxx_instr_check;
    assign store_driver_idx = store_in_progress_reg == 1 ? 0:
 			     store_in_progress_reg == 2 ? 1:
 			     store_in_progress_reg == 4 ? 2 : 3;
@@ -39,7 +39,7 @@ module port_allocate_unit#
       end
       else
       begin
-	 if (alloc_port_vld_o && (instr_vld_i[3:2]!=0 && instr_rdy_o[3:2]!=0))
+	 if (alloc_port_vld && (instr_vld_i[3:2]!=0 && instr_rdy_o[3:2]!=0))
 	 begin
 	    store_in_progress_reg <= start_o;
 	 end
@@ -59,7 +59,7 @@ module port_allocate_unit#
       end
       else
       begin
-	 if (alloc_port_vld_o && instr_vld_i[5])
+	 if (alloc_port_vld && instr_vld_i[5])
 	 begin
 	    load_in_progress_reg <= start_o;
 	 end
@@ -70,7 +70,7 @@ module port_allocate_unit#
    
 
    
-
+   
    assign mvv_101xxx_instr_check = instr_vld_i[1];
    
    // Sequential logic that updatas register that tells which port group we are using.
@@ -100,10 +100,10 @@ module port_allocate_unit#
 	 if (slide_instr_check_i && port_group_to_allocate_reg != 0)
 	   start_o[i] = 1'b0;
 	 else
-	   start_o[i] = port_rdy_i[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld_o && dependancy_issue_i==0;
+	   start_o[i] = port_rdy_i[port_group_to_allocate_reg] && i==port_group_to_allocate_reg && alloc_port_vld && dependancy_issue_i==0;
       end
    end
-   assign alloc_port_vld_o = ((instr_rdy_o[11:0] && instr_vld_i[11:0]) != 0 && vrf_starting_addr_vld_i);
+   assign alloc_port_vld = ((instr_rdy_o[11:0] & instr_vld_i[11:0]) != 0 && vrf_starting_addr_vld_i);
 
    generate
       for (genvar i=0; i<R_PORTS_NUM/2; i++)
@@ -129,12 +129,12 @@ module port_allocate_unit#
    
    always_comb
    begin      
-      op3_port_sel_o <= 'h0;
+      op3_port_sel_o = 'h0;
       for (int i=0; i<W_PORTS_NUM; i++)
       begin
 	   if (port_rdy_i[i] && i != port_group_to_allocate_reg)
 	   begin	      
-	      op3_port_sel_o <= i;
+	      op3_port_sel_o = i[$clog2(R_PORTS_NUM)-1:0];
 	      break;
 	   end   
       end

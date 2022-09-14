@@ -16,13 +16,12 @@ set releaseDir $rootDir\/release\/RISCV_V_AXI_IP
 file mkdir $resultDir
 file mkdir $releaseDir
 
+
+
 create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
 
-# TODO CHANGE BASED ON VIVADO VERSION
-#set_property board_part avnet.com:zedboard:part0:1.4 [current_project]
-#set_property board_part digilentinc.com:zedboard:part0:1.0 [current_project]
-set_property board_part em.avnet.com:zed:part0:1.4 [current_project]
-
+set boardpart [get_board_parts -filter {BOARD_NAME=~zed*}]
+set_property board_part $boardpart [current_project]
 
 # ADDING FILES
 add_files -norecurse ..\/hdl\/packages\/typedef_pkg.sv
@@ -124,6 +123,10 @@ ipgui::move_param -component [ipx::current_core] -order 3 [ipgui::get_guiparamsp
 ipgui::move_param -component [ipx::current_core] -order 4 [ipgui::get_guiparamspec -name "C_LVL1_CACHE_SIZE" -component [ipx::current_core]] -parent [ipgui::get_pagespec -name "Page 0" -component [ipx::current_core]]
 ipgui::move_param -component [ipx::current_core] -order 5 [ipgui::get_guiparamspec -name "C_LVL2_CACHE_SIZE" -component [ipx::current_core]] -parent [ipgui::get_pagespec -name "Page 0" -component [ipx::current_core]]
 ipgui::move_param -component [ipx::current_core] -order 6 [ipgui::get_guiparamspec -name "C_LVL2_CACHE_NWAY" -component [ipx::current_core]] -parent [ipgui::get_pagespec -name "Page 0" -component [ipx::current_core]]
+
+ipx::infer_bus_interface interrupt_o xilinx.com:signal:interrupt_rtl:1.0 [ipx::current_core]
+ipx::infer_bus_interface clk2 xilinx.com:signal:clock_rtl:1.0 [ipx::current_core]
+ipx::infer_bus_interface rstn2 xilinx.com:signal:reset_rtl:1.0 [ipx::current_core]
 
 
 set_property core_revision 2 [ipx::current_core]

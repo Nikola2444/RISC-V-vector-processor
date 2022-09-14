@@ -5,7 +5,7 @@ module column_offset_register
 )
 (
     input clk_i,
-    input rst_i,
+    input rstn_i,
     
     input logic [1 : 0] input_sel_i,                                            // 00 - NOP, 01 - right shift, 10 - left shift, 11 - parallel input
     input logic [1 : 0] adder_input_sel_i,                                      // 00 - SA + i, 01 - SA + VLANE_NUM - i, 10 - shift_reg - 1, 11 - NOT DEFINED
@@ -67,7 +67,7 @@ assign or_tree = orTree(~shift_reg_comp);
 //////////////////////////////////////////////////////////
 // Decrementor for enable signal
 always_ff@(posedge clk_i) begin
-    if(!rst_i) begin
+    if(!rstn_i) begin
         decrementor <= 0;
         or_tree_ff <= 0;
     end
@@ -98,7 +98,7 @@ always_comb begin
 end
 
 always_ff@(posedge clk_i) begin
-    if(!rst_i) begin
+    if(!rstn_i) begin
         shift_reg <= 0;
         slide_write_data_pattern_reg <= 0;
     end

@@ -16,7 +16,7 @@ module vector_core #
    ctrl_rstart_o, rd_tready_o, ctrl_waddr_offset_o, ctrl_wxfer_size_o,
    ctrl_wstart_o, wr_tdata_o, wr_tvalid_o,ctrl_wstrb_msk_en_o, wr_tstrb_msk_o,
    // Inputs
-   clk, clk2, rstn, rs1_i, rs2_i, vector_instr_i, ctrl_rdone_i,
+   clk, clk2, rstn, rstn2, rs1_i, rs2_i, vector_instr_i, ctrl_rdone_i,
    rd_tdata_i, rd_tvalid_i, rd_tlast_i, ctrl_wdone_i, wr_tready_i
    );
    localparam LP_VECTOR_REGISTER_NUM=32;
@@ -31,6 +31,7 @@ module vector_core #
    input 	 clk;
    input 	 clk2;
    input 	 rstn;
+   input 	 rstn2;
 
    //scalar core interface
    input [31:0]  rs1_i;
@@ -264,37 +265,38 @@ module vector_core #
       .load_data_i			        (vlane_load_data),
       // TODO: MISSING byte-write_enable signal for loads
       // Inputs
-      .clk_i				(clk),
-      .clk2_i				(clk2),
-      .rst_i				(rstn),
-      .vl_i				(vl[$clog2(VLANE_NUM*LP_MAX_VL_PER_LANE)-1:0]), // this should be 31:0
-      .vsew_i				(sew[2:0]),
-      .vlmul_i				(lmul[2:0]),
-      .inst_type_i			(inst_type),
-      .start_i				(start[W_PORTS_NUM-1:0]),
-      .inst_delay_i			(inst_delay),
-      .vrf_ren_i			(vrf_ren),
-      .vrf_oreg_ren_i			(vrf_oreg_ren),
-      .vrf_starting_waddr_i		(vrf_starting_waddr),
-      .vrf_starting_raddr_i		({vrf_starting_waddr, vrf_starting_raddr_vs2, vrf_starting_raddr_vs1}), //TODO: how to orded them ?
-      .vrf_write_sew_i			(vrf_write_sew[1:0]),
-      .ready_o				(port_group_ready[W_PORTS_NUM-1:0]),
-      .load_bwen_i                      (vlane_load_bwen),
-      .store_data_mux_sel_i		(store_data_mux_sel),
+      .clk_i                (clk),
+      .clk2_i               (clk2),
+      .rstn_i               (rstn),
+      .rstn2_i               (rstn2),
+      .vl_i                 (vl[$clog2(VLANE_NUM*LP_MAX_VL_PER_LANE)-1:0]), // this should be 31:0
+      .vsew_i               (sew[2:0]),
+      .vlmul_i              (lmul[2:0]),
+      .inst_type_i          (inst_type),
+      .start_i              (start[W_PORTS_NUM-1:0]),
+      .inst_delay_i         (inst_delay),
+      .vrf_ren_i            (vrf_ren),
+      .vrf_oreg_ren_i       (vrf_oreg_ren),
+      .vrf_starting_waddr_i (vrf_starting_waddr),
+      .vrf_starting_raddr_i ({vrf_starting_waddr, vrf_starting_raddr_vs2, vrf_starting_raddr_vs1}), //TODO: how to orded them ?
+      .vrf_write_sew_i      (vrf_write_sew[1:0]),
+      .ready_o              (port_group_ready[W_PORTS_NUM-1:0]),
+      .load_bwen_i          (vlane_load_bwen),
+      .store_data_mux_sel_i (store_data_mux_sel),
       .store_load_index_mux_sel_i	(store_load_idx_mux_sel),
-      .op2_sel_i			(op2_sel[1:0]),
-      .op3_sel_i			(op3_sel),
-      .ALU_x_data_i			(alu_x_data[31:0]),
-      .ALU_imm_i			(alu_imm[4:0]),
-      .reduction_op_i                   (reduction_op),
-      .ALU_opmode_i			(alu_opmode),
-      .alu_en_32bit_mul_i		(1'b0),
-      .up_down_slide_i			(up_down_slide),
-      .slide_type_i			(slide_type),
-      .slide_amount_i			(slide_amount[31:0]),
-      .vector_mask_i			(vector_mask),
-      .read_port_allocation_i		(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this
-      .use_3_read_ports_i		(8'h00));//TODO: what is this
+      .op2_sel_i            (op2_sel[1:0]),
+      .op3_sel_i            (op3_sel),
+      .ALU_x_data_i         (alu_x_data[31:0]),
+      .ALU_imm_i            (alu_imm[4:0]),
+      .reduction_op_i       (reduction_op),
+      .ALU_opmode_i         (alu_opmode),
+      .alu_en_32bit_mul_i   (1'b0),
+      .up_down_slide_i      (up_down_slide),
+      .slide_type_i         (slide_type),
+      .slide_amount_i       (slide_amount[31:0]),
+      .vector_mask_i        (vector_mask),
+      .read_port_allocation_i(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this
+      .use_3_read_ports_i   (8'h00));//TODO: what is this
 
    
    always_comb

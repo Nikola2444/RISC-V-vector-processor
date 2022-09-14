@@ -11,7 +11,7 @@ module complete_sublane_driver
    (
     // Clock and Reset
     input 							clk_i,
-    input 							rst_i,
+    input 							rstn_i,
    
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] 	vl_i, // per lane: vl_i / 8 + !(vl_i % 8 == 0)
@@ -265,7 +265,7 @@ module complete_sublane_driver
    // For some instruction, like slide, depending on the slide amount lanes should skip some of the elements
    always@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
       begin
 	 first_elements_to_skip <= '{default:'0};
       end
@@ -291,7 +291,7 @@ module complete_sublane_driver
    ////////////////////BWEN and WADDRESS GENERATION////////////////////////////////////////////
 
    always_ff@(posedge clk_i) begin
-      if(!rst_i) begin
+      if(!rstn_i) begin
          shift4_reg <= 4'b0001;
          shift2_reg <= 2'b01;
       end
@@ -322,7 +322,7 @@ module complete_sublane_driver
    /////////////////////////////////////////////////////////////////////////////////
    // slide_bwen assigment //
    always_ff@(posedge clk_i) begin
-      if(!rst_i) begin
+      if(!rstn_i) begin
 	 slide_bwen_skip1_reg <= 4'b0010;
 	 slide_bwen_skip2_reg <= 4'b0100;
 	 slide_bwen_skip3_reg <= 4'b1000;
@@ -368,7 +368,7 @@ module complete_sublane_driver
 
    //bwen register  
    always@(posedge clk_i) begin
-      if (!rst_i || !dp0_next.en_write)
+      if (!rstn_i || !dp0_next.en_write)
       begin
 	 bwen_reg <= '{default:'0};
       end
@@ -419,7 +419,7 @@ module complete_sublane_driver
 			  (current_state==REDUCTION_MODE && next_state==REDUCTION_WRITE_MODE);
    assign  rst_vmrf_cnt = next_state==IDLE && current_state!=IDLE;
    always_ff@(posedge clk_i) begin
-      if(!rst_i) begin
+      if(!rstn_i) begin
          main_cnt <= 0;
          vmrf_cnt <= 0;
       end
@@ -452,7 +452,7 @@ module complete_sublane_driver
    /////////////////////////////////////////////////////////////////////////////////
    // General registers - implementation //
    always_ff@(posedge clk_i) begin
-      if(!rst_i) begin
+      if(!rstn_i) begin
          dp0_reg <= 0;
          dp0_reg.vrf_write_sew <= 2'b11;
       end
@@ -480,7 +480,7 @@ module complete_sublane_driver
    waddr_cnt
      (
       .clk_i(clk_i),
-      .rst_i(rst_i),
+      .rstn_i(rstn_i),
       .slide_offset_i(slide_waddr_offset),
       .start_addr_i(vrf_starting_waddr_i),
       .load_i(waddr_load),
@@ -504,7 +504,7 @@ module complete_sublane_driver
          raddr_cnt
 		     (
 		      .clk_i(clk_i),
-		      .rst_i(rst_i),
+		      .rstn_i(rstn_i),
 		      .slide_offset_i('h0),
 		      .start_addr_i(vrf_starting_raddr_i[i]),
 		      .load_i(raddr_load),
@@ -528,7 +528,7 @@ module complete_sublane_driver
    data_validation_inst
      (
       .clk_i(clk_i),
-      .rst_i(rst_i),
+      .rstn_i(rstn_i),
       
       .vl_i(dp0_next.vl),
       .shift_en_i(shift_data_validation),
@@ -552,7 +552,7 @@ module complete_sublane_driver
    /////////////////////////////////////////////////////////////////////////////////
    // FSM //
    always_ff@(posedge clk_i) begin
-      if(!rst_i) begin
+      if(!rstn_i) begin
          current_state <= IDLE;
       end
       else begin
@@ -845,7 +845,7 @@ module complete_sublane_driver
    //generating ready signal
    always_ff@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
 	ready_o <= 1'b1;
       else if (start_i && ready_o)
 	ready_o <= 1'b0;
@@ -859,7 +859,7 @@ module complete_sublane_driver
    assign vrf_write_mux_sel_o = dp0_reg.vrf_write_mux_sel;
    always@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
       begin
 	 vrf_waddr_o <= '{default:'0};
       end
@@ -872,7 +872,7 @@ module complete_sublane_driver
 
    always@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
       begin
 	 vrf_raddr_o 		<= 0;
 	 vrf_read_byte_sel_o[0] <= 0;

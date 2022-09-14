@@ -46,7 +46,7 @@ module riscv_v_w_mem_subsystem #
 	s_m_axi_arlock, s_m_axi_arcache, s_m_axi_arprot, s_m_axi_arqos,
 	s_m_axi_aruser, interrupt_o,
 	// Inputs
-	clk, clk2, rstn, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
+	clk, clk2, rstn, rstn2, v_m_axi_awready, v_m_axi_wready, v_m_axi_arready,
 	v_m_axi_rvalid, v_m_axi_rdata, v_m_axi_rlast, v_m_axi_bvalid,
 	s_m_axi_awready, s_m_axi_wready, s_m_axi_arready, s_m_axi_rvalid,
 	s_m_axi_rdata, s_m_axi_rlast, s_m_axi_bvalid, s_m_axi_bid,
@@ -72,6 +72,7 @@ module riscv_v_w_mem_subsystem #
     input 	       clk;
     input 	       clk2;
     input 	       rstn;
+    input 	       rstn2;
     // AXI FULL VECTOR CORE IF
     output logic        v_m_axi_awvalid ;
     input  logic 	       v_m_axi_awready ;
@@ -410,6 +411,7 @@ module riscv_v_w_mem_subsystem #
       .clk2                (clk2               ),
       .ce                  (ce                 ),
       .rstn                (rstn               ),
+      .rstn2               (rstn2               ),
       .fencei_o            (fencei             ),
       .pc_reg_o            (pc_reg             ),
       .fin_interrupt_o     (fin_interrupt_s    ),

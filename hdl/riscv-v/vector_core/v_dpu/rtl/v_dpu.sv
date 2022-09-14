@@ -15,7 +15,8 @@ module v_dpu#
    (
     input 							   clk_i,
     input 							   clk2_i,
-    input 							   rst_i,
+    input 							   rstn_i,
+    input 							   rstn2_i,
    
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] 	   vl_i,
@@ -190,7 +191,7 @@ module v_dpu#
             complete_sublane_driver_inst
               (
                .clk_i(clk_i),
-               .rst_i(rst_i),
+               .rstn_i(rstn_i),
                .vl_i(vl_i),
                .vsew_i(vsew_i[1 : 0]),
                .vsew_o(vsew_di[0]),
@@ -267,7 +268,7 @@ module v_dpu#
             complete_sublane_driver_inst
               (
                .clk_i(clk_i),
-               .rst_i(rst_i),
+               .rstn_i(rstn_i),
                .vl_i(vl_i),
                .vsew_i(vsew_i[1 : 0]),
                .vsew_o(vsew_di[i]),
@@ -338,7 +339,7 @@ module v_dpu#
 
    always @(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
       begin
 	 store_data_mux_sel_reg <= 0;
 	 store_load_index_mux_sel_reg <= 0;
@@ -399,7 +400,8 @@ module v_dpu#
 		     (
 		      .clk_i(clk_i),
 		      .clk2_i(clk2_i),
-		      .rst_i(rst_i),
+		      .rstn_i(rstn_i),
+		      .rstn2_i(rstn2_i),
 //		      .vsew_i(vsew_di),
 		      .vrf_write_sew_i(vrf_write_sew_di),
 		      .vrf_read_sew_i(vrf_read_sew_di),
@@ -478,7 +480,7 @@ module v_dpu#
    logic [VRF_DELAY-1:0][1:0] 			      slide_read_byte_sel_reg;
    always@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
       begin
 	 ALU_imm_data 	    <= 'h0;
 	 ALU_x_data 	    <= 'h0;
@@ -577,7 +579,7 @@ module v_dpu#
 	      )
 	 ALU_inst(
 		  .clk(clk_i),
-		  .rstn(rst_i),
+		  .rstn(rstn_i),
 	    
 		  .alu_opmode_i(alu_opmode[i]),
 		  .alu_reduction_i(alu_reduction[i]),

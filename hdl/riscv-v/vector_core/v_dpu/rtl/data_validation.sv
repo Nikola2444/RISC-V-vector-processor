@@ -5,7 +5,7 @@ module data_validation
     )
    (
     input clk_i,
-    input rst_i,
+    input rstn_i,
    
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,
     input logic shift_en_i,
@@ -41,7 +41,7 @@ module data_validation
    end
 
    always_ff@(posedge clk_i) begin
-      if(!rst_i) begin
+      if(!rstn_i) begin
          base_counter <= 0;
          last_valid <= 0;
          partial_results_reg <= 0;
@@ -78,7 +78,7 @@ module data_validation
    
    always@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
       begin
 	 vl_reg <= 0;
       end

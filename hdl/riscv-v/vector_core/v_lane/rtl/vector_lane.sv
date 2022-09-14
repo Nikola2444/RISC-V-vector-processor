@@ -14,7 +14,8 @@ module vector_lane
    (
     input 							       clk_i,
     input 							       clk2_i,
-    input 							       rst_i,
+    input 							       rstn_i,
+    input 							       rstn2_i,
           
     // VRF
     
@@ -209,7 +210,8 @@ module vector_lane
      (
       .clk(clk_i),
       .clk2(clk2_i),
-      .rstn(rst_i),
+      .rstn(rstn_i),
+      .rstn2(rstn2_i),
       
       // Read IF
       .raddr_i(vrf_raddr_i),
@@ -240,7 +242,7 @@ module vector_lane
      (
       .clk(clk_i),
       .clk2(clk2_i),
-      .rstn(rst_i),
+      .rstn(rstn_i),
       
       .dout_o(vmrf_rdata),
       .raddr_i(vmrf_addr_i),
@@ -286,7 +288,7 @@ module vector_lane
 
    always_ff@(posedge clk_i)
    begin
-      if (!rst_i)
+      if (!rstn_i)
 	slide_data_reg <= 0;
       else
 	slide_data_reg <= {slide_data_reg[VMRF_DELAY-2:0], slide_data_i};      
@@ -296,7 +298,7 @@ module vector_lane
    // Pipeline registers for data on the same level as ALU
    always_ff@(posedge clk_i) begin
       for(int i = 0; i < VRF_DELAY; i++) begin
-         if(!rst_i) begin
+         if(!rstn_i) begin
             ALU_signals_reg[i] <= 0;
          end
          else begin
@@ -336,7 +338,7 @@ module vector_lane
       for(i_gen = 0; i_gen < R_PORTS_NUM; i_gen++) begin                  
          // Registers
          always_ff@(posedge clk_i) begin
-            if(!rst_i) begin
+            if(!rstn_i) begin
                for(int i = 0; i < VRF_DELAY - 1; i++) begin
                   vrf_read_byte_sel_reg[i_gen][i] <= 0;               
                end
@@ -400,7 +402,7 @@ module vector_lane
          
          // Registers
          always_ff@(posedge clk_i) begin
-            if(!rst_i) begin
+            if(!rstn_i) begin
                for(int i = 0; i < VMRF_DELAY; i++) begin
                   vrf_write_reg[i][j_gen] 	 <= 0;
                   vmrf_write_reg[i][j_gen] 	 <= 0;

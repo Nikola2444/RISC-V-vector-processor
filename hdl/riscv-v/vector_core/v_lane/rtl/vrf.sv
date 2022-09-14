@@ -13,6 +13,7 @@ module vrf #
     input 					   clk,
     input 					   clk2,
     input 					   rstn,
+    input 					   rstn2,
 
    
     // read IF
@@ -188,15 +189,15 @@ module vrf #
 			// Outputs
 			.doutb		(lvt_ram_dout[i][j]),
 			// Inputs
-			.addra		(lvt_ram_waddr[i][j]),
-			.addrb		(lvt_ram_raddr[i][j]),
-			.dina		(lvt_ram_din[i][j]),
-			.clka		(clk2),
-			.wea		(lvt_ram_bwe[i][j]),
-			.enb		(1'b1),
-			.clkb		(clk2),
-			.rstb		(1'b0),
-			.regceb		(1'b1));
+			.addra  (lvt_ram_waddr[i][j]),
+			.addrb  (lvt_ram_raddr[i][j]),
+			.dina   (lvt_ram_din[i][j]),
+			.clka   (clk2),
+			.wea    (lvt_ram_bwe[i][j]),
+			.enb    (1'b1),
+			.clkb   (clk2),
+			.rstb   (1'b0),
+			.regceb (1'b1));
 	    end
 	    else
 	    begin: gen_LUTRAM
@@ -421,7 +422,7 @@ module vrf #
 
 	 always @(posedge clk2)
 	 begin
-	    if (!rstn)
+	    if (!rstn2)
 	    begin
 	       dout_clk2_reg <= '{default:'0};
 	    end

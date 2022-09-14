@@ -11,7 +11,7 @@ module partial_sublane_driver
 (
     // Clock and Reset
     input clk_i,
-    input rst_i,
+    input rstn_i,
     
     // General signals
     input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] vl_i,             // per lane: vl_i / 8 + !(vl_i % 8 == 0)
@@ -257,7 +257,7 @@ end
 /////////////////////////////////////////////////////////////////////////////////
 // Main counter and vmrf counter //
 always_ff@(posedge clk_i) begin
-    if(!rst_i) begin
+    if(!rstn_i) begin
         main_cnt <= 0;
         vmrf_cnt <= 0;
     end
@@ -297,7 +297,7 @@ end
 /////////////////////////////////////////////////////////////////////////////////
 // General registers - implementation //
 always_ff@(posedge clk_i) begin
-    if(!rst_i) begin
+    if(!rstn_i) begin
         dp0_reg <= 0;
         dp0_reg.vrf_write_sew <= 2'b11;
     end
@@ -310,7 +310,7 @@ end
 /////////////////////////////////////////////////////////////////////////////////
 // bwen generation - implementation //
 always_ff@(posedge clk_i) begin
-    if(!rst_i) begin
+    if(!rstn_i) begin
         shift4_reg <= 4'b0001;
         shift2_reg <= 2'b01;
     end
@@ -355,7 +355,7 @@ address_counter
 waddr_cnt
 (
     .clk_i(clk_i),
-    .rst_i(rst_i),
+    .rstn_i(rstn_i),
     .slide_offset_i('h0),
     .start_addr_i(dp0_reg.vrf_starting_waddr),
     .load_i(waddr_load),
@@ -379,7 +379,7 @@ generate
         raddr_cnt
         (
             .clk_i(clk_i),
-            .rst_i(rst_i),
+            .rstn_i(rstn_i),
 	    .slide_offset_i('h0),
             .start_addr_i(dp0_reg.vrf_starting_raddr[i]),
             .load_i(raddr_load),
@@ -403,7 +403,7 @@ data_validation
 data_validation_inst
 (
     .clk_i(clk_i),
-    .rst_i(rst_i),
+    .rstn_i(rstn_i),
     
     .vl_i(vl_i),
     .shift_en_i(shift_data_validation),
@@ -427,7 +427,7 @@ endgenerate;
 /////////////////////////////////////////////////////////////////////////////////
 // FSM //
 always_ff@(posedge clk_i) begin
-    if(!rst_i) begin
+    if(!rstn_i) begin
         current_state <= IDLE;
     end
     else begin
@@ -437,7 +437,7 @@ end
 
 always_ff@(posedge clk_i)
 begin
-   if (!rst_i)
+   if (!rstn_i)
      ready_o <= 1'b1;
    else if (start_i && ready_o)
      ready_o <= 1'b0;

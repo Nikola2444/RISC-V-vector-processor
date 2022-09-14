@@ -7,7 +7,7 @@ module address_counter
 )
 (
     input clk_i,
-    input rst_i,
+    input rstn_i,
     
     input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] start_addr_i,
     input logic [$clog2(MEM_DEPTH)-1:0]                          slide_offset_i,
@@ -80,7 +80,7 @@ generate
         end
         
         always_ff@(posedge clk_i) begin
-            if(!rst_i) begin
+            if(!rstn_i) begin
                 shift_reg <= 0;
             end
             else begin
@@ -105,7 +105,7 @@ generate
         end
         
         always_ff@(posedge clk_i) begin
-            if(!rst_i) begin
+            if(!rstn_i) begin
                 counter <= 0;
             end
             else begin
@@ -156,7 +156,7 @@ generate
         end
         
         always_ff@(posedge clk_i) begin
-            if(!rst_i) begin
+            if(!rstn_i) begin
                 shift_reg <= 0;
             end
             else begin
@@ -178,7 +178,7 @@ generate
         end
         
         always_ff@(posedge clk_i) begin
-            if(!rst_i) begin
+            if(!rstn_i) begin
                 counter <= 0;
             end
             else begin

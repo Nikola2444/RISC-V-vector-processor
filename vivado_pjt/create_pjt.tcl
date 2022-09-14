@@ -77,7 +77,7 @@ add_files -norecurse ..\/hdl\/riscv-v\/scalar_axil_s_ctrl/rtl/riscv_axil_s_ctrl.
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_axif_m_ctrl/rtl/riscv_axif_m_ctrl.vhd
 #mem_subsystem
 add_files -norecurse ..\/hdl\/riscv-v\/scalar_cache\/rtl\/cache_contr_nway_vnv_axi.vhd
-add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/axi_m_controller.v
+#add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/axi_m_controller.v
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/m_cu\/rtl\/m_cu.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/buff_array\/rtl\/buff_array.sv
 add_files -norecurse ..\/hdl\/riscv-v\/vector_core\/mem_subs\/rtl/mem_subsys.sv

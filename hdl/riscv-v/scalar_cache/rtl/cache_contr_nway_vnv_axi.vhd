@@ -188,6 +188,16 @@ architecture Behavioral of cache_contr_nway_vnv is
 	-- AXI support signals
 	signal axi_read_address_s : std_logic_vector(PHY_ADDR_WIDTH-1 downto 0);
 	signal axi_write_address_s : std_logic_vector(PHY_ADDR_WIDTH-1 downto 0);
+  -- Register AXI interface
+  signal axi_write_address_d : std_logic_vector(31 downto 0);
+	signal axi_write_init_d,axi_write_init_s	: std_logic;
+  signal axi_write_data_d,axi_write_data_s	: std_logic_vector(31 downto 0);
+  signal axi_write_next_d :std_logic;
+  signal axi_write_done_d :std_logic;
+  signal axi_read_address_d : std_logic_vector(31 downto 0);
+  signal axi_read_init_d,axi_read_init_s: std_logic;
+  signal axi_read_data_d	: std_logic_vector(31 downto 0);
+  signal axi_read_next_d  : std_logic;
 --*******************************************************************************************
 
 
@@ -1079,19 +1089,23 @@ begin
 
 
 
-	axi_write_address_o  <= std_logic_vector(to_unsigned(0,32 - PHY_ADDR_WIDTH)) & axi_write_address_s;
-	axi_read_address_o   <= std_logic_vector(to_unsigned(0,32 - PHY_ADDR_WIDTH)) & axi_read_address_s;
+	axi_write_address_o  <= std_logic_vector(to_unsigned(0,32 - PHY_ADDR_WIDTH)) & axi_write_address_d;
+  axi_write_data_o <= axi_write_data_d;
+  axi_write_init_o <= axi_write_init_d;
+
+	axi_read_address_o   <= std_logic_vector(to_unsigned(0,32 - PHY_ADDR_WIDTH)) & axi_read_address_d;
+  axi_read_init_o <= axi_read_init_d;
 	-- Memory controller
 	-- FSM that controls communication between lvl2 cache and main memory (DDR RAM)
 	mc_fsm_proc : process(mc_state_reg, mc_counter_reg, mc_counter_incr, check_lvl2_s,
 								lvl2_c_idx_s, lvl2_c_tag_s, lvl2_c_hit_s, lvl2a_ts_bkk_s, lvl2a_ts_tag_s,
 								lvl2b_ts_tag_s, lvl2b_ts_bkk_s, lvl2b_ts_nbkk_s, dreadb_lvl2_cache_s,
 								lvl2_victim_index, lvl2_nextv_index, lvl2_rando_index, lvl2_invalid_found_s, lvl2_invalid_index,
-								axi_write_next_i, axi_write_done_i, axi_read_data_i, axi_read_next_i) is
+								axi_write_next_i, axi_write_done_i, axi_read_data_d, axi_read_next_d) is
 	begin
 		-- for FSM
 		mc_state_next <= idle;
-		mc_counter_next <= (others => '0');
+		mc_counter_next <= mc_counter_reg;
 		-- LVL 2 signals ports B
 		for i in 0 to (LVL2C_ASSOCIATIVITY-1) loop
 			addrb_lvl2_cache_s(i) <= (others => '0');
@@ -1104,10 +1118,10 @@ begin
 
 		-- MEMORY interface signals (axi bus)
 		axi_write_address_s <= (others => '0');
-		axi_write_init_o	<= '0';
-		axi_write_data_o	<= (others => '0');
+		axi_write_init_s	<= '0';
+		axi_write_data_s	<= (others => '0');
 		axi_read_address_s  <= (others => '0');
-		axi_read_init_o <= '0';
+		axi_read_init_s <= '0';
 
 		-- coherency
 		flush_lvl1d_s <= '0';
@@ -1116,6 +1130,7 @@ begin
 
 		case (mc_state_reg) is
 			when idle =>
+        mc_counter_next <= (others => '0');
 				if(lvl2_c_hit_s = '0' and check_lvl2_s = '1')then
 					case (lvl2a_ts_bkk_s(lvl2_victim_index)(1 downto 0)) is 
 						when "10" => -- dirty but not valid lvl2, data lvl1 has updated values
@@ -1126,12 +1141,12 @@ begin
 							addrb_lvl2_tag_s <= lvl2_c_idx_s;
 							addrb_lvl2_cache_s(lvl2_victim_index) <= lvl2_c_idx_s & mc_counter_reg;
 							axi_write_address_s <= lvl2_c_tag_s & lvl2_c_idx_s & COUNTER_MIN & "00";
-							axi_write_init_o <= '1';
+							axi_write_init_s <= '1';
 						when others => -- not initialized / valid but not dirty data
 							mc_state_next <= fetch;
 							addrb_lvl2_tag_s <= lvl2_c_idx_s;
 							axi_read_address_s <= lvl2_c_tag_s & lvl2_c_idx_s & COUNTER_MIN & "00";
-							axi_read_init_o <= '1';
+							axi_read_init_s <= '1';
 							-- when evicting block, invalidate if block is in lvl1 data cache
 							if (lvl2a_ts_bkk_s(lvl2_victim_index)(LVL2C_BKK_DATA)='1')then 
 								invalidate_lvl1d_s <= '1';
@@ -1148,9 +1163,9 @@ begin
 			when fetch =>
 				axi_read_address_s <= lvl2_c_tag_s & lvl2_c_idx_s & COUNTER_MIN & "00"; 
 				addrb_lvl2_cache_s(lvl2_victim_index) <= lvl2_c_idx_s & mc_counter_reg;
-				dwriteb_lvl2_cache_s(lvl2_victim_index) <= axi_read_data_i;
+				dwriteb_lvl2_cache_s(lvl2_victim_index) <= axi_read_data_d;
 
-				if(axi_read_next_i = '1') then
+				if(axi_read_next_d = '1') then
 					web_lvl2_cache_s(lvl2_victim_index) <= '1';
 					mc_counter_next <= mc_counter_incr;
 				else
@@ -1186,9 +1201,9 @@ begin
 
 			when flush =>
 				axi_write_address_s <= lvl2b_ts_tag_s(lvl2_victim_index) & lvl2_c_idx_s & COUNTER_MIN & "00";
-				axi_write_data_o <= dreadb_lvl2_cache_s(lvl2_victim_index);
+				axi_write_data_s    <= dreadb_lvl2_cache_s(lvl2_victim_index);
 
-				if(axi_write_next_i = '1') then
+				if(axi_write_next_i = '1' or mc_counter_reg=COUNTER_MIN) then
 					mc_counter_next <= mc_counter_incr;
 					addrb_lvl2_cache_s(lvl2_victim_index) <= lvl2_c_idx_s & mc_counter_incr;
 				else
@@ -1212,6 +1227,42 @@ begin
 				
 			when others =>
 		end case;
+	end process;
+
+  -- Register AXI write if
+	register_write_output : process(clk)is
+	begin
+		if(rising_edge(clk))then
+			if(reset = '0') then 
+        axi_write_address_d <= (others => '0');
+        axi_write_init_d    <= '0';
+        axi_write_data_d    <= (others => '0');
+			elsif (ce = '1')then 
+        axi_write_address_d <= axi_write_address_s;
+        axi_write_init_d    <= axi_write_init_s;
+        if(axi_write_next_i = '1' or mc_counter_reg=COUNTER_MIN)then
+          axi_write_data_d    <= axi_write_data_s;
+        end if;
+			end if;
+		end if;
+	end process;
+
+  -- Register AXI read if
+	register_read_output : process(clk)is
+	begin
+		if(rising_edge(clk))then
+			if(reset = '0') then 
+        axi_read_address_d <= (others => '0');
+        axi_read_init_d    <= '0';
+        axi_read_data_d    <= (others => '0');
+        axi_read_next_d    <= '0';
+			elsif (ce = '1')then 
+        axi_read_address_d <= axi_read_address_s;
+        axi_read_init_d    <= axi_read_init_s;
+        axi_read_data_d    <= axi_read_data_i;
+        axi_read_next_d    <= axi_read_next_i;
+			end if;
+		end if;
 	end process;
 
 

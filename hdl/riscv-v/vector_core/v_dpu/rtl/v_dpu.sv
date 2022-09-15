@@ -99,79 +99,79 @@ module v_dpu#
 
    ////////////////////////////////////////////////////////////////////////////////////
    // Connecting signals
-   logic [2:0]	store_data_mux_sel_reg;
-   logic [2:0] 	store_load_index_mux_sel_reg;
+   logic [2:0]									   store_data_mux_sel_reg;
+   logic [2:0]									   store_load_index_mux_sel_reg;
    // Special load signals
-   logic [W_PORTS_NUM - 1 : 0] ready_for_load;
+   logic [W_PORTS_NUM - 1 : 0]							   ready_for_load;
 
    // Off lane signals for slides and reductions
-   logic [VLANE_NUM - 1 : 0][31 : 0] slide_data_input, slide_data_output;
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0] ALU_output;
-   logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 2 : 0][31 : 0] lane_result;
+   logic [VLANE_NUM - 1 : 0][31 : 0]						   slide_data_input, slide_data_output;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][31 : 0]			   ALU_output;
+   logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 2 : 0][31 : 0]			   lane_result;
 
    // Driver - Interconnect signals
-   logic [W_PORTS_NUM - 1 : 0][1 : 0] 			  vsew_di;
-   logic [W_PORTS_NUM - 1 : 0][1 : 0] 			  vrf_write_sew_di;
-   logic [W_PORTS_NUM - 1 : 0][1 : 0] 			  vrf_read_sew_di;
-   logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0] 	  read_data_valid_di;                              // TO BE CHECKED
-   logic [W_PORTS_NUM - 1 : 0] 				  vrf_ren_di;
-   logic [W_PORTS_NUM - 1 : 0] 				  vrf_oreg_ren_di;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_di;
-   logic [W_PORTS_NUM-1:0][VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]   vrf_waddr_complete_di;
-   logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_di;
-   logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0][3 : 0] 	 vrf_bwen_di;
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][3 : 0] 	 vrf_bwen_il;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0]  vmrf_addr_di;   
-   logic [W_PORTS_NUM - 1 : 0] 					 vmrf_wen_di;
-   logic [W_PORTS_NUM - 1 : 0] 					 store_data_valid_di;
-   logic [W_PORTS_NUM - 1 : 0] 					 store_load_index_valid_di;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 	 store_data_mux_sel_di;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 	 store_load_index_mux_sel_di;
-   logic [W_PORTS_NUM - 1 : 0][1 : 0] 				 op2_sel_di;
-   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0] 	 op3_sel_di;
-   logic [W_PORTS_NUM - 1 : 0][31 : 0] 				 ALU_x_data_di;
-   logic [W_PORTS_NUM - 1 : 0][4 : 0] 				 ALU_imm_di;
-   logic [W_PORTS_NUM - 1 : 0][31 : 0] 				 ALU_reduction_data_di;
-   logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0] 		 ALU_ctrl_di;
-   logic [W_PORTS_NUM - 1 : 0] 					 reduction_op_di;
-   logic 							 alu_en_32bit_mul_di;
-   logic 							 up_down_slide_di;
-   logic 							 slide_op;
-   logic [$clog2(VLANE_NUM)-1:0] 				 slide_data_mux_sel;
+   logic [W_PORTS_NUM - 1 : 0][1 : 0]						   vsew_di;
+   logic [W_PORTS_NUM - 1 : 0][1 : 0]						   vrf_write_sew_di;
+   logic [W_PORTS_NUM - 1 : 0][1 : 0]						   vrf_read_sew_di;
+   logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0]				   read_data_valid_di; // TO BE CHECKED
+   logic [W_PORTS_NUM - 1 : 0]							   vrf_ren_di;
+   logic [W_PORTS_NUM - 1 : 0]							   vrf_oreg_ren_di;
+   logic [W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]			   vrf_waddr_di;
+   logic [W_PORTS_NUM-1:0][VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]	   vrf_waddr_complete_di;
+   logic [W_PORTS_NUM - 1 : 0][2 : 0][$clog2(MEM_DEPTH) - 1 : 0]		   vrf_raddr_di;
+   logic [W_PORTS_NUM - 1 : 0][VLANE_NUM - 1 : 0][3 : 0]			   vrf_bwen_di;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][3 : 0]			   vrf_bwen_il;
+   logic [W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0]			   vmrf_addr_di; 
+   logic [W_PORTS_NUM - 1 : 0]							   vmrf_wen_di;
+   logic [W_PORTS_NUM - 1 : 0]							   store_data_valid_di;
+   logic [W_PORTS_NUM - 1 : 0]							   store_load_index_valid_di;
+   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0]			   store_data_mux_sel_di;
+   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0]			   store_load_index_mux_sel_di;
+   logic [W_PORTS_NUM - 1 : 0][1 : 0]						   op2_sel_di;
+   logic [W_PORTS_NUM - 1 : 0][$clog2(R_PORTS_NUM) - 1 : 0]			   op3_sel_di;
+   logic [W_PORTS_NUM - 1 : 0][31 : 0]						   ALU_x_data_di;
+   logic [W_PORTS_NUM - 1 : 0][4 : 0]						   ALU_imm_di;
+   logic [W_PORTS_NUM - 1 : 0][31 : 0]						   ALU_reduction_data_di;
+   logic [W_PORTS_NUM - 1 : 0][ALU_OPMODE - 1 : 0]				   ALU_ctrl_di;
+   logic [W_PORTS_NUM - 1 : 0]							   reduction_op_di;
+   logic									   alu_en_32bit_mul_di;
+   logic									   up_down_slide_di;
+   logic									   slide_op;
+   logic [$clog2(VLANE_NUM)-1:0]						   slide_data_mux_sel;
 
-   logic [W_PORTS_NUM - 1 : 0] 					 request_write_control_di;
-   logic [R_PORTS_NUM - 1 : 0][1 : 0] 				 vrf_read_byte_sel_di;
-   logic [W_PORTS_NUM - 1 : 0] 					 vector_mask_di;
-   logic [W_PORTS_NUM - 1 : 0][1 : 0] 				 vrf_write_mux_sel_di;
+   logic [W_PORTS_NUM - 1 : 0]							   request_write_control_di;
+   logic [R_PORTS_NUM - 1 : 0][1 : 0]						   vrf_read_byte_sel_di;
+   logic [W_PORTS_NUM - 1 : 0]							   vector_mask_di;
+   logic [W_PORTS_NUM - 1 : 0][1 : 0]						   vrf_write_mux_sel_di;
 
    // Interconnect - Vector lane signals
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] 		 read_data_valid_il;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0]				   read_data_valid_il;
 
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_il;
-   logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_raddr_il;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]	   vrf_waddr_il;
+   logic [VLANE_NUM - 1 : 0][R_PORTS_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]	   vrf_raddr_il;
    //logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][3 : 0] vrf_bwen_il;
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_il;   
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] 				   vmrf_wen_il;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0][$clog2(MAX_VL_PER_LANE) - 1 : 0] vmrf_addr_il; 
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0]				   vmrf_wen_il;
 
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] 				   store_data_valid_l;
-   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0] 				   store_load_index_valid_l;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0]				   store_data_valid_l;
+   logic [VLANE_NUM - 1 : 0][W_PORTS_NUM - 1 : 0]				   store_load_index_valid_l;
    ////////////////////////////////////////////////////////////////////////////////////
 
    // VLANE-ALU signals
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][ALU_OPMODE-1:0] 			   alu_opmode;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   vs1_data;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   vs2_data;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   vs3_data;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   alu_a;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   alu_b;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   alu_c;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0] 				   alu_res;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0] 				   alu_read_sew;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0] 				   alu_write_sew;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 					   alu_in_vld;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 					   alu_reduction;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 					   alu_out_vld;
-   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0] 					   alu_mask_vector;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][ALU_OPMODE-1:0]			   alu_opmode;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   vs1_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   vs2_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   vs3_data;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   alu_a;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   alu_b;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   alu_c;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][31:0]					   alu_res;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0]				   alu_read_sew;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0][1 : 0]				   alu_write_sew;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0]					   alu_in_vld;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0]					   alu_reduction;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0]					   alu_out_vld;
+   logic [VLANE_NUM-1:0][W_PORTS_NUM-1:0]					   alu_mask_vector;
 
    assign ready_for_load_o = orTree(ready_for_load);
 
@@ -237,6 +237,7 @@ module v_dpu#
                .ALU_x_data_o(ALU_x_data_di[0]),
                .ALU_imm_o(ALU_imm_di[0]),
                .ALU_reduction_data_o(ALU_reduction_data_di[0]),
+
                .ALU_ctrl_o(ALU_ctrl_di[0]),
                .reduction_op_o (reduction_op_di[0]),
                .alu_en_32bit_mul_i(alu_en_32bit_mul_i),
@@ -472,7 +473,7 @@ module v_dpu#
    end
 
 
-   localparam VRF_DELAY = 3;
+   localparam VRF_DELAY = 4;
    localparam VMRF_DELAY = 2;
 
    logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
@@ -555,7 +556,8 @@ module v_dpu#
 	      
               1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
               2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
-              3: alu_b[lane][i] = ALU_reduction_data[i][VRF_DELAY-1]; // Should insert an assert
+              //3: alu_b[lane][i] = ALU_reduction_data_di[i][VRF_DELAY-1]; // Should insert an assert
+	      3: alu_b[lane][i] = ALU_reduction_data_di[i]; // Should insert an assert
               default: alu_b[lane][i] = vs2_data
 [lane][i];
            endcase // case (op2_sel[i][VRF_DELAY-1])
@@ -580,15 +582,15 @@ module v_dpu#
 	 ALU_inst(
 		  .clk(clk_i),
 		  .rstn(rstn_i),
-	    
+		  
 		  .alu_opmode_i(alu_opmode[i]),
 		  .alu_reduction_i(alu_reduction[i]),
 		  .alu_a_i(alu_a[i]),
 		  .alu_b_i(alu_b[i]),
 		  .alu_c_i(alu_c[i]),
 		  .input_sew_i(alu_read_sew[i]),
-		  .output_sew_i(alu_write_sew[i]),
-		  .alu_vld_i(alu_in_vld[i]),
+		  .output_sew_i(alu_write_sew[i]),		 
+		  .alu_lane_dvld_i(alu_in_vld[i]),
 		  .alu_vld_o(alu_out_vld[i]),
 		  .alu_o(alu_res[i]),
 		  .alu_mask_vector_o(alu_mask_vector[i])

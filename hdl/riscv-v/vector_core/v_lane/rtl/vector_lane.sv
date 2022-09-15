@@ -75,7 +75,7 @@ module vector_lane
    
    // Loacal parameters //
      ////////////////////////////////////////////////
-     localparam VRF_DELAY = 3;
+   localparam VRF_DELAY = 4;
    localparam VMRF_DELAY = 2;
    localparam SLIDE_PORT_ID = 1;
    ////////////////////////////////////////////////

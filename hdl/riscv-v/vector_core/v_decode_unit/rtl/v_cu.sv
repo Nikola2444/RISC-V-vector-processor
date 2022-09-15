@@ -20,7 +20,7 @@ module v_cu #
    vrf_starting_raddr0_i, vrf_starting_raddr1_i, port_group_ready_i
    );
    import typedef_pkg::*;
-   localparam LP_VRF_DELAY=2;
+   localparam LP_VRF_DELAY=3;
    localparam LP_VECTOR_REGISTER_NUM=32;
    localparam LP_MAX_LMUL=8;
    localparam MEM_DEPTH=VLEN/VLANE_NUM;
@@ -436,14 +436,14 @@ module v_cu #
       if (!rstn)
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++) 
-	   dependancy_issue_cnt[i] <= 11; //depenancy delay, for slides should be less
+	   dependancy_issue_cnt[i] <= 15; //depenancy delay, for slides should be less
       end
       else
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++)
 	   if (start_o[i] && port_group_ready_i[i])
 	   begin
-	      dependancy_issue_cnt[i]<=11;	      
+	      dependancy_issue_cnt[i]<=15;	      
 	   end
 	   else if (dependancy_issue_cnt[i] != 0)
 	     dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
@@ -493,8 +493,8 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 'h8 : 
-			 slide_instr_check ? LP_VRF_DELAY : 'h7;
+   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 'h9 : 
+			 slide_instr_check ? LP_VRF_DELAY : 'h8;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;

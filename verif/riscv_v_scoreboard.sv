@@ -503,7 +503,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
    endfunction // store_instr
 
 
-/* -----\/----- EXCLUDED -----\/-----
+
    function void cmp_exp_with_real(bd_v_instr_if_seq_item tr);
       int 	   vrf_addr_offset;
       int 	   vreg_to_update;
@@ -562,7 +562,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD MATCH NUMBER: %0d", match_num), UVM_LOW);
       `uvm_info(get_type_name(), $sformatf("RISCV VECTOR SCOREBOARD MISSMATCH NUMBER: %0d ", missmatch_num), UVM_LOW);
    endfunction : report_phase
- -----/\----- EXCLUDED -----/\----- */
+
 
    
 endclass : riscv_v_scoreboard

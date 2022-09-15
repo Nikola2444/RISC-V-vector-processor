@@ -18,7 +18,7 @@ module alu #
     input [PARALLEL_IF_NUM-1:0][1:0] 		     output_sew_i,
     input [PARALLEL_IF_NUM-1:0] 		     alu_reduction_i,
     output logic [PARALLEL_IF_NUM-1:0][OP_WIDTH-1:0] alu_o,
-    input [PARALLEL_IF_NUM-1:0] 		     alu_vld_i,
+    input [PARALLEL_IF_NUM-1:0] 		     alu_lane_dvld_i,
     output [PARALLEL_IF_NUM-1:0] 		     alu_vld_o,
     output logic [PARALLEL_IF_NUM-1:0] 		     alu_mask_vector_o
 
@@ -29,7 +29,12 @@ module alu #
     // input 					     alu_stall_i
     );
 
-   logic [3:0][31:0] 				     alu_out;
+   logic [3:0][31:0] alu_out;
+   logic [3:0]	     alu_vld;
+
+   
+   assign alu_vld = alu_lane_dvld_i;
+   
 
    alu_submodule  #
      (.V_LANE_NUM(V_LANE_NUM))
@@ -48,7 +53,7 @@ module alu #
     .op1_i		(alu_a_i[0]),
     .op2_i		(alu_b_i[0]),
     .op3_i		(alu_c_i[0]),
-    .alu_vld_i		(alu_vld_i[0]));
+    .alu_vld_i		(alu_vld[0]));
    alu_submodule #
      (.V_LANE_NUM(V_LANE_NUM))
    alu_submodule_inst1
@@ -66,7 +71,7 @@ module alu #
     .op1_i		(alu_a_i[1]),
     .op2_i		(alu_b_i[1]),
     .op3_i		(alu_c_i[1]),
-    .alu_vld_i		(alu_vld_i[1]));
+    .alu_vld_i		(alu_vld[1]));
 
    alu_submodule #
      (.V_LANE_NUM(V_LANE_NUM))
@@ -85,7 +90,7 @@ module alu #
     .op1_i		(alu_a_i[2]),
     .op2_i		(alu_b_i[2]),
     .op3_i		(alu_c_i[2]),
-    .alu_vld_i		(alu_vld_i[2]));
+    .alu_vld_i		(alu_vld[2]));
    alu_submodule #
      (.V_LANE_NUM(V_LANE_NUM))
    alu_submodule_inst3
@@ -103,7 +108,7 @@ module alu #
     .op1_i		(alu_a_i[3]),
     .op2_i		(alu_b_i[3]),
     .op3_i		(alu_c_i[3]),
-    .alu_vld_i		(alu_vld_i[3]));
+    .alu_vld_i		(alu_vld[3]));
 
    always_comb
    begin

@@ -10,7 +10,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 
 
    int		branch_skip;
-   int		clock_cnt;
+   int		clock_cnt[4];
    int		thread_finished=0;
    logic[31:0] store_data[$];
    
@@ -26,10 +26,11 @@ class bd_v_instr_if_monitor extends uvm_monitor;
    virtual interface axi4_if v_axi4_vif;
 
    // current transaction
-   bd_v_instr_if_seq_item curr_it;
+   bd_v_instr_if_seq_item curr_it[4];
+   bd_v_instr_if_seq_item store_ch_item;
    logic [31:0] 			  store_data_queue[$];
    typedef enum 			  {collect_data_state, wait_for_finish_state, send_data_state} data_gather_states;
-   data_gather_states data_gather_fsm;
+   data_gather_states data_gather_fsm[4];
    logic [31:0] 			  instr_queue[4][$];
    logic [2:0] 				  sew_queue[4][$];
    logic [2:0] 				  lmul_queue[4][$];
@@ -77,7 +78,25 @@ class bd_v_instr_if_monitor extends uvm_monitor;
    task main_phase(uvm_phase phase);
 
       forever begin
-	 @(negedge vif.clk);	 
+	 @(negedge vif.clk);
+/* -----\/----- EXCLUDED -----\/-----
+	 fork	  
+	    begin
+	       lane_driver(0);
+	    end
+	    begin
+	       lane_driver(1);
+	    end
+	    begin
+	       lane_driver(2);
+	    end
+	    begin
+
+	       lane_driver(3);
+	    end
+	 join
+ -----/\----- EXCLUDED -----/\----- */
+
 	 store_checker();
       end
 
@@ -90,36 +109,35 @@ class bd_v_instr_if_monitor extends uvm_monitor;
                 $sformatf("V_MONITOR: VECTOR INSTRUCTION STARTED,  v_instruction: %x", vif.v_instruction),
                 UVM_HIGH)
 
-	 curr_it 	       = bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
-	 curr_it.v_instruction = vif.v_instruction;
-	 curr_it.sew 	       = vif.sew;
-	 curr_it.lmul 	       = vif.lmul;
-	 curr_it.vl 	       = vif.vl;
-	 curr_it.scalar        = vif.v_rs1_scalar;
-	 curr_it.scalar2       = vif.v_rs2_scalar;
-	 curr_it.store_check   = 0;
+	 store_ch_item 	       = bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
+	 store_ch_item.v_instruction = vif.v_instruction;
+	 store_ch_item.sew 	       = vif.sew;
+	 store_ch_item.lmul 	       = vif.lmul;
+	 store_ch_item.vl 	       = vif.vl;
+	 store_ch_item.scalar        = vif.v_rs1_scalar;
+	 store_ch_item.scalar2       = vif.v_rs2_scalar;
+	 store_ch_item.store_check   = 0;
 	 
-	 item_collected_port.write(curr_it);
-	 curr_it=null;
+	 item_collected_port.write(store_ch_item);
+	 store_ch_item=null;
       end
       #1;
       if (v_axi4_vif.m_axi_wvalid && v_axi4_vif.m_axi_wready)
       begin
 	 store_data.push_back(v_axi4_vif.m_axi_wdata);
 	 if (v_axi4_vif.m_axi_wlast)begin
-	    curr_it = bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
-	    curr_it.store_data=store_data;
-	    curr_it.store_check=1;
+	    store_ch_item = bd_v_instr_if_seq_item::type_id::create("bd_v_instr_if_seq_item", this);
+	    store_ch_item.store_data=store_data;
+	    store_ch_item.store_check=1;
 	    //$display("store_check function called, dut_result: %x", store_data[0]);
-	    item_collected_port.write(curr_it);
+	    item_collected_port.write(store_ch_item);
 	    store_data.delete();
-	    curr_it=null;
+	    store_ch_item=null;
 	 end
       end
 
       
    endtask
-/* -----\/----- EXCLUDED -----\/-----
    task lane_driver(int idx);
 
       case (data_gather_fsm[idx])
@@ -154,7 +172,8 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	    data_gather_fsm[idx]=collect_data_state;
 	 end
       endcase
-/-* -----\/----- EXCLUDED -----\/-----
+
+/* -----\/----- EXCLUDED -----\/-----
       if (driver_processing[idx][0]==1 && vif.ready[idx])
       begin
 	 fork
@@ -187,7 +206,8 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	 join_none
 	 
       end
- -----/\----- EXCLUDED -----/\----- *-/
+ -----/\----- EXCLUDED -----/\----- */
+
 
       //every time write happens, write data into temp vrf.
       for (int lane=0; lane <`V_LANES; lane++)
@@ -196,7 +216,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	  begin	     
 	     waddr[idx] = vif.vrf_waddr[idx][lane];	     
 	     temp_vrf_read_ram[idx][lane][waddr[idx]][byte_idx*8 +: 8] = vif.vrf_wdata[idx][lane][byte_idx*8 +: 8];
-	     $display("temp_vrf_read_ram[%d][%d][%d][%d]= %x", idx, lane, waddr[idx], byte_idx, temp_vrf_read_ram[idx][lane][waddr[idx]][byte_idx*8 +: 8]);
+	     //$display("temp_vrf_read_ram[%d][%d][%d][%d]= %x", idx, lane, waddr[idx], byte_idx, temp_vrf_read_ram[idx][lane][waddr[idx]][byte_idx*8 +: 8]);
 	  end
       if (vif.start[idx] && vif.ready[idx])
       begin
@@ -215,7 +235,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 
       end            
    endtask
- -----/\----- EXCLUDED -----/\----- */
+
 
    
    

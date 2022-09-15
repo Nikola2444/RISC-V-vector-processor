@@ -10,91 +10,91 @@ module complete_sublane_driver
     )
    (
     // Clock and Reset
-    input 							clk_i,
-    input 							rstn_i,
+    input							clk_i,
+    input							rstn_i,
    
     // General signals
-    input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0] 	vl_i, // per lane: vl_i / 8 + !(vl_i % 8 == 0)
-    input logic [1 : 0] 					vsew_i,
-    output logic [1 : 0] 					vsew_o,//reg
-    output logic [1 : 0] 					vrf_write_sew_o,//reg
-    input logic [2 : 0] 					vlmul_i, // NEW SIGNAL
+    input logic [$clog2(VLANE_NUM * MAX_VL_PER_LANE) - 1 : 0]	vl_i, // per lane: vl_i / 8 + !(vl_i % 8 == 0)
+    input logic [1 : 0]						vsew_i,
+    output logic [1 : 0]					vsew_o,//reg
+    output logic [1 : 0]					vrf_write_sew_o,//reg
+    input logic [2 : 0]						vlmul_i, // NEW SIGNAL
    
     // Control Flow signals
-    input logic [$clog2(INST_TYPE_NUM) - 1 : 0] 		inst_type_i, // 0 - normal, 1 - reduction, 2 - load, ...
+    input logic [$clog2(INST_TYPE_NUM) - 1 : 0]			inst_type_i, // 0 - normal, 1 - reduction, 2 - load, ...
    
     // Handshaking
-    input 							start_i,
-    output logic 						ready_o,//reg
+    input							start_i,
+    output logic						ready_o,//reg
    
     // Inst timing signals
-    input logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] 		inst_delay_i,
+    input logic [$clog2(MAX_VL_PER_LANE) - 1 : 0]		inst_delay_i,
    
     // Signals for read data valid logic
-    output logic [VLANE_NUM - 1 : 0] 				read_data_valid_o,//reg
+    output logic [VLANE_NUM - 1 : 0]				read_data_valid_o,//reg
    
     // VRF
-    input logic 						vrf_ren_i, // unknown behaviour 
-    input logic 						vrf_oreg_ren_i, // unknown behaviour
-    input logic [8 * $clog2(MEM_DEPTH) - 1 : 0] 		vrf_starting_waddr_i,
-    input logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0] 		vrf_starting_raddr_i, // UPDATED
-    input logic [1 : 0] 					vrf_write_sew_i, // 1 - byte, 2 - halfword, 3 - word
-    output logic 						vrf_ren_o,//reg
-    output logic 						vrf_oreg_ren_o,//reg
-    output logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0] vrf_waddr_o,//reg
-    output logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0] 		vrf_raddr_o, //reg UPDATED, 0 - vs1, 1 - vs2, 2 - vs3(only for three operands)  
-    output logic [VLANE_NUM - 1 : 0][3 : 0] 			vrf_bwen_o,//not reg but ok
+    input logic							vrf_ren_i, // unknown behaviour 
+    input logic							vrf_oreg_ren_i, // unknown behaviour
+    input logic [8 * $clog2(MEM_DEPTH) - 1 : 0]			vrf_starting_waddr_i,
+    input logic [2 : 0][8 * $clog2(MEM_DEPTH) - 1 : 0]		vrf_starting_raddr_i, // UPDATED
+    input logic [1 : 0]						vrf_write_sew_i, // 1 - byte, 2 - halfword, 3 - word
+    output logic						vrf_ren_o,//reg
+    output logic						vrf_oreg_ren_o,//reg
+    output logic [VLANE_NUM - 1 : 0][$clog2(MEM_DEPTH) - 1 : 0]	vrf_waddr_o,//reg
+    output logic [2 : 0][$clog2(MEM_DEPTH) - 1 : 0]		vrf_raddr_o, //reg UPDATED, 0 - vs1, 1 - vs2, 2 - vs3(only for three operands)  
+    output logic [VLANE_NUM - 1 : 0][3 : 0]			vrf_bwen_o,//not reg but ok
    
     // VMRF
-    output logic [$clog2(MAX_VL_PER_LANE) - 1 : 0] 		vmrf_addr_o, //reg
-    output logic 						vmrf_wen_o,//not reg
+    output logic [$clog2(MAX_VL_PER_LANE) - 1 : 0]		vmrf_addr_o, //reg
+    output logic						vmrf_wen_o,//not reg
    
     // Load and Store
-    input logic 						load_valid_i, 
-    input logic 						load_last_i, 
-    output logic 						ready_for_load_o, // not reg
-    input logic [VLANE_NUM - 1 : 0][3 : 0] 			load_bwen_i, 
+    input logic							load_valid_i, 
+    input logic							load_last_i, 
+    output logic						ready_for_load_o, // not reg
+    input logic [VLANE_NUM - 1 : 0][3 : 0]			load_bwen_i, 
    
-    input logic [$clog2(R_PORTS_NUM) - 1 : 0] 			store_data_mux_sel_i,
-    input logic [$clog2(R_PORTS_NUM) - 1 : 0] 			store_load_index_mux_sel_i,
-    output logic 						store_data_valid_o,//reg
-    output logic 						store_load_index_valid_o,//reg
-    output logic [$clog2(R_PORTS_NUM) - 1 : 0] 			store_data_mux_sel_o,//reg
-    output logic [$clog2(R_PORTS_NUM) - 1 : 0] 			store_load_index_mux_sel_o,//reg
+    input logic [$clog2(R_PORTS_NUM) - 1 : 0]			store_data_mux_sel_i,
+    input logic [$clog2(R_PORTS_NUM) - 1 : 0]			store_load_index_mux_sel_i,
+    output logic						store_data_valid_o,//reg
+    output logic						store_load_index_valid_o,//reg
+    output logic [$clog2(R_PORTS_NUM) - 1 : 0]			store_data_mux_sel_o,//reg
+    output logic [$clog2(R_PORTS_NUM) - 1 : 0]			store_load_index_mux_sel_o,//reg
    
     // Signals for reductions
-    input logic [VLANE_NUM - 2 : 0][31 : 0] 			lane_result_i,
+    input logic [VLANE_NUM - 2 : 0][31 : 0]			lane_result_i,
    
     // ALU
-    input logic [1 : 0] 					op2_sel_i,
-    input logic [$clog2(R_PORTS_NUM) - 1 : 0] 			op3_sel_i, // Determined by port allocation
-    input logic [31 : 0] 					ALU_x_data_i,
-    input logic [4 : 0] 					ALU_imm_i,
-    input logic [ALU_OPMODE - 1 : 0] 				ALU_opmode_i,
-    input logic 						reduction_op_i,
-    output logic [1 : 0] 					op2_sel_o,// not reg but seems ok
-    output logic [$clog2(R_PORTS_NUM) - 1 : 0] 			op3_sel_o,//reg
-    output logic [31 : 0] 					ALU_x_data_o,//reg
-    output logic [4 : 0] 					ALU_imm_o,//reg
-    output logic [31 : 0] 					ALU_reduction_data_o,//not reg but ok
-    output logic [ALU_OPMODE - 1 : 0] 				ALU_ctrl_o,//reg
-    output logic 						reduction_op_o, // reg
-    input logic 						alu_en_32bit_mul_i, // NEW SIGNAL
-    output logic 						alu_en_32bit_mul_o, 
+    input logic [1 : 0]						op2_sel_i,
+    input logic [$clog2(R_PORTS_NUM) - 1 : 0]			op3_sel_i, // Determined by port allocation
+    input logic [31 : 0]					ALU_x_data_i,
+    input logic [4 : 0]						ALU_imm_i,
+    input logic [ALU_OPMODE - 1 : 0]				ALU_opmode_i,
+    input logic							reduction_op_i,
+    output logic [1 : 0]					op2_sel_o,// not reg but seems ok
+    output logic [$clog2(R_PORTS_NUM) - 1 : 0]			op3_sel_o,//reg
+    output logic [31 : 0]					ALU_x_data_o,//reg
+    output logic [4 : 0]					ALU_imm_o,//reg
+    output logic [31 : 0]					ALU_reduction_data_o,//not reg but ok
+    output logic [ALU_OPMODE - 1 : 0]				ALU_ctrl_o,//reg
+    output logic						reduction_op_o, // reg
+    input logic							alu_en_32bit_mul_i, // NEW SIGNAL
+    output logic						alu_en_32bit_mul_o, 
    
     // Slides
     //input logic slide_type_i,
-    input logic 						up_down_slide_i, // 0 for down, 1 for up
-    input logic [31 : 0] 					slide_amount_i,
-    output logic [$clog2(VLANE_NUM)-1:0] 			slide_data_mux_sel_o,//reg
-    output logic 						up_down_slide_o,//reg
-    output logic [1:0] 						vrf_read_sew_o,//reg
-    output logic 						request_write_control_o, //not_reg but ok- 0 - ALU generates valid signal, 1 - only bwen_reg is important 
+    input logic							up_down_slide_i, // 0 for down, 1 for up
+    input logic [31 : 0]					slide_amount_i,
+    output logic [$clog2(VLANE_NUM)-1:0]			slide_data_mux_sel_o,//reg
+    output logic						up_down_slide_o,//reg
+    output logic [1:0]						vrf_read_sew_o,//reg
+    output logic						request_write_control_o, //not_reg but ok- 0 - ALU generates valid signal, 1 - only bwen_reg is important 
     // Misc signals
-    input 							vector_mask_i,
-    output logic [1:0][1:0] 					vrf_read_byte_sel_o,//not reg
-    output logic 						vector_mask_o,//reg
-    output logic [1 : 0] 					vrf_write_mux_sel_o//reg
+    input							vector_mask_i,
+    output logic [1:0][1:0]					vrf_read_byte_sel_o,//not reg
+    output logic						vector_mask_o,//reg
+    output logic [1 : 0]					vrf_write_mux_sel_o//reg
    
     );
 
@@ -739,11 +739,12 @@ module complete_sublane_driver
             
             case({inst_type_comp[5], inst_type_comp[3 : 1]})
                4'b0001 : begin                                            // REDUCTION
-                  if(main_cnt == (dp0_reg.read_limit + dp0_reg.inst_delay - 1)) begin                               // Not yet specified                  
+                  //if(main_cnt == (dp0_reg.read_limit + dp0_reg.inst_delay - 1)) begin                               // Not yet specified
+		  if(main_cnt == (dp0_reg.read_limit + VRF_DELAY-2)) begin                               // Not yet specified                  
                      next_state       = REDUCTION_MODE;
-		     shift_partial    = 1;
-		     waddr_out_reg_en = 1;
-		     read_data_valid[0] = partial_results_valid;
+		     //shift_partial    = 1;
+		     //waddr_out_reg_en = 1;
+		     //read_data_valid[0] = partial_results_valid;
                   end                                   
                end
                4'b0010 : begin                                            // STORE		  
@@ -787,23 +788,25 @@ module complete_sublane_driver
             main_cnt_en        = 1;            
             shift_partial      = 1;
             read_data_valid[0] = partial_results_valid;
-            
-            if(main_cnt == REDUCTION_MODE_LIMIT) begin
+
+            waddr_out_reg_en = 1;
+            if(main_cnt == REDUCTION_MODE_LIMIT) begin//in the previous state we allready generated one valid
                next_state   = REDUCTION_WRITE_MODE;
-	       read_data_valid[0] = 0;
+	       //read_data_valid[0] = 0;
 	       //shift_partial = 0;
             end
+	    
          end
          REDUCTION_WRITE_MODE : begin            
             request_write_control_o = 1'b1; 
             main_cnt_en 	    = 1;
-            
-            if(main_cnt == dp0_reg.inst_delay+1) begin
+            dp0_next.en_write = 0;
+            if(main_cnt == dp0_reg.inst_delay) begin
                dp0_next.en_write = 1;
                dp0_next.vmrf_wen = 1;
             end
             
-            if(dp0_reg.en_write) begin
+            if(main_cnt == dp0_reg.inst_delay+2) begin
                next_state 	     = IDLE;
                dp0_next.reduction_op = 0;
                dp0_next.en_write     = 0;
@@ -908,7 +911,7 @@ module complete_sublane_driver
    assign store_load_index_valid_o = dp0_reg.store_load_index_valid;
    assign store_data_valid_o = dp0_reg.store_data_valid;
    // Selecting ALU operands and ALU control
-   assign op2_sel_o = (current_state == REDUCTION_MODE) ? 2'b11 : dp0_reg.op2_sel;
+   assign op2_sel_o = (current_state == REDUCTION_MODE || current_state==REDUCTION_WRITE_MODE) ? 2'b11 : dp0_reg.op2_sel;
    assign op3_sel_o = dp0_reg.op3_sel;
    assign ALU_x_data_o = dp0_reg.ALU_x_data;
    assign ALU_imm_o = dp0_reg.ALU_imm;   
@@ -925,6 +928,5 @@ module complete_sublane_driver
    assign vsew_o = dp0_reg.sew;
 
    //reduction output
-   assign ALU_reduction_data_o = lane_result_i[main_cnt[$clog2(VLANE_NUM - 1) - 1 : 0]];   
-   
+   assign ALU_reduction_data_o = lane_result_i[main_cnt[$clog2(VLANE_NUM - 1) - 1 : 0]];     
 endmodule

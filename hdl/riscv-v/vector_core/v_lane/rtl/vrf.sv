@@ -32,7 +32,8 @@ module vrf #
    localparam LP_BANK_NUM           = W_PORTS_NUM/MULTIPUMP_WRITE;
    localparam LP_LVT_BRAM_PER_BANK  = W_PORTS_NUM/MULTIPUMP_WRITE-1;
    localparam LP_READ_BRAM_PER_BANK = R_PORTS_NUM/MULTIPUMP_READ;
-   localparam LP_INPUT_REG_NUM      = RAM_PERFORMANCE == "HIGH_PERFORMANCE" && MULTIPUMP_WRITE==1 ? 2 : 1;
+   localparam LP_BRAM_IN_REG_NUM    = 2;
+   localparam LP_INPUT_REG_NUM      = (RAM_PERFORMANCE == "HIGH_PERFORMANCE" && MULTIPUMP_WRITE==1) || LP_BRAM_IN_REG_NUM>1 ? 2 : 1;
    //localparam LP_INPUT_REG_NUM      = RAM_PERFORMANCE == "HIGH_PERFORMANCE" ? 2 : 1;
    typedef int 					   lvt_raddr_type[LP_BANK_NUM][LP_LVT_BRAM_PER_BANK];
    localparam lvt_raddr_type lvt_raddr_array=lvt_raddr_set();
@@ -184,20 +185,21 @@ module vrf #
 			      .COL_WIDTH	(8),
 			      .RAM_DEPTH	(MEM_DEPTH),
 			      .RAM_PERFORMANCE	(RAM_PERFORMANCE),
+			      .IN_REG_NUM       (LP_BRAM_IN_REG_NUM),
 			      .INIT_FILE		(""))
 	       LVT_RAMs(/*AUTO_INST*/
 			// Outputs
 			.doutb		(lvt_ram_dout[i][j]),
 			// Inputs
-			.addra  (lvt_ram_waddr[i][j]),
-			.addrb  (lvt_ram_raddr[i][j]),
-			.dina   (lvt_ram_din[i][j]),
-			.clka   (clk2),
-			.wea    (lvt_ram_bwe[i][j]),
-			.enb    (1'b1),
-			.clkb   (clk2),
-			.rstb   (1'b0),
-			.regceb (1'b1));
+			.addra		(lvt_ram_waddr[i][j]),
+			.addrb		(lvt_ram_raddr[i][j]),
+			.dina		(lvt_ram_din[i][j]),
+			.clka		(clk2),
+			.wea		(lvt_ram_bwe[i][j]),
+			.enb		(1'b1),
+			.clkb		(clk2),
+			.rstb		(1'b0),
+			.regceb		(1'b1));
 	    end
 	    else
 	    begin: gen_LUTRAM
@@ -312,6 +314,7 @@ module vrf #
 			      .NB_COL		(NUM_OF_BYTES),
 			      .COL_WIDTH	(8),
 			      .RAM_DEPTH	(MEM_DEPTH),
+			      .IN_REG_NUM       (LP_BRAM_IN_REG_NUM),
 			      .RAM_PERFORMANCE	(RAM_PERFORMANCE),
 			      .INIT_FILE	(""))
 	       READ_RAMs(/*AUTO_INST*/
@@ -419,7 +422,7 @@ module vrf #
 	       end
 	    end	
 	 end
-
+	 
 	 always @(posedge clk2)
 	 begin
 	    if (!rstn2)

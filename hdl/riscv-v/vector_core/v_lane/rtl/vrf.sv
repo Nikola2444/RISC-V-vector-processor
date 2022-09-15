@@ -62,26 +62,26 @@ module vrf #
    
    //localparam int [LP_BANK_NUM][LP_LVT_BRAM_PER_BANK] LP_LVT_RAM_WADDR_ARRAY = lvt_r_addr_array();
 
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0] lvt_ram_raddr;
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0] 			    lvt_ram_ren;
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0] 			    lvt_ram_oreg_en; 
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0] [MEM_WIDTH-1:0] 	    lvt_ram_dout;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0]  lvt_ram_raddr;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0]			     lvt_ram_ren;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0]			     lvt_ram_oreg_en; 
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0] [MEM_WIDTH-1:0]	     lvt_ram_dout;
    
    // LVT BRAMs IF
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0] lvt_ram_waddr;
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][NUM_OF_BYTES-1:0] 	    lvt_ram_bwe;
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0] 			    lvt_ram_wen;
-   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][MEM_WIDTH-1:0] 	    lvt_ram_din;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0]  lvt_ram_waddr;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][NUM_OF_BYTES-1:0]	     lvt_ram_bwe;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0]			     lvt_ram_wen;
+   logic [LP_BANK_NUM-1:0][LP_LVT_BRAM_PER_BANK-1:0][MEM_WIDTH-1:0]	     lvt_ram_din;
 
    logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0] read_ram_raddr;
-   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0] 			     read_ram_ren;
-   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0] 			     read_ram_oreg_en; 
-   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0] [MEM_WIDTH-1:0] 	     read_ram_dout;
+   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0]			     read_ram_ren;
+   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0]			     read_ram_oreg_en; 
+   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0] [MEM_WIDTH-1:0]	     read_ram_dout;
    
    // READ BRAMs IF
    logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][$clog2(MEM_DEPTH)-1:0] read_ram_waddr;
-   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][NUM_OF_BYTES-1:0] 	     read_ram_bwe;
-   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][MEM_WIDTH-1:0] 	     read_ram_din;
+   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][NUM_OF_BYTES-1:0]	     read_ram_bwe;
+   logic [LP_BANK_NUM-1:0][LP_READ_BRAM_PER_BANK-1:0][MEM_WIDTH-1:0]	     read_ram_din;
 
    //input registers
 
@@ -91,18 +91,19 @@ module vrf #
    //logic [R_PORTS_NUM-1:0] [MEM_WIDTH-1:0] 				     data_reg;
    
    // write IF
-   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][$clog2(MEM_DEPTH)-1:0]      waddr_reg;
-   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][NUM_OF_BYTES-1:0] 	     bwe_reg;
+   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][$clog2(MEM_DEPTH)-1:0]	     waddr_reg;
+   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][NUM_OF_BYTES-1:0]	     bwe_reg;
    //logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0] 			     wen_reg;
-   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][MEM_WIDTH-1:0] 	     din_reg;
+   logic [W_PORTS_NUM-1:0][LP_INPUT_REG_NUM-1:0][MEM_WIDTH-1:0]		     din_reg;
 
 
-   logic [$clog2(MULTIPUMP_WRITE)-1:0] 					     multipump_sel_reg;
-   logic [LP_BANK_NUM-1:0][LP_BANK_NUM-1:0][MEM_WIDTH-1:0] 		     lvt_write_xor_in;
-   logic [LP_BANK_NUM-1:0][MEM_WIDTH-1:0] 				     lvt_write_xor_out;
-   logic [LP_READ_BRAM_PER_BANK-1:0][LP_BANK_NUM-1:0][MEM_WIDTH-1:0] 	     lvt_read_xor;
+   logic [$clog2(MULTIPUMP_WRITE)-1:0]					     multipump_sel_reg;
+   logic [LP_BANK_NUM-1:0][LP_BANK_NUM-1:0][MEM_WIDTH-1:0]		     lvt_write_xor_in;
+   logic [LP_BANK_NUM-1:0][MEM_WIDTH-1:0]				     lvt_write_xor_out;
+   logic [LP_READ_BRAM_PER_BANK-1:0][LP_BANK_NUM-1:0][MEM_WIDTH-1:0]	     lvt_read_xor;
 
-   logic 								     read_clk;
+   logic								     read_clk;
+   logic								     multipump_sel_rst;
    
    
    always @(posedge clk)
@@ -137,39 +138,32 @@ module vrf #
 	end	
    end
    
-   assign multipump_sel_reg = ~clk;
+   //assign multipump_sel_reg = ~clk;
    
 
-/* -----\/----- EXCLUDED -----\/-----
+
+
    logic reset_value;
-   always @(negedge clk2)
+   always @(posedge clk)
    begin
-      reset_value <= clk;
+      multipump_sel_rst <= rstn;
    end
    
-   always @(posedge clk2)
-   begin
-      if(!rstn)
-      begin
-	 multipump_sel_reg <= reset_value;
-      end
-      else
-	multipump_sel_reg <= ~multipump_sel_reg;
-   end	
- -----/\----- EXCLUDED -----/\----- */
 
 
-/* -----\/----- EXCLUDED -----\/-----
    always @(posedge clk2)
    begin
-      if(!rstn)
+      if(!multipump_sel_rst)
       begin
 	 multipump_sel_reg <=0;
       end
       else
 	multipump_sel_reg <= ~multipump_sel_reg;
    end	
- -----/\----- EXCLUDED -----/\----- */
+
+
+
+
    
    //generating LVT brams per bank
    generate

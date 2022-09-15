@@ -52,6 +52,7 @@ module riscv_v_verif_top;
    logic 	clk;
    logic 	clk2;
    logic 	rstn;
+   logic 	rstn2;
    int          num_of_instr;
    string 	assembly_file_path = "../../../../../../RISCV-GCC-compile-scripts/assembly.dump";
       
@@ -95,6 +96,7 @@ module riscv_v_verif_top;
       .clk		(v_axi4_vif.clk),
       .clk2		(clk2),
       .rstn		(v_axi4_vif.rstn),
+      .rstn2		(rstn2),
       .v_m_axi_awready	(v_axi4_vif.m_axi_awready),
       .v_m_axi_wready	(v_axi4_vif.m_axi_wready),
       .v_m_axi_arready	(v_axi4_vif.m_axi_arready),
@@ -190,7 +192,9 @@ module riscv_v_verif_top;
       clk <= 0;
       clk2 <= 1;
       rstn <= 0;
-      #950 rstn <= 1;
+      rstn2 <= 0;
+      #892 rstn <= 1;
+      rstn2 <= 1;
       ce <= 1'b1;      
    end
    logic[31:0] LVT0_xor_LVT1;

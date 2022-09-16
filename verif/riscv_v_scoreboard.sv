@@ -477,7 +477,7 @@ class riscv_v_scoreboard extends uvm_scoreboard;
       mop = tr.v_instruction[27:26];
       funct6=tr.v_instruction[31:26];
       store_idx=store_queue.size();
-      $display("store queue size: %d", store_queue.size());
+      //$display("store queue size: %d", store_queue.size());
       store_instr_queue.push_back(tr.v_instruction);
       //$display("store instr queue size: %d", store_instr_queue.size());
 

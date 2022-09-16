@@ -479,6 +479,9 @@ module v_dpu#
    logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
    logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0]  op2_sel;
    logic [VRF_DELAY-1:0][1:0] 			      slide_read_byte_sel_reg;
+
+   // we need to sync data that goes through vector lane with
+   // data that doesnt.
    always@(posedge clk_i)
    begin
       if (!rstn_i)

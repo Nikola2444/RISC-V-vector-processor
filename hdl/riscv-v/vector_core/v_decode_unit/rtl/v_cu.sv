@@ -493,7 +493,7 @@ module v_cu #
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
    // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 'h9 : 
+   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 'h8 : 
 			 slide_instr_check ? LP_VRF_DELAY : 'h8;
    
    // instructions that dont read from VRF are load and config

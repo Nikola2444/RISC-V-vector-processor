@@ -801,12 +801,12 @@ module complete_sublane_driver
             request_write_control_o = 1'b1; 
             main_cnt_en 	    = 1;
             dp0_next.en_write = 0;
-            if(main_cnt == dp0_reg.inst_delay) begin
+            if(main_cnt == dp0_reg.inst_delay-1) begin
                dp0_next.en_write = 1;
                dp0_next.vmrf_wen = 1;
             end
             
-            if(main_cnt == dp0_reg.inst_delay+2) begin
+            if(main_cnt == dp0_reg.inst_delay) begin
                next_state 	     = IDLE;
                dp0_next.reduction_op = 0;
                dp0_next.en_write     = 0;
@@ -823,13 +823,13 @@ module complete_sublane_driver
 	       waddr_out_reg_en  = 1;
 	       dp0_next.bwen_en  = 1;
 	       dp0_next.en_write = 1;
-
 	    end
+
 	    if(main_cnt >= dp0_reg.inst_delay+1)
 	       request_write_control_o = 1'b1;
-	    if(main_cnt > main_cnt_limit)
-	      request_write_control_o = 0;
+
             if(main_cnt > main_cnt_limit) begin
+	       request_write_control_o = 0;
                next_state 	       = IDLE;	       
                dp0_next.vmrf_wen       = 0;
                dp0_next.en_comp        = 0;

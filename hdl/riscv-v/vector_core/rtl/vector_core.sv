@@ -6,6 +6,7 @@ module vector_core #
    parameter MULTIPUMP_WRITE = 2,
    parameter MULTIPUMP_READ  = 2,
    parameter MEM_WIDTH =32,
+
    parameter C_M_AXI_ADDR_WIDTH       = 32,
    parameter C_M_AXI_DATA_WIDTH       = 32,
    parameter C_XFER_SIZE_WIDTH        = 32
@@ -14,19 +15,23 @@ module vector_core #
    // Outputs
    vector_stall_o, ctrl_raddr_offset_o, ctrl_rxfer_size_o,
    ctrl_rstart_o, rd_tready_o, ctrl_waddr_offset_o, ctrl_wxfer_size_o,
-   ctrl_wstart_o, wr_tdata_o, wr_tvalid_o,ctrl_wstrb_msk_en_o, wr_tstrb_msk_o,
+   ctrl_wstart_o, ctrl_wstrb_msk_en_o, wr_tstrb_msk_o, wr_tdata_o,
+   wr_tvalid_o,
    // Inputs
    clk, clk2, rstn, rstn2, rs1_i, rs2_i, vector_instr_i, ctrl_rdone_i,
    rd_tdata_i, rd_tvalid_i, rd_tlast_i, ctrl_wdone_i, wr_tready_i
    );
    localparam LP_VECTOR_REGISTER_NUM=32;
    localparam LP_MAX_LMUL=8;
-   localparam MEM_DEPTH=VLEN/VLANE_NUM;
-   localparam ALU_OPMODE_WIDTH=9;
+   localparam LP_MEM_DEPTH=VLEN/VLANE_NUM;
+   localparam LP_ALU_OPMODE_WIDTH=9;
+   localparam LP_VRF_READ_DELAY=4;
+   localparam LP_ALU_DELAY=4;
+   localparam LP_VRF_WRITE_DELAY=3;
    // Number of bytes in VRF
    localparam LP_LANE_VRF_EL_NUM=VLEN*LP_VECTOR_REGISTER_NUM/8/VLANE_NUM;
    localparam LP_MAX_VL_PER_LANE=VLEN/8/VLANE_NUM*LP_MAX_LMUL;
-   localparam VREG_LOC_PER_LANE = VLEN/VLANE_NUM/32; 
+   localparam LP_VREG_LOC_PER_LANE = VLEN/VLANE_NUM/32; 
 
    input 	 clk;
    input 	 clk2;
@@ -85,16 +90,16 @@ module vector_core #
 
    //renaming_unit-vcu
    logic 				 ru_vrf_starting_addr_vld;
-   logic [8*$clog2( MEM_DEPTH)-1:0] 	 ru_vrf_starting_waddr;
-   logic [8*$clog2( MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr0;
-   logic [8*$clog2( MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr1;
+   logic [8*$clog2( LP_MEM_DEPTH)-1:0] 	 ru_vrf_starting_waddr;
+   logic [8*$clog2( LP_MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr0;
+   logic [8*$clog2( LP_MEM_DEPTH)-1:0] 	 ru_vrf_starting_raddr1;
    
 
    // V_CU-Vector_lanes interconnections
    logic [2:0] 				 inst_type;
    logic [W_PORTS_NUM-1:0] 		 start;
    logic [4:0] 				 alu_imm;	// From v_cu_inst of v_cu.v
-   logic [ALU_OPMODE_WIDTH-1:0] 	 alu_opmode;// From v_cu_inst of v_cu.v
+   logic [LP_ALU_OPMODE_WIDTH-1:0] 	 alu_opmode;// From v_cu_inst of v_cu.v
    logic 				 reduction_op;// From v_cu_inst of v_cu.v
    logic [31:0] 			 alu_x_data;	// From v_cu_inst of v_cu.v
    logic [$clog2(LP_MAX_VL_PER_LANE)-1:0] inst_delay;// From v_cu_inst of v_cu.v
@@ -112,9 +117,9 @@ module vector_core #
    logic [31:0] 			  vl_o;			// From v_cu_inst of v_cu.v
    logic 				  vrf_oreg_ren;		// From v_cu_inst of v_cu.v
    logic 				  vrf_ren;		// From v_cu_inst of v_cu.v
-   logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
-   logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
-   logic [8*$clog2( MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
+   logic [8*$clog2( LP_MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs1;// From v_cu_inst of v_cu.v
+   logic [8*$clog2( LP_MEM_DEPTH)-1:0] 	  vrf_starting_raddr_vs2;// From v_cu_inst of v_cu.v
+   logic [8*$clog2( LP_MEM_DEPTH)-1:0] 	  vrf_starting_waddr;// From v_cu_inst of v_cu.v
    logic [1:0] 				  vrf_write_sew;		// From v_cu_inst of v_cu.v
    logic [W_PORTS_NUM-1:0] 		  port_group_ready;
    logic [2:0] 				  store_data_mux_sel;
@@ -193,7 +198,10 @@ module vector_core #
 	  .VLEN				(VLEN),
 	  .VLANE_NUM			(VLANE_NUM),
 	  .R_PORTS_NUM			(R_PORTS_NUM),
-	  .W_PORTS_NUM			(W_PORTS_NUM))
+	  .W_PORTS_NUM			(W_PORTS_NUM),
+	  .VRF_READ_DELAY(LP_VRF_READ_DELAY),
+	  .VRF_WRITE_DELAY(LP_VRF_WRITE_DELAY),
+	  .ALU_DELAY(LP_ALU_DELAY))
    v_cu_inst(/*AUTO_INST*/
 	     // Outputs
 	     .instr_rdy_o		(instr_rdy),
@@ -206,9 +214,9 @@ module vector_core #
 	     .inst_delay_o		(inst_delay/*[W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0]*/),
 	     .vrf_ren_o			(vrf_ren),
 	     .vrf_oreg_ren_o		(vrf_oreg_ren),
-	     .vrf_starting_waddr_o	(vrf_starting_waddr[8*$clog2( MEM_DEPTH)-1:0]),
-	     .vrf_starting_raddr_vs1_o	(vrf_starting_raddr_vs1[8*$clog2( MEM_DEPTH)-1:0]),
-	     .vrf_starting_raddr_vs2_o	(vrf_starting_raddr_vs2[8*$clog2( MEM_DEPTH)-1:0]),
+	     .vrf_starting_waddr_o	(vrf_starting_waddr[8*$clog2( LP_MEM_DEPTH)-1:0]),
+	     .vrf_starting_raddr_vs1_o	(vrf_starting_raddr_vs1[8*$clog2( LP_MEM_DEPTH)-1:0]),
+	     .vrf_starting_raddr_vs2_o	(vrf_starting_raddr_vs2[8*$clog2( LP_MEM_DEPTH)-1:0]),
 	     .vrf_write_sew_o		(vrf_write_sew[1:0]),
 	     .store_data_mux_sel_o	(store_data_mux_sel[$clog2(R_PORTS_NUM)-1:0]),
 	     .store_load_index_mux_sel_o(store_load_idx_mux_sel[$clog2(R_PORTS_NUM)-1:0]),
@@ -216,7 +224,7 @@ module vector_core #
 	     .op3_sel_o			(op3_sel/*[W_PORTS_NUM-1:0][$clog2(R_PORTS_NUM)-1:0]*/),
 	     .alu_x_data_o		(alu_x_data/*[W_PORTS_NUM-1:0][31:0]*/),
 	     .alu_imm_o			(alu_imm/*[W_PORTS_NUM-1:0][4:0]*/),
-	     .alu_opmode_o		(alu_opmode/*[W_PORTS_NUM-1:0][ALU_OPMODE_WIDTH-1:0]*/),
+	     .alu_opmode_o		(alu_opmode/*[W_PORTS_NUM-1:0][LP_ALU_OPMODE_WIDTH-1:0]*/),
 	     .reduction_op_o            (reduction_op),
 	     .up_down_slide_o		(up_down_slide),
 	     .slide_amount_o		(slide_amount[31:0]),
@@ -241,9 +249,9 @@ module vector_core #
    v_dpu # 
      (/*AUTO_INSTPARAM*/
       // Parameters
-      . MEM_DEPTH			( MEM_DEPTH),
+      .MEM_DEPTH			( LP_MEM_DEPTH),
       .MAX_VL_PER_LANE 		        (LP_MAX_VL_PER_LANE),
-      .VREG_LOC_PER_LANE		(VREG_LOC_PER_LANE),
+      .VREG_LOC_PER_LANE		(LP_VREG_LOC_PER_LANE),
       .W_PORTS_NUM			(W_PORTS_NUM),
       .R_PORTS_NUM			(R_PORTS_NUM),
       .INST_TYPE_NUM			(7),
@@ -251,24 +259,27 @@ module vector_core #
       .ALU_OPMODE			(9),
       .MULTIPUMP_WRITE			(MULTIPUMP_WRITE),
       .MULTIPUMP_READ			(MULTIPUMP_READ),
-      .MEM_WIDTH			(MEM_WIDTH))
+      .MEM_WIDTH			(MEM_WIDTH),
+      .VRF_READ_DELAY                   (LP_VRF_READ_DELAY),
+      .VRF_WRITE_DELAY                  (LP_VRF_WRITE_DELAY),
+      .ALU_DELAY                        (LP_ALU_DELAY))
    v_dpu_inst
      (/*AUTO_INST*/
       // Outputs
-      .ready_for_load_o			    (vlane_load_rdy),
-      .store_data_o			        (vlane_store_data),
-      .store_load_index_o		    (vlane_st_ld_idx),
-      .store_data_valid_o		    (vlane_store_dvalid),
+      .ready_for_load_o		(vlane_load_rdy),
+      .store_data_o		(vlane_store_data),
+      .store_load_index_o	(vlane_st_ld_idx),
+      .store_data_valid_o	(vlane_store_dvalid),
       .store_load_index_valid_o	(vlane_st_ld_ivalid),
-      .load_valid_i			        (vlane_load_dvalid),
-      .load_last_i			        (vlane_load_last),
-      .load_data_i			        (vlane_load_data),
+      .load_valid_i		(vlane_load_dvalid),
+      .load_last_i		(vlane_load_last),
+      .load_data_i		(vlane_load_data),
       // TODO: MISSING byte-write_enable signal for loads
       // Inputs
       .clk_i                (clk),
       .clk2_i               (clk2),
       .rstn_i               (rstn),
-      .rstn2_i               (rstn2),
+      .rstn2_i              (rstn2),
       .vl_i                 (vl[$clog2(VLANE_NUM*LP_MAX_VL_PER_LANE)-1:0]), // this should be 31:0
       .vsew_i               (sew[2:0]),
       .vlmul_i              (lmul[2:0]),
@@ -297,14 +308,7 @@ module vector_core #
       .vector_mask_i        (vector_mask),
       .read_port_allocation_i(read_port_allocation/*[R_PORTS_NUM-1:0][$clog2(W_PORTS_NUM)-1:0]*/), // TODO: what is this
       .use_3_read_ports_i   (8'h00));//TODO: what is this
-
    
-   always_comb
-   begin
-      for (int i=0; i<VLANE_NUM; i++)
-      begin
-      end       
-   end
 
    // Instantiate MEM_SUBSYS
    mem_subsys #(

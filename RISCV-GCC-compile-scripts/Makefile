@@ -1,7 +1,7 @@
 
 src ?= assembly.s
 all: assembly.dump convert_to_raw_hex assembly.h 
-bin_path = /opt/riscv/riscv32-unknown-linux-gnu/bin
+bin_path = /opt/riscv/riscv64-unknown-elf/bin
 
 assembly.h : assembly_noaddr.dump convert_to_raw_hex
 	./convert_to_raw_hex
@@ -13,7 +13,7 @@ assembly_noaddr.dump: assembly.o
 assembly.dump: assembly.o
 	$(bin_path)/objdump -d assembly.o > assembly.dump
 assembly.o: $(src)
-	$(bin_path)/as -march=rv32iv -o assembly.o $(src)
+	$(bin_path)/as -march=rv64iv -o assembly.o $(src)
 
 .PHONY:clean
 clean:

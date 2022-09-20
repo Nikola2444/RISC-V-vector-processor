@@ -11,7 +11,10 @@ module v_dpu#
    parameter MULTIPUMP_WRITE = 4,
    parameter MULTIPUMP_READ = 4,
    parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", // Select "HIGH_PERFORMANCE" or "LOW_LATENCY"
-   parameter MEM_WIDTH = 32)
+   parameter MEM_WIDTH = 32,
+   parameter VRF_READ_DELAY=4,
+   parameter VRF_WRITE_DELAY=3,
+   parameter ALU_DELAY=4)
    (
     input 							   clk_i,
     input 							   clk2_i,
@@ -473,12 +476,9 @@ module v_dpu#
    end
 
 
-   localparam VRF_DELAY = 4;
-   localparam VMRF_DELAY = 2;
-
-   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
-   logic [W_PORTS_NUM - 1 : 0][VRF_DELAY-1:0][1 : 0]  op2_sel;
-   logic [VRF_DELAY-1:0][1:0] 			      slide_read_byte_sel_reg;
+   logic [W_PORTS_NUM - 1 : 0][VRF_READ_DELAY-1:0][31 : 0] ALU_x_data, ALU_imm_data, ALU_reduction_data;
+   logic [W_PORTS_NUM - 1 : 0][VRF_READ_DELAY-1:0][1 : 0]  op2_sel;
+   logic [VRF_READ_DELAY-1:0][1:0] 			      slide_read_byte_sel_reg;
 
    // we need to sync data that goes through vector lane with
    // data that doesnt.
@@ -494,11 +494,11 @@ module v_dpu#
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++)
 	 begin
-	    ALU_imm_data[i] 	  <= {ALU_imm_data[i][VRF_DELAY-2:0],ALU_imm_di[i]};
-	    ALU_x_data[i] 	  <= {ALU_x_data[i][VRF_DELAY-2:0],ALU_x_data_di[i]};
-	    ALU_reduction_data[i] <= {ALU_reduction_data[i][VRF_DELAY-2:0],ALU_reduction_data_di[i]};
-	    op2_sel[i] <= {op2_sel[i][VRF_DELAY-2:0],op2_sel_di[i]};
-	    slide_read_byte_sel_reg <= {slide_read_byte_sel_reg[VRF_DELAY-2:0], vrf_read_byte_sel_di[1]};//Lane0 R_port1	    
+	    ALU_imm_data[i] 	  <= {ALU_imm_data[i][VRF_READ_DELAY-2:0],ALU_imm_di[i]};
+	    ALU_x_data[i] 	  <= {ALU_x_data[i][VRF_READ_DELAY-2:0],ALU_x_data_di[i]};
+	    ALU_reduction_data[i] <= {ALU_reduction_data[i][VRF_READ_DELAY-2:0],ALU_reduction_data_di[i]};
+	    op2_sel[i] <= {op2_sel[i][VRF_READ_DELAY-2:0],op2_sel_di[i]};
+	    slide_read_byte_sel_reg <= {slide_read_byte_sel_reg[VRF_READ_DELAY-2:0], vrf_read_byte_sel_di[1]};//Lane0 R_port1	    
 	 end
       end      
    end
@@ -547,7 +547,7 @@ module v_dpu#
       for (int lane=0; lane<VLANE_NUM; lane++)
 	for (int i=0;i<W_PORTS_NUM;i++)
 	begin
-	   case(op2_sel[i][VRF_DELAY-1])
+	   case(op2_sel[i][VRF_READ_DELAY-1])
 	      0:begin
 		 case (alu_read_sew[lane][i])
 		    0: alu_b[lane][i] = vs2_data[lane][i];
@@ -557,13 +557,13 @@ module v_dpu#
 		 endcase
 	      end
 	      
-              1: alu_b[lane][i] = ALU_x_data[i][VRF_DELAY-1];
-              2: alu_b[lane][i] = ALU_imm_data[i][VRF_DELAY-1];
-              //3: alu_b[lane][i] = ALU_reduction_data_di[i][VRF_DELAY-1]; // Should insert an assert
+              1: alu_b[lane][i] = ALU_x_data[i][VRF_READ_DELAY-1];
+              2: alu_b[lane][i] = ALU_imm_data[i][VRF_READ_DELAY-1];
+              //3: alu_b[lane][i] = ALU_reduction_data_di[i][VRF_READ_DELAY-1]; // Should insert an assert
 	      3: alu_b[lane][i] = ALU_reduction_data_di[i]; // Should insert an assert
               default: alu_b[lane][i] = vs2_data
 [lane][i];
-           endcase // case (op2_sel[i][VRF_DELAY-1])
+           endcase // case (op2_sel[i][VRF_READ_DELAY-1])
 	   alu_a[lane][i] = alu_read_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
 			    alu_read_sew[lane][i] == 2'b01 ? alu_a_16bit[lane][i] : alu_a_32bit[lane][i];
 	   alu_c[lane][i] = alu_read_sew[lane][i] == 2'b00 ? vs1_data[lane][i] :
@@ -673,7 +673,7 @@ module v_dpu#
 	 else
 	   lane_sel[lane] = slide_data_mux_sel+lane;
 
-	 slide_data_input[lane] = {4{slide_data_output[lane_sel[lane]][slide_read_byte_sel_reg[VRF_DELAY-2]*8 +: 8]}};  
+	 slide_data_input[lane] = {4{slide_data_output[lane_sel[lane]][slide_read_byte_sel_reg[VRF_READ_DELAY-2]*8 +: 8]}};  
       end      
    end
 

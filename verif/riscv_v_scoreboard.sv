@@ -368,7 +368,12 @@ class riscv_v_scoreboard extends uvm_scoreboard;
 	   element_idx = i + (tr.scalar << tr.sew);
 	   src_element_idx = i[31:2];
 	   vrf_read_ram[vd][element_idx[31:2]][element_idx[1:0]*8 +: 8] = vrf_read_ram[vs2][src_element_idx][i[1:0]*8 +: 8];
-	   //$display("vrf_dest[%0d][%0d][%0d]=%0x, vrf_src[%0d][%0d][%0d]=%0x", vd, element_idx[31:2], element_idx[1:0], vrf_read_ram[vd][element_idx[31:2]][element_idx[1:0]*8 +: 8], vs2, src_element_idx[31:2], src_element_idx[1:0], vrf_read_ram[vs2][src_element_idx[31:2]][src_element_idx[1:0]*8 +: 8]);
+/* -----\/----- EXCLUDED -----\/-----
+	   $display("vrf_dest[%0d][%0d][%0d]=%0x, vrf_src[%0d][%0d][%0d]=%0x", vd, element_idx[31:2], element_idx[1:0], 
+		    vrf_read_ram[vd][element_idx[31:2]][element_idx[1:0]*8 +: 8], 
+		    vs2, src_element_idx, i[1:0], 
+		    vrf_read_ram[vs2][src_element_idx][i[1:0]*8 +: 8]);
+ -----/\----- EXCLUDED -----/\----- */
 	end // for (int i=0; i<tr.vl; i++)
       else // slidedown
       begin

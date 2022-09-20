@@ -77,9 +77,11 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 
    task main_phase(uvm_phase phase);
 
+
       forever begin
+
 	 @(negedge vif.clk);
-/* -----\/----- EXCLUDED -----\/-----
+	 /* -----\/----- EXCLUDED -----\/-----
 	 fork	  
 	    begin
 	       lane_driver(0);
@@ -96,6 +98,7 @@ class bd_v_instr_if_monitor extends uvm_monitor;
 	    end
 	 join
  -----/\----- EXCLUDED -----/\----- */
+
 
 	 store_checker();
       end

@@ -9,7 +9,10 @@ module vector_lane
     parameter MULTIPUMP_READ = 2,
     parameter RAM_PERFORMANCE = "HIGH_PERFORMANCE", /* Select "HIGH_PERFORMANCE" or "LOW_LATENCY" */
     parameter MEM_WIDTH = 32,
-    parameter V_LANE_NUM = 0
+    parameter V_LANE_NUM = 0,
+    parameter VRF_READ_DELAY=4,
+    parameter VRF_WRITE_DELAY=3,
+    parameter ALU_DELAY=4
     )
    (
     input 							       clk_i,
@@ -74,7 +77,6 @@ module vector_lane
    
    // Loacal parameters //
      ////////////////////////////////////////////////
-   localparam VRF_DELAY = 4;
    localparam VMRF_DELAY = 2;
    localparam SLIDE_PORT_ID = 1;
    ////////////////////////////////////////////////
@@ -123,7 +125,7 @@ module vector_lane
    logic [VMRF_DELAY - 1 : 0][W_PORTS_NUM - 1 : 0][4 + 32 + $clog2(MEM_DEPTH) - 1 : 0] vrf_write_reg, vrf_write_next;      
 
    // Read data preparation pipeline registers
-   logic [R_PORTS_NUM - 1 : 0][VRF_DELAY - 2 : 0][1 : 0] 			       vrf_read_byte_sel_reg, vrf_read_byte_sel_next; 
+   logic [R_PORTS_NUM - 1 : 0][VRF_READ_DELAY - 2 : 0][1 : 0] 			       vrf_read_byte_sel_reg, vrf_read_byte_sel_next; 
 
    // Vector mask pipeline register
    logic [VMRF_DELAY - 1 : 0][W_PORTS_NUM - 1 : 0] 				       vm_reg, vm_next;
@@ -149,7 +151,7 @@ module vector_lane
       
    } ALU_packet; 
 
-   ALU_packet [VRF_DELAY - 1 : 0] ALU_signals_reg, ALU_signals_next; 
+   ALU_packet [VRF_READ_DELAY - 1 : 0] ALU_signals_reg, ALU_signals_next; 
    ////////////////////////////////////////////////
    
    // Vector mask register file
@@ -262,14 +264,14 @@ module vector_lane
    
    generate
       for (genvar i=0; i<W_PORTS_NUM; i++)
-	assign alu_read_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].vrf_read_sew[i];
+	assign alu_read_sew_o[i] = ALU_signals_reg[VRF_READ_DELAY - 1].vrf_read_sew[i];
    endgenerate
    generate
       for (genvar i=0; i<W_PORTS_NUM; i++)
-	assign alu_write_sew_o[i] = ALU_signals_reg[VRF_DELAY - 1].vrf_write_sew[i];
+	assign alu_write_sew_o[i] = ALU_signals_reg[VRF_READ_DELAY - 1].vrf_write_sew[i];
    endgenerate
 
-   assign alu_vld_o = ALU_signals_reg[VRF_DELAY-1].read_data_valid;
+   assign alu_vld_o = ALU_signals_reg[VRF_READ_DELAY-1].read_data_valid;
    
    assign alu_output_valid_next[0] = alu_vld_i;
    assign ALU_out_data[W_PORTS_NUM-1:0]= alu_res_i;
@@ -280,9 +282,9 @@ module vector_lane
    assign slide_data_o = vrf_rdata[SLIDE_PORT_ID];
 
    //Chosing read port for store data
-   assign store_data_o = read_data_mux_reg[ALU_signals_reg[VRF_DELAY - 1].store_data_mux_sel];
+   assign store_data_o = read_data_mux_reg[ALU_signals_reg[VRF_READ_DELAY - 1].store_data_mux_sel];
    //Chosing read port for store/load index data
-   assign store_load_index_o = read_data_mux_reg[ALU_signals_reg[VRF_DELAY - 1].store_load_index_mux_sel];
+   assign store_load_index_o = read_data_mux_reg[ALU_signals_reg[VRF_READ_DELAY - 1].store_load_index_mux_sel];
 
 
    always_ff@(posedge clk_i)
@@ -296,7 +298,7 @@ module vector_lane
    ////////////////////////////////////////////////
    // Pipeline registers for data on the same level as ALU
    always_ff@(posedge clk_i) begin
-      for(int i = 0; i < VRF_DELAY; i++) begin
+      for(int i = 0; i < VRF_READ_DELAY; i++) begin
          if(!rstn_i) begin
             ALU_signals_reg[i] <= 0;
          end
@@ -307,17 +309,17 @@ module vector_lane
    end
 
    always_comb begin
-      for(int i = 0; i < VRF_DELAY - 1; i++) begin
+      for(int i = 0; i < VRF_READ_DELAY - 1; i++) begin
          ALU_signals_next[i + 1] = ALU_signals_reg[i]; 
       end
-      op3_sel = ALU_signals_reg[VRF_DELAY - 1].op3_sel;
+      op3_sel = ALU_signals_reg[VRF_READ_DELAY - 1].op3_sel;
       
-      store_data_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_data_mux_sel;
-      store_load_index_mux_sel = ALU_signals_reg[VRF_DELAY - 1].store_load_index_mux_sel;
-      ALU_ctrl = ALU_signals_reg[VRF_DELAY - 1].ALU_ctrl;
-      ALU_reduction = ALU_signals_reg[VRF_DELAY - 1].ALU_reduction;
-      store_data_valid_o = ALU_signals_reg[VRF_DELAY - 1].store_data_valid;
-      store_load_index_valid_o = ALU_signals_reg[VRF_DELAY - 1].store_load_index_valid;
+      store_data_mux_sel = ALU_signals_reg[VRF_READ_DELAY - 1].store_data_mux_sel;
+      store_load_index_mux_sel = ALU_signals_reg[VRF_READ_DELAY - 1].store_load_index_mux_sel;
+      ALU_ctrl = ALU_signals_reg[VRF_READ_DELAY - 1].ALU_ctrl;
+      ALU_reduction = ALU_signals_reg[VRF_READ_DELAY - 1].ALU_reduction;
+      store_data_valid_o = ALU_signals_reg[VRF_READ_DELAY - 1].store_data_valid;
+      store_load_index_valid_o = ALU_signals_reg[VRF_READ_DELAY - 1].store_load_index_valid;
       
       ALU_signals_next[0].op3_sel = op3_sel_i;
       ALU_signals_next[0].ALU_reduction = reduction_op_i;
@@ -338,14 +340,14 @@ module vector_lane
          // Registers
          always_ff@(posedge clk_i) begin
             if(!rstn_i) begin
-               for(int i = 0; i < VRF_DELAY - 1; i++) begin
+               for(int i = 0; i < VRF_READ_DELAY - 1; i++) begin
                   vrf_read_byte_sel_reg[i_gen][i] <= 0;               
                end
 	       read_data_mux_reg[i_gen] <= 0;
             end
             else begin               
                
-               for(int i = 0; i < VRF_DELAY - 1; i++) begin
+               for(int i = 0; i < VRF_READ_DELAY - 1; i++) begin
                   vrf_read_byte_sel_reg[i_gen][i] <= vrf_read_byte_sel_next[i_gen][i];                  
                end
 	       read_data_mux_reg[i_gen] <= read_data_mux_next[i_gen];
@@ -353,23 +355,23 @@ module vector_lane
          end
          
          always_comb begin
-            for(int i = 1; i < VRF_DELAY - 1; i++) begin
+            for(int i = 1; i < VRF_READ_DELAY - 1; i++) begin
                vrf_read_byte_sel_next[i_gen][i] = vrf_read_byte_sel_reg[i_gen][i - 1];
             end
             vrf_read_byte_sel_next[i_gen][0] = vrf_read_byte_sel_i[i_gen];
          end
          
          // Generate VRF read assignments	 
-         assign read_data_byte_mux_sel[i_gen] = vrf_read_byte_sel_reg[i_gen][VRF_DELAY - 2];
-         assign read_data_hw_mux_sel[i_gen] = vrf_read_byte_sel_reg[i_gen][VRF_DELAY - 2][0];
+         assign read_data_byte_mux_sel[i_gen] = vrf_read_byte_sel_reg[i_gen][VRF_READ_DELAY - 2];
+         assign read_data_hw_mux_sel[i_gen] = vrf_read_byte_sel_reg[i_gen][VRF_READ_DELAY - 2][0];
 
 	 // Mux for choosing the right byte
 	 assign read_data_byte_mux[i_gen] = vrf_rdata[i_gen][read_data_byte_mux_sel[i_gen]*8 +: 8];
          // Mux for choosing the right halfword
 	 assign read_data_hw_mux[i_gen] = vrf_rdata[i_gen][read_data_hw_mux_sel[i_gen]*16 +: 16];
 	 // Registering data read from VRF.	 	 
-	 assign read_data_mux_next[i_gen] = ALU_signals_reg[VRF_DELAY - 2].vrf_read_sew[i_gen/2] == 2'b00 ? read_data_byte_mux[i_gen] : // we chose byte
-					    ALU_signals_reg[VRF_DELAY - 2].vrf_read_sew[i_gen/2] == 2'b01 ? read_data_hw_mux[i_gen] : // we chose half word
+	 assign read_data_mux_next[i_gen] = ALU_signals_reg[VRF_READ_DELAY - 2].vrf_read_sew[i_gen/2] == 2'b00 ? read_data_byte_mux[i_gen] : // we chose byte
+					    ALU_signals_reg[VRF_READ_DELAY - 2].vrf_read_sew[i_gen/2] == 2'b01 ? read_data_hw_mux[i_gen] : // we chose half word
 					    vrf_rdata[i_gen]; // we chose the whole word	 
       end // for (i_gen = 0; i_gen < R_PORTS_NUM; i_gen++)
 

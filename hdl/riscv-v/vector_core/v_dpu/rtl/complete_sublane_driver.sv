@@ -534,7 +534,7 @@ module complete_sublane_driver
       .clk_i(clk_i),
       .rstn_i(rstn_i),
       
-      .vl_i(dp0_next.vl),
+      .vl_i(dp0_reg.vl),
       .shift_en_i(shift_data_validation),
       .shift_partial_i(shift_partial),
       .load_i(load_data_validation),

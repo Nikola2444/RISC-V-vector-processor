@@ -2,18 +2,18 @@ module port_allocate_unit#
   (parameter R_PORTS_NUM = 8,
    parameter W_PORTS_NUM = 4)
    (
-    input logic 			   clk,
-    input logic 			   rstn,
+    input logic				   clk,
+    input logic				   rstn,
 
-    output logic [12:0] 		   instr_rdy_o,
-    input logic [12:0] 			   instr_vld_i,
-    input logic 			   vrf_starting_addr_vld_i,
-    input logic [W_PORTS_NUM-1:0] 	   dependancy_issue_i,
-    input logic 			   slide_instr_check_i,
-    output logic [W_PORTS_NUM-1:0] 	   start_o,
-    input logic [W_PORTS_NUM-1:0] 	   port_rdy_i,
+    output logic [12:0]			   instr_rdy_o,
+    input logic [12:0]			   instr_vld_i,
+    input logic				   vrf_starting_addr_vld_i,
+    input logic				   dependancy_issue_i,
+    input logic				   slide_instr_check_i,
+    output logic [W_PORTS_NUM-1:0]	   start_o,
+    input logic [W_PORTS_NUM-1:0]	   port_rdy_i,
     output logic [$clog2(R_PORTS_NUM)-1:0] op3_port_sel_o,
-    output logic [1:0] 			   store_driver_o
+    output logic [1:0]			   store_driver_o
     
 
 

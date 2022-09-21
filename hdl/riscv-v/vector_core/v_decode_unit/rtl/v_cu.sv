@@ -1,4 +1,4 @@
-`include "../../../../packages/typedef_pkg.sv"
+//`include "../../../../packages/typedef_pkg.sv"
 module v_cu #
   (parameter VLEN=4096,
    parameter VLANE_NUM=16,
@@ -168,13 +168,14 @@ module v_cu #
    logic [W_PORTS_NUM-1:0][2:0]				   reduction_wait_cnt;
    logic [W_PORTS_NUM-1:0][6:0]				   store_dependencie_cnt;
    logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] dependancy_issue_cnt;
+   logic						   dependancy_issue;
 
    
    logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] instr_exe_time_cnt;
    logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] clocks_to_wait;
    logic [W_PORTS_NUM-1:0]				   instr_dependancy_check;
    logic [W_PORTS_NUM-1:0][1:0]				   instr_in_progr_sew_reg;
-   logic [W_PORTS_NUM-1:0][31:0]			   instr_in_progr_vl_reg;	
+   logic [W_PORTS_NUM-1:0][31:0]			   instr_in_progr_vl_reg; 
    logic [W_PORTS_NUM-1:0]				   instr_not_safe_to_start;
    logic [W_PORTS_NUM-1:0]				   sew_check;
    logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] instr_in_progr_vl_half_reg, instr_in_progr_vl_half;
@@ -292,7 +293,7 @@ module v_cu #
       .store_driver_o   (store_driver_o),
       .op3_port_sel_o	(op3_sel_o),
       .slide_instr_check_i(slide_instr_check),
-      .dependancy_issue_i(instr_not_safe_to_start),
+      .dependancy_issue_i(dependancy_issue),
       // Inputs
       .clk		(clk),
       .rstn		(rstn),
@@ -437,8 +438,44 @@ module v_cu #
 			     instr_in_progr_sew_reg[i]==2'b01 && (sew_o[1:0] == 2'b10 || store_instr_check) ? (instr_in_progr_vl_half_reg[i]) : LP_CHAINING_DELAY;
 
 	 // Checking all conditions to safely issue the next instruction
-	 instr_not_safe_to_start[i] = (instr_dependancy_check[i] && instr_vld_reg!=0 ) &&
-				      ((instr_exe_time_cnt[i] < clocks_to_wait[i]) || reduction_in_progress_reg[i]) && instr_in_progress != 4'h0;
+//	 instr_not_safe_to_start[i] = (instr_dependancy_check[i] && instr_vld_reg!=0 ) &&
+//				      ((instr_exe_time_cnt[i] < clocks_to_wait[i]) || reduction_in_progress_reg[i]) && instr_in_progress != 4'h0;
+
+      end
+   end
+   
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 instr_not_safe_to_start <= '{default:'0};
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	 begin
+	    if (start_o[i] && port_group_ready_i[i])
+	      instr_not_safe_to_start[i] <= 1'b1;
+	    else if (port_group_ready_i[i])
+	      instr_not_safe_to_start[i] <= 1'b0;
+	    else if (((instr_exe_time_cnt[i] < clocks_to_wait[i]) || reduction_in_progress_reg[i]) && instr_not_safe_to_start[i])
+	      instr_not_safe_to_start[i] <= 1'b1;
+	    else
+	      instr_not_safe_to_start[i] <= 1'b0;
+	 end
+      end
+   end
+
+   always_comb
+   begin
+      for (int i=0; i<W_PORTS_NUM; i++)
+      begin
+	 dependancy_issue = 1'b0;
+	 if (instr_not_safe_to_start[i]!=0 & instr_dependancy_check[i] != 0)
+	 begin
+	    dependancy_issue = 1'b1;
+	    break;
+	 end
       end
    end
 

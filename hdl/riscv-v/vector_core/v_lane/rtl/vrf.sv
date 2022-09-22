@@ -8,7 +8,9 @@ module vrf #
    // 
    parameter MEM_DEPTH = 512,
    parameter MEM_WIDTH = 32,
-   parameter NUM_OF_BYTES = MEM_WIDTH < 8 ? 1 : MEM_WIDTH/8)
+   parameter NUM_OF_BYTES = MEM_WIDTH < 8 ? 1 : MEM_WIDTH/8,
+   parameter VRF_READ_DELAY=4,
+   parameter VRF_WRITE_DELAY=3)
    (
     input 					   clk,
     input 					   clk2,

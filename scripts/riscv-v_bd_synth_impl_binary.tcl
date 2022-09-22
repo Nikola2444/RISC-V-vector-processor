@@ -21,7 +21,16 @@ file mkdir $releaseDir
 # Create project
 create_project RISCV_V_AXI_project $resultDir -part xc7z020clg484-1 -force
 set boardpart [get_board_parts -filter {BOARD_NAME=~zed*}]
-set_property board_part $boardpart [current_project]
+
+set c 0
+set increment 1
+foreach part $boardpart {
+    set part [split $part " "]
+    set board_array($c) $part    
+    set c [expr $c + $increment]
+}
+
+set_property board_part $board_array([expr $c - $increment]) [current_project]
 
 # Create block design
 create_bd_design "riscv_v_axi_bd"

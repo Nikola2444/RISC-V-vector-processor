@@ -6,7 +6,10 @@ module complete_sublane_driver
     parameter R_PORTS_NUM = 8,
     parameter INST_TYPE_NUM = 7,
     parameter VLANE_NUM = 8,
-    parameter ALU_OPMODE = 6
+    parameter ALU_OPMODE = 6,
+    parameter VRF_READ_DELAY=4,
+    parameter VRF_WRITE_DELAY=3,
+    parameter ALU_DELAY=4
     )
    (
     // Clock and Reset
@@ -467,8 +470,9 @@ module complete_sublane_driver
    assign slide_waddr_offset = dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[31 : $clog2(VLANE_NUM*4)] :
 			       !dp0_reg.up_down_slide && dp0_reg.inst_type == 6 ? dp0_reg.slide_amount[31 : $clog2(VLANE_NUM*4)] : 'h0;
 
-   assign raddr_cnt_rst = next_state==IDLE && current_state!=IDLE;
-   assign waddr_cnt_rst = next_state==IDLE && current_state!=IDLE;
+   //assign raddr_cnt_rst = (next_state==IDLE && current_state!=IDLE) || main_cnt == dp0_next.read_limit-1; 
+   assign raddr_cnt_rst = main_cnt >= dp0_next.read_limit-1;	
+   assign waddr_cnt_rst = (next_state==IDLE && current_state!=IDLE);
 
    address_counter
      #(
@@ -530,7 +534,7 @@ module complete_sublane_driver
       .clk_i(clk_i),
       .rstn_i(rstn_i),
       
-      .vl_i(dp0_next.vl),
+      .vl_i(dp0_reg.vl),
       .shift_en_i(shift_data_validation),
       .shift_partial_i(shift_partial),
       .load_i(load_data_validation),
@@ -625,8 +629,8 @@ module complete_sublane_driver
                dp0_next.reduction_op 		 = reduction_op_i;
                dp0_next.vmrf_wen 		 = 0;
                dp0_next.alu_en_32bit_mul 	 = alu_en_32bit_mul_i;
-               dp0_next.sew 			 = vsew_i[1 : 0];
-	       dp0_next.vrf_read_sew 		 = vsew_i[1:0];
+               dp0_next.sew 			 = inst_type_i == 2 || inst_type_i == 3 ? 2'b10 : vsew_i[1 : 0];
+	       dp0_next.vrf_read_sew 		 = inst_type_i == 2 || inst_type_i == 3 ? 2'b10 : vsew_i[1 : 0];
                dp0_next.lmul 			 = vlmul_i[2 : 0];
                dp0_next.vl 			 = vl_i;
                // slides
@@ -666,13 +670,17 @@ module complete_sublane_driver
 		     end
 		     else
 		       next_state 	       = READ_MODE;
+
        		     dp0_next.vrf_read_sew     = 2'b10;
+                     raddr_cnt_en 	       = 1;
                      dp0_next.store_data_valid = 1;
                   end
                   7'b0001000 : begin                                            // INDEXED_STORE
                      dp0_next.store_data_valid 	     = 1;
                      dp0_next.store_load_index_valid = 1;
 		     dp0_next.vrf_read_sew 	     = 2'b10;
+		     raddr_cnt_en 		     = 1;
+
                      next_state 		     = READ_MODE;
 		     if (main_cnt == dp0_next.read_limit)
 		     begin
@@ -747,13 +755,15 @@ module complete_sublane_driver
 		     //read_data_valid[0] = partial_results_valid;
                   end                                   
                end
-               4'b0010 : begin                                            // STORE		  
+               4'b0010 : begin                                            // STORE
+		  dp0_next.store_data_valid = 1;
                   if(read_limit_comp) begin		     
                      next_state 	       = IDLE;
                      dp0_next.store_data_valid = 0;
                   end
                end
-               4'b0100 : begin                                            // INDEXED_STORE
+               4'b0100 : begin                                           // INDEXED_STORE
+		  dp0_next.store_data_valid = 1;                          
                   if(read_limit_comp) begin                               
                      next_state 		     = IDLE;
                      dp0_next.store_data_valid 	     = 0;
@@ -801,12 +811,12 @@ module complete_sublane_driver
             request_write_control_o = 1'b1; 
             main_cnt_en 	    = 1;
             dp0_next.en_write = 0;
-            if(main_cnt == dp0_reg.inst_delay) begin
+            if(main_cnt == dp0_reg.inst_delay-1) begin
                dp0_next.en_write = 1;
                dp0_next.vmrf_wen = 1;
             end
             
-            if(main_cnt == dp0_reg.inst_delay+2) begin
+            if(main_cnt == dp0_reg.inst_delay) begin
                next_state 	     = IDLE;
                dp0_next.reduction_op = 0;
                dp0_next.en_write     = 0;
@@ -823,13 +833,13 @@ module complete_sublane_driver
 	       waddr_out_reg_en  = 1;
 	       dp0_next.bwen_en  = 1;
 	       dp0_next.en_write = 1;
-
 	    end
+
 	    if(main_cnt >= dp0_reg.inst_delay+1)
 	       request_write_control_o = 1'b1;
-	    if(main_cnt > main_cnt_limit)
-	      request_write_control_o = 0;
+
             if(main_cnt > main_cnt_limit) begin
+	       request_write_control_o = 0;
                next_state 	       = IDLE;	       
                dp0_next.vmrf_wen       = 0;
                dp0_next.en_comp        = 0;

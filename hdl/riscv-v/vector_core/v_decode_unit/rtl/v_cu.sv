@@ -3,7 +3,10 @@ module v_cu #
   (parameter VLEN=4096,
    parameter VLANE_NUM=16,
    parameter R_PORTS_NUM = 8,
-   parameter W_PORTS_NUM = 4)
+   parameter W_PORTS_NUM = 4,
+   parameter VRF_READ_DELAY=4,
+   parameter VRF_WRITE_DELAY=3,
+   parameter ALU_DELAY=4)
 
    (/*AUTOARG*/
    // Outputs
@@ -30,6 +33,7 @@ module v_cu #
    // Number of bytes in VRF
    localparam LP_LANE_VRF_EL_NUM=VLEN*LP_VECTOR_REGISTER_NUM/8/VLANE_NUM;
    localparam LP_MAX_VL_PER_LANE=VLEN/8/VLANE_NUM*LP_MAX_LMUL;
+   localparam LP_CLK_TIL_FIRST_WRITE=VRF_READ_DELAY+ALU_DELAY+2;
    // ***********V_CU I/O BEGIN**********************************
    input 					     clk;
    input 					     rstn;
@@ -94,19 +98,13 @@ module v_cu #
    // ***********V_CU I/O END**********************************
 
    // ***********V_CU DECLARATIONS BEGIN***********************
-   logic 					     vrf_ren;
-   logic 					     vrf_oreg_ren;
 
-   logic 					     rdata_sign;
-   logic 					     imm_sign_i;
+
 
    // Values Extraced from vector instruction
    logic [2:0] 					     v_instr_funct6_upper;
    logic [5:0] 					     v_instr_funct6;
-   logic [2:0] 					     v_instr_funct3;
    logic [4:0] 					     v_instr_imm;
-   logic [1:0] 					     v_instr_mop;
-   logic [4:0] 					     v_instr_rs1;
    logic [4:0] 					     v_instr_vs1;
    logic [4:0] 					     v_instr_vs2;
    logic [4:0] 					     v_instr_vd;
@@ -141,38 +139,47 @@ module v_cu #
       for (int lmul=1; lmul<4; lmul++)	 
 	for (int sew=0; sew<3; sew++)
 	begin
-	   vlmax_values[8-lmul][sew] =((VLEN/8)/(2**sew))/(2**lmul);
+	   vlmax_values[8-lmul][sew] = ((VLEN/8)/(2**sew))/(2**lmul);
 	end
       return vlmax_values;
    endfunction // init_base_addr
 
    // registers for input values
-   logic [31:0] 		   vector_instr_reg;
-   logic [12:0] 		   instr_vld_reg;
-   logic [12:0] 		   instr_rdy_reg;
-   logic [31:0] 		   scalar_rs1_reg;
-   logic [31:0] 		   scalar_rs2_reg;
+   logic [31:0]						   vector_instr_reg;
+   logic [12:0]						   instr_vld_reg;
+   logic [12:0]						   instr_rdy_reg;
+   logic [31:0]						   scalar_rs1_reg;
+   logic [31:0]						   scalar_rs2_reg;
 
    // Values coming from renaming unit
-   logic 			   renaming_unit_rdy;
-   logic [8*$clog2(MEM_DEPTH)-1:0] vrf_starting_waddr_reg;
-   logic [8*$clog2(MEM_DEPTH)-1:0] vrf_starting_raddr0_reg;
-   logic [8*$clog2(MEM_DEPTH)-1:0] vrf_starting_raddr1_reg;
-   logic 			   vrf_starting_addr_vld_reg;
+   logic [8*$clog2(MEM_DEPTH)-1:0]			   vrf_starting_waddr_reg;
+   logic [8*$clog2(MEM_DEPTH)-1:0]			   vrf_starting_raddr0_reg;
+   logic [8*$clog2(MEM_DEPTH)-1:0]			   vrf_starting_raddr1_reg;
+   logic						   vrf_starting_addr_vld_reg;
 
    
    // Signals needed dependancy checking
-   logic [$clog2(W_PORTS_NUM)-1:0] allocated_port;
-   logic [$clog2(W_PORTS_NUM)-1:0] released_port;
-   logic [W_PORTS_NUM-1:0][5:0]    vd_instr_in_progress;
-   logic [W_PORTS_NUM-1:0] 	   dependancy_issue;
-   logic [W_PORTS_NUM-1:0][4:0]    dependancy_issue_cnt;
-   logic 			   slide_in_progress_reg;
-   logic [W_PORTS_NUM-1:0] 	   reduction_in_progress_reg;
-   logic [W_PORTS_NUM-1:0] 	   reduction_wait_cnt_en;
-   logic [W_PORTS_NUM-1:0][2:0]    reduction_wait_cnt;
-   logic [W_PORTS_NUM-1:0][6:0]    store_dependencie_cnt;
+   logic [W_PORTS_NUM-1:0][4:0]				   vd_instr_in_progress;
+   logic [W_PORTS_NUM-1:0]				   instr_in_progress;
+   //logic [W_PORTS_NUM-1:0]				   instr_not_safe_to_start;   
+   logic						   slide_in_progress_reg;
+   logic [W_PORTS_NUM-1:0]				   reduction_in_progress_reg;
+   logic [W_PORTS_NUM-1:0]				   reduction_wait_cnt_en;
+   logic [W_PORTS_NUM-1:0][2:0]				   reduction_wait_cnt;
+   logic [W_PORTS_NUM-1:0][6:0]				   store_dependencie_cnt;
+   logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] dependancy_issue_cnt;
+   logic						   dependancy_issue;
 
+   
+   logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] instr_exe_time_cnt;
+   logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] clocks_to_wait;
+   logic [W_PORTS_NUM-1:0]				   instr_dependancy_check;
+   logic [W_PORTS_NUM-1:0][1:0]				   instr_in_progr_sew_reg;
+   logic [W_PORTS_NUM-1:0][31:0]			   instr_in_progr_vl_reg; 
+   logic [W_PORTS_NUM-1:0]				   instr_not_safe_to_start;
+   logic [W_PORTS_NUM-1:0]				   sew_check;
+   logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] instr_in_progr_vl_half_reg, instr_in_progr_vl_half;
+   logic [W_PORTS_NUM-1:0][$clog2(LP_MAX_VL_PER_LANE)-1:0] instr_in_progr_vl_3_quarters_reg, instr_in_progr_vl_3_quarters;
    // ***********V_CU DECLARATIONS END***********************
 
    /*Registering input values*/
@@ -193,8 +200,8 @@ module v_cu #
       end
       else
       begin
-	 if (dependancy_issue==0)
-	 begin
+//	 if (instr_not_safe_to_start==0)
+//	 begin
 	    if((instr_vld_i[12:0] & instr_rdy_o[12:0]) != 0)// config instruction received
 	    begin
 	       vector_instr_reg	      <= vector_instr_i;
@@ -219,7 +226,7 @@ module v_cu #
 	    vtype_reg 	     <= vtype_next;	 
 	    vl_reg 	     <= vl_next;
 	 end
-      end	
+//      end	
    end
    
    //configuring vtype reg
@@ -245,7 +252,7 @@ module v_cu #
    assign vl_next = v_instr_vs1 != 'h0 ? scalar_rs1_reg :
 		    v_instr_vd != 0 ? {{32-$clog2(VLEN){1'b0}},vlmax} : vl_reg;
    
-   assign v_instr_funct3       = vector_instr_reg[14:12];
+  // assign v_instr_funct3       = vector_instr_reg[14:12];
    
    //extracting information from vector instruction
    assign v_instr_funct6_upper = vector_instr_reg[31:29];
@@ -294,18 +301,8 @@ module v_cu #
        
       .vrf_starting_addr_vld_i(vrf_starting_addr_vld_reg),
       .instr_vld_i	(instr_vld_reg[12:0]));
-   // Here we need to insert component which uses generated control signals to
-   // Control the lanes.
-   
-   assign allocated_port =   start_o == 1 ? 0:
-			     start_o == 2 ? 1:
-			     start_o == 4 ? 2 : 3;
-   assign released_port =   port_group_ready_i == 1 ? 0:
-			     port_group_ready_i == 2 ? 1:
-			     port_group_ready_i == 4 ? 2 : 3;
 
-   /***************DEPENDANCY CHECK LOGIC END***********/   
-
+/* -----\/----- EXCLUDED -----\/-----
    always@(posedge clk)
    begin
       if (!rstn)
@@ -315,7 +312,54 @@ module v_cu #
       else if (port_group_ready_i[0])
 	slide_in_progress_reg <= 0;
    end
+ -----/\----- EXCLUDED -----/\----- */
 
+   
+   //logic bellow registers destination registers(vd) of instruction in
+   //progress, and if there is currenlty an instruction in progress . 
+   //This is needed for dependancy checking.
+   always@(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 for (int i=0;i<W_PORTS_NUM;i++)
+	 begin
+	    vd_instr_in_progress[i] <= 5'b00000;
+	    instr_in_progress[i]    <= 1'b0;
+	 end
+      end
+      else
+      begin
+	 for (int i=0;i<W_PORTS_NUM;i++)
+	   if (start_o[i] && port_group_ready_i[i])
+	   begin
+	      vd_instr_in_progress[i] <= v_instr_vd;
+	      instr_in_progress[i] <= 1'b1;
+	   end
+	   else if (instr_in_progress[i]==1'b1 && port_group_ready_i[i])
+	   begin
+	      vd_instr_in_progress[i] <= 5'b00000;//no valid instruction
+	      instr_in_progress[i] <= 1'b0;
+	   end
+      end
+   end     
+
+   // Maximum amount of elements per lane that need to be processed befor.
+   // we can issue safely the next instruction
+   // If amount of elements per lane cant be divided with VLANE_NUM,
+   // that means at least one lane needs to process one element more than the rest,
+   // so in that case we add additonal element.
+   localparam LP_CHAINING_DELAY = VRF_READ_DELAY+ALU_DELAY+3;
+
+   
+   assign instr_in_progr_vl_half       = vl_o[$clog2(VLANE_NUM)-1:0] == 0 ? ((vl_o >> $clog2(VLANE_NUM)) >> 1) + LP_CHAINING_DELAY : 
+					 ((vl_o >> $clog2(VLANE_NUM)) >> 1) + LP_CHAINING_DELAY + 1;
+   //We calculate 3 quarters of elements that need to be proccesed.
+   assign instr_in_progr_vl_3_quarters = vl_o[$clog2(VLANE_NUM)-1:0] == 0 ? ((vl_o >>$clog2(VLANE_NUM)) >> 1) + ((vl_o >> $clog2(VLANE_NUM)) >> 2) + LP_CHAINING_DELAY :
+					 ((vl_o >> $clog2(VLANE_NUM)) >> 1) + ((vl_o >> $clog2(VLANE_NUM)) >> 2) + LP_CHAINING_DELAY + 1;
+
+
+   //registering if reduction instruction is being executed
    always@(posedge clk)
    begin
       if (!rstn)
@@ -331,125 +375,110 @@ module v_cu #
    end
 
 
-   always@(posedge clk)
-   begin
-      if (!rstn)
-	reduction_wait_cnt_en <= '{default:'0};
-      else
-	for(int i=0; i<W_PORTS_NUM; i++)
-	begin
-	   if (reduction_wait_cnt[i]==2 && port_group_ready_i[i])
-	     reduction_wait_cnt_en[i] <= 1'b1;
-	   else if (reduction_wait_cnt[i] == 1)
-	     reduction_wait_cnt_en[i] <= 1'b0;
-	end      
-   end
-
-   always@(posedge clk)
-   begin
-      if (!rstn)
-	for (int i=0; i<W_PORTS_NUM; i++)
-	  reduction_wait_cnt[i] <= 0;
-      else
-      begin
-	 for (int i=0; i<W_PORTS_NUM; i++)
-	   if (reduction_instr_check && start_o[i])
-	     reduction_wait_cnt[i] <= 2;
-	   else if (reduction_wait_cnt_en[i])
-	     reduction_wait_cnt[i] <= reduction_wait_cnt[i]-1;
-      end
-   end
-
-   always@(posedge clk)
-   begin
-      if (!rstn)
-	for (int i=0; i<W_PORTS_NUM; i++)
-	  store_dependencie_cnt[i] <= 0;
-      else
-      begin
-	 for (int i=0; i<W_PORTS_NUM; i++)
-	   if (start_o[i] && store_instr_check)
-	     if (sew_o[1:0] == 2'b00)
-	       store_dependencie_cnt[i] <= 88;
-	     else if (sew_o[1:0] == 2'b01)
-	       store_dependencie_cnt[i] <= 44;
-	     else
-	       store_dependencie_cnt[i] <= 22;
-	   else if (!port_group_ready_i[i])
-	     store_dependencie_cnt[i] <= store_dependencie_cnt[i];
-	   else
-	     store_dependencie_cnt[i] <= 0;
-      end	
-   end
-
-   always@(posedge clk)
+   //registering values needed for dependancy checking. SEW, vl, vl/2, vl*3/4
+   // for each instruction being executed.
+   always @(posedge clk)
    begin
       if (!rstn)
       begin
-	 for (int i=0;i<W_PORTS_NUM;i++)
-	   vd_instr_in_progress[i] <= 6'b100000;;
-      end
-      else
-      begin
-	 for (int i=0;i<W_PORTS_NUM;i++)
-	   if (start_o[i] && port_group_ready_i[i])
-	     vd_instr_in_progress[i] <= {1'b0, v_instr_vd};
-	   else if (dependancy_issue_cnt[i]==0 && reduction_wait_cnt[i] == 0 && store_dependencie_cnt[i]==0)	   
-	     vd_instr_in_progress[i] <= 6'b100000;//no valid instruction
-      end
-   end
-
-   
-   
-   always_comb
-   begin
-      for (int i=0; i<W_PORTS_NUM; i++)
-      begin
-	 dependancy_issue[i]=1'b0;
-/* -----\/----- EXCLUDED -----\/-----
-	 if (i == 0)
-	 begin
-/-* -----\/----- EXCLUDED -----\/-----
-	    if (slide_in_progress_reg)
-	      dependancy_issue[i]=1'b1;
- -----/\----- EXCLUDED -----/\----- *-/
-	    if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
-		     (dependancy_issue_cnt[i] != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
-		     (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check))
-	      dependancy_issue[i]=1'b1;
-	 end
-	 else
-	 begin
- -----/\----- EXCLUDED -----/\----- */
-	 if (instr_vld_reg!=0 && vd_instr_in_progress[i][5]==1'b0 &&
-	     (dependancy_issue_cnt[i] != 0 && ((vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) || vd_instr_in_progress[i][4:0]==v_instr_vs2)) ||
-	     (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check) || 
-	     ((vd_instr_in_progress[i][4:0]==v_instr_vs1 || vd_instr_in_progress[i][4:0]==v_instr_vs2) && reduction_in_progress_reg[i]))
-	   dependancy_issue[i]=1'b1;
-//	 end
-	 
-      end
-   end
-
-   always@(posedge clk)
-   begin
-      if (!rstn)
-      begin
-	 for (int i=0; i<W_PORTS_NUM; i++) 
-	   dependancy_issue_cnt[i] <= 15; //depenancy delay, for slides should be less
+	 instr_in_progr_sew_reg 	  <= '{default:'0};
+	 instr_in_progr_vl_reg 		  <= '{default:'0};
+	 instr_in_progr_vl_half_reg 	  <= '{default:'0};
+	 instr_in_progr_vl_3_quarters_reg <= '{default:'0};
       end
       else
       begin
 	 for (int i=0; i<W_PORTS_NUM; i++)
 	   if (start_o[i] && port_group_ready_i[i])
 	   begin
-	      dependancy_issue_cnt[i]<=15;	      
+	      instr_in_progr_sew_reg[i] 	  <= slide_instr_check ? 2'b00 : sew_o[1:0];
+	      instr_in_progr_vl_reg[i] 		  <= vl_o+LP_CHAINING_DELAY;
+	      instr_in_progr_vl_half_reg[i] 	  <= instr_in_progr_vl_half[i];
+	      instr_in_progr_vl_3_quarters_reg[i] <= instr_in_progr_vl_3_quarters[i];
+	   end 
+      end      
+   end
+
+
+   //logic bellow implements counters that count clock
+   //cycles so we can know how many clock cycles each
+   // chained instruction has been executing.
+   always@(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++) 
+	   instr_exe_time_cnt[i] <= 0;
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	   if (start_o[i] && port_group_ready_i[i])
+	   begin
+	      instr_exe_time_cnt[i]<=0;		      
 	   end
-	   else if (dependancy_issue_cnt[i] != 0)
-	     dependancy_issue_cnt[i] <= dependancy_issue_cnt[i]-1;
+	   else if (instr_in_progress[i]==1'b1)// valid instruction in progress
+	     instr_exe_time_cnt[i] <= instr_exe_time_cnt[i]+1;
+      end
+   end
+
+   // logic bellow checks whether received instruction is dependant on instructions
+   // currently in progress
+   always_comb
+   begin
+      for (int i=0;i<W_PORTS_NUM;i++)
+      begin
+	 // check if vd_in_progress==vs1, vd_in_progress==vs2, vd_in_progress==vd
+	 instr_dependancy_check[i] = (vd_instr_in_progress[i][4:0]==v_instr_vs1 && vector_vector_check) ||
+		 (vd_instr_in_progress[i][4:0]==v_instr_vs2) || (vd_instr_in_progress[i][4:0]==v_instr_vd && store_instr_check);
+
+	 //Amount of cycles we need to wait before safely issuing the next instruction 
+	 clocks_to_wait[i] = instr_in_progr_sew_reg[i]==2'b00 && sew_o[1:0] == 2'b01 ? (instr_in_progr_vl_half_reg[i]):
+			     instr_in_progr_sew_reg[i]==2'b00 && (sew_o[1:0] == 2'b10 || store_instr_check) ? (instr_in_progr_vl_3_quarters_reg[i]):
+			     instr_in_progr_sew_reg[i]==2'b01 && (sew_o[1:0] == 2'b10 || store_instr_check) ? (instr_in_progr_vl_half_reg[i]) : LP_CHAINING_DELAY;
+
+	 // Checking all conditions to safely issue the next instruction
+//	 instr_not_safe_to_start[i] = (instr_dependancy_check[i] && instr_vld_reg!=0 ) &&
+//				      ((instr_exe_time_cnt[i] < clocks_to_wait[i]) || reduction_in_progress_reg[i]) && instr_in_progress != 4'h0;
 
       end
    end
+   
+   always @(posedge clk)
+   begin
+      if (!rstn)
+      begin
+	 instr_not_safe_to_start <= '{default:'0};
+      end
+      else
+      begin
+	 for (int i=0; i<W_PORTS_NUM; i++)
+	 begin
+	    if (start_o[i] && port_group_ready_i[i])
+	      instr_not_safe_to_start[i] <= 1'b1;
+	    else if (port_group_ready_i[i])
+	      instr_not_safe_to_start[i] <= 1'b0;
+	    else if (((instr_exe_time_cnt[i] < clocks_to_wait[i]) || reduction_in_progress_reg[i]) && instr_not_safe_to_start[i])
+	      instr_not_safe_to_start[i] <= 1'b1;
+	    else
+	      instr_not_safe_to_start[i] <= 1'b0;
+	 end
+      end
+   end
+
+   always_comb
+   begin
+      for (int i=0; i<W_PORTS_NUM; i++)
+      begin
+	 dependancy_issue = 1'b0;
+	 if (instr_not_safe_to_start[i]!=0 & instr_dependancy_check[i] != 0)
+	 begin
+	    dependancy_issue = 1'b1;
+	    break;
+	 end
+      end
+   end
+
    /***************DEPENDANCY CHECK LOGIC END***********/   
    /***************OUTPUTS*****************************/
    assign lmul_o = vtype_reg[2:0];
@@ -492,9 +521,8 @@ module v_cu #
 
    // this will chenge when renaming is inserted
    //assign start_o = inst_type_o != 1'b1;
-   // This tells how much delay ALU inserts for a particular instruction.
-   assign inst_delay_o = reduction_instr_check && alu_opmode_o[6:5] == 2'b01 ? 'h9 : 
-			 slide_instr_check ? LP_VRF_DELAY : 'h8;
+   // This tells how much delay ALU+VRF inserts for a particular instruction.
+   assign inst_delay_o = slide_instr_check ? VRF_READ_DELAY-1 : VRF_READ_DELAY+ALU_DELAY;
    
    // instructions that dont read from VRF are load and config
    assign vrf_ren      = !instr_vld_reg[12] && !instr_vld_reg[5] && instr_vld_reg != 0;

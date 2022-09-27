@@ -2,10 +2,10 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <time.h>
-#define IM_SIZE 56
-#define IN_D    256
-#define OUT_D   64
-#define REPEAT_NUM 1
+#define IM_SIZE    7
+#define IN_D       2048
+#define OUT_D      512
+#define REPEAT_NUM 1000
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][IN_D];
 int8_t ifm [IM_SIZE][IM_SIZE][IN_D];
 int8_t filter [OUT_D][IN_D];
@@ -20,24 +20,24 @@ double total_time=0.0;
 int main()
 {
   
+  srand(time(0));
+for (int repeat=0; repeat < REPEAT_NUM; repeat++)
+{
   // Initialize values
   for (int y=0; y<IM_SIZE; y++)
     for (int x=0; x<IM_SIZE; x++)
       for (int ich=0; ich<IN_D; ich++)
-         ifm[y][x][ich]=y*IM_SIZE+x+ich%3;
+         ifm[y][x][ich]=y*IM_SIZE+x+ich%3+rand()%3;
 
   for (int och=0; och<OUT_D; och++)
     for (int ich=0; ich<IN_D; ich++)
-       filter[och][ich]=((och+ich)-(ich%10));
+       filter[och][ich]=((och+ich)-(ich%10))+rand()%3;
 
 
-
-  for (int repeat=0; repeat < REPEAT_NUM; repeat++)
-    {
-      clock_t begin = clock();
-    // 1x1 convolution
-    for (int y=0; y<IM_SIZE; y++)
-      {
+clock_t begin = clock();
+// 1x1 convolution
+for (int y=0; y<IM_SIZE; y++)
+  {
 	for (int x=0; x<IM_SIZE; x++)
 	  {
 	    for (int och=0; och<OUT_D; och++)

@@ -1,20 +1,28 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <time.h>
 
-#define IM_SIZE 3
+#define IM_SIZE 56
 #define PD_SIZE 1
 #define IN_D    64
-#define OUT_D   4
+#define OUT_D   64
 #define FR_SIZE 3
 //#define PRINT_INTERMEDIATE
+#define REPEAT_NUM 50
 
 int8_t inter [IM_SIZE][IM_SIZE][OUT_D][FR_SIZE][FR_SIZE][IN_D];
 int8_t ifm [IM_SIZE+2*PD_SIZE][IM_SIZE+2*PD_SIZE][IN_D];
 int8_t filter [OUT_D][FR_SIZE][FR_SIZE][IN_D];
 int8_t ofm [IM_SIZE][IM_SIZE][OUT_D]={0};
 
+double time_spent_per_repeat = 0.0;
+double total_time=0.0;
+
 int main()
+{
+  srand(time(0));
+for (int repeat=0; repeat < REPEAT_NUM; repeat++)
 {
   // Initialize values
   for (int y=0; y<IM_SIZE+2*PD_SIZE; y++)
@@ -26,7 +34,7 @@ int main()
          if(x==0 || x==(IM_SIZE+2*PD_SIZE-1) || y==0 || y==(IM_SIZE+2*PD_SIZE-1))
            ifm[y][x][ich]=0;
          else
-           ifm[y][x][ich]=y*IM_SIZE+x+ich%3;
+           ifm[y][x][ich]=y*IM_SIZE+x+ich%3+rand()%3;
       }
     }
   }
@@ -34,9 +42,9 @@ int main()
     for (int fy=0; fy<FR_SIZE; fy++)
       for (int fx=0; fx<FR_SIZE; fx++)
         for (int ich=0; ich<IN_D; ich++)
-          filter[och][fy][fx][ich]=((och+ich)-(ich%10));
+          filter[och][fy][fx][ich]=((och+ich)-(ich%10))+rand()%3;
   
-  // 1x1 convolution
+  clock_t begin = clock();
   for (int och=0; och<OUT_D; och++)
   {
     for (int y=0; y<IM_SIZE; y++)
@@ -74,6 +82,15 @@ int main()
     }
   }
 
+clock_t end = clock();
+time_spent_per_repeat = (double)(end - begin) / CLOCKS_PER_SEC;
+total_time+=time_spent_per_repeat;
+
+}
+
+printf("\nAverage elapsed time is: The elapsed time is %f seconds\n", total_time/REPEAT_NUM);
+
+
             //printf("inter[%d][%d][%d][%d]=%02x \t\t ifm=%02x \t filter=%02x\n",y,x,och,ich,(unsigned char)inter[y][x][och][ich],(unsigned char)ifm[y][x][ich],(unsigned char)filter[och][ich]);
             //getchar();
   printf("Output feature map:\n");
@@ -83,9 +100,8 @@ int main()
     {
       for (int x=0; x<IM_SIZE; x++)
       {
-        printf("ofm[%d][%d][%d]=%02x ",y,x,och,(unsigned char)ofm[y][x][och]);
-        //printf("ofm[%d][%d][%d]=%d\n",y,x,och,ofm[y][x][och]);
-        getchar();
+        //printf("ofm[%d][%d][%d]=%02x ",y,x,och,(unsigned char)ofm[y][x][och]);
+        //getchar();
       }
     }
   }
